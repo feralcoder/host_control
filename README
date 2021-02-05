@@ -1,0 +1,5 @@
+These scripts rely heavily on `getent hosts`.  Some assumptions are made...
+
+- entries include short and long names (IE kgn vs kerrigan) with bare and FQDN versions
+- matching ilo entries are structured like 's/<NAME>/<NAME>-ipmi/g'
+- the first named entry is the longname FQDN (IE kerrigan.feralcoder.org)
