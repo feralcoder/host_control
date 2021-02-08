@@ -1,6 +1,9 @@
 #!/bin/bash
 
-. ilo_control.sh
+. ilo_common.sh
+. ilo_power.sh
+. ilo_boot.sh
+. ilo_boot_target.sh
 
 wait_for_host_down () {
   local HOST=$1 IP=$2

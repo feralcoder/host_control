@@ -1,6 +1,10 @@
 #!/bin/bash
 
-. ilo_control.sh
+. ilo_common.sh
+. ilo_power.sh
+. ilo_boot.sh
+. ilo_boot_target.sh
+
 . ssh_control.sh
 
 SYSTEM_ILO=2
