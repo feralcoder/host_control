@@ -1,7 +1,6 @@
 #!/bin/bash
 
-
-get_boot_defaults () {
+ilo_boot_get_order () {
   local HOST=$1 IP=$2
 
   local BOOTS BOOTDEV
@@ -12,7 +11,7 @@ get_boot_defaults () {
 }
 
 
-set_boot_defaults () {
+ilo_boot_set_order () {
   local HOST IP BOOT_ORDER
   read HOST IP BOOT_ORDER <<< `echo $1 | sed 's/:/ /g' | awk '{print $1 " " $2 " " $1 ":" $3 ":" $4 ":" $5 ":" $6 ":" $7}'`
   
@@ -52,7 +51,7 @@ set_boot_defaults () {
 }
 
 
-set_first_boot () {
+ilo_boot_set_first_boot () {
   local BOOTDEV=$1 HOST=$2 IP=$3
   COMPLETED=""
   while [[ $COMPLETED == "" ]]; do
@@ -84,7 +83,31 @@ set_first_boot () {
 
 
 
-set_boot_defaults_for_these_hosts () {
+ilo_boot_set_order_these_hosts () {
+  local PIDS="" HOST
+  local ORDER=$1
+
+  for HOST in $@ now_wait; do
+    if ( echo $HOST | grep '[0-9]:[0-9]:[0-9]' ); then
+      echo ORDER is $HOST
+    elif [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      local IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+      ilo_boot_set_order "$HOST:$IP:$ORDER" &
+      PIDS="$PIDS:$!"
+      echo "Setting boot order for $HOST: $!"
+    fi
+  done
+}
+
+
+ilo_boot_set_defaults_these_hosts () {
   local PIDS="" HOST
 
   for HOST in $@ now_wait; do
@@ -97,34 +120,30 @@ set_boot_defaults_for_these_hosts () {
       done
     else
       local IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      set_boot_defaults "$HOST:$IP:1:5:2:3:4" &
+      ilo_boot_set_order "$HOST:$IP:1:5:2:3:4" &
       PIDS="$PIDS:$!"
       echo "Setting boot defaults for $HOST: $!"
     fi
   done
 }
 
-set_boot_defaults_for_all_hosts () {
-  set_boot_defaults_for_these_hosts $ILO2_HOSTS $ILO4_HOSTS
+ilo_boot_set_defaults_all_hosts () {
+  ilo_boot_set_defaults_these_hosts $ILO2_HOSTS $ILO4_HOSTS
 }
 
-set_boot_defaults_for_all_ilo2_hosts () {
-  set_boot_defaults_for_these_hosts $ILO2_HOSTS
-}
-
-set_boot_defaults_for_dumbledore () {
-  set_boot_defaults_for_these_hosts dmb
+ilo_boot_set_defaults_all_ilo2_hosts () {
+  ilo_boot_set_defaults_these_hosts $ILO2_HOSTS
 }
 
 
 
-set_onetimeboot_ipmi () {
+ilo_boot_set_onetimeboot_ipmi () {
   local TARGET=$1 HOST=$2 IP=$3
 
   ipmitool -I lanplus -H $IP -U stack -f ilo_pass chassis bootdev $TARGET
 }
 
-set_onetimeboot_ipmi_for_these_hosts () {
+ilo_boot_set_onetimeboot_ipmi_these_hosts () {
   local PIDS="" HOST TARGET=$1 HOSTS=$2
 
   for HOST in $HOSTS now_wait; do
@@ -137,7 +156,7 @@ set_onetimeboot_ipmi_for_these_hosts () {
       done
     else
       local IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      set_onetimeboot_ipmi $TARGET $HOST $IP &
+      ilo_boot_set_onetimeboot_ipmi $TARGET $HOST $IP &
       PIDS="$PIDS:$!"
       echo "Setting Onetime Boot to PXE for $HOST: $!"
     fi
@@ -145,18 +164,49 @@ set_onetimeboot_ipmi_for_these_hosts () {
 }
 
 
-set_onetimeboot_ipmi_for_all_hosts () {
+ilo_boot_set_onetimeboot_ipmi_all_hosts () {
   local TARGET=$1
-  set_onetimeboot_ipmi_for_these_hosts $TARGET "$ILO2_HOSTS $ILO4_HOSTS"
+  ilo_boot_set_onetimeboot_ipmi_these_hosts $TARGET "$ILO2_HOSTS $ILO4_HOSTS"
 }
 
-set_onetimeboot_ipmi_for_all_ilo4_hosts () {
+ilo_boot_set_onetimeboot_ipmi_all_ilo4_hosts () {
   local TARGET=$1
-  set_onetimeboot_ipmi_for_these_hosts $TARGET "$ILO4_HOSTS"
+  ilo_boot_set_onetimeboot_ipmi_these_hosts $TARGET "$ILO4_HOSTS"
 }
 
-set_onetimeboot_ipmi_for_all_ilo2_hosts () {
+ilo_boot_set_onetimeboot_ipmi_all_ilo2_hosts () {
   local TARGET=$1
-  set_onetimeboot_ipmi_for_these_hosts $TARGET "$ILO2_HOSTS"
+  ilo_boot_set_onetimeboot_ipmi_these_hosts $TARGET "$ILO2_HOSTS"
 }
 
+ilo_boot_get_order_these_hosts () {
+  local PIDS="" HOST
+  for HOST in $@ now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      local IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+      ilo_boot_get_order $HOST $IP &
+      PIDS="$PIDS:$!"
+      echo "Getting boot order for $HOST: $!"
+    fi
+  done
+}
+
+
+ilo_boot_get_order_all_hosts () {
+  local PID_ILO2 PID_ILO4
+  ilo_boot_get_order_these_hosts $ILO2_HOSTS &
+  PID_ILO2="$!"
+  echo "Getting boot order for ILO2 Servers: $PID_ILO2"
+  ilo_boot_get_order_these_hosts $ILO4_HOSTS &
+  PID_ILO4="$!"
+  echo "Getting boot order for ILO4 Servers: $PID_ILO4"
+  wait $PID_ILO2
+  wait $PID_ILO4
+}
