@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/bin/bash -x
+echo "$2"
+SOURCE="${BASH_SOURCE[0]}"
+echo $(dirname $SOURCE)
+
 
 # Run only this file to include the others:
 . ilo_common.sh
@@ -11,3 +15,4 @@
 . undercloud_control.sh
 . stack_control.sh  
 
+echo $my_dir
