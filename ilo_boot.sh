@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DEFAULT_BOOT_ORDER="1:5:2:3:4"
+
 ilo_boot_get_order () {
   local HOST=$1 IP=$2
 
@@ -120,7 +122,7 @@ ilo_boot_set_defaults_these_hosts () {
       done
     else
       local IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      ilo_boot_set_order "$HOST:$IP:1:5:2:3:4" &
+      ilo_boot_set_order "$HOST:$IP:$DEFAULT_BOOT_ORDER" &
       PIDS="$PIDS:$!"
       echo "Setting boot defaults for $HOST: $!"
     fi
