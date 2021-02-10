@@ -18,3 +18,4 @@ ALL_HOSTS="manhattan lawnmowerman bowman kerrigan neo strange merlin gandalf yod
 UNDERCLOUD_HOSTS="kerrigan dumbledore"
 OVERCLOUD_HOSTS="manhattan lawnmowerman bowman neo merlin gandalf yoda"
 
+ALL_HOSTS_MINUS_ADMIN="manhattan lawnmowerman bowman kerrigan neo strange merlin gandalf dumbledore"
