@@ -5,6 +5,26 @@
 . ilo_boot.sh
 . ilo_boot_target.sh
 
+ssh_control_distribute_admin_key () {
+  local HOST=$1
+  local HOST_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  [[ -f ~/.ssh/pubkeys/id_rsa.pub ]] && {
+    local KEY=`cat ~/.ssh/pubkeys/id_rsa.pub`
+  } || {
+    echo "No public key to push!"
+    return 1
+  }
+
+  ssh_control_run_as_user cliff "echo '$KEY' >> ~/.ssh/authorized_keys; chmod 644 ~/.ssh/authorized_keys" $HOST
+  ssh_control_run_as_user cliff "cat ~/.ssh/authorized_keys | sort | uniq > /tmp/auth_keys_$$ ; cat /tmp/auth_keys_$$ > ~/.ssh/authorized_keys" $HOST
+  ssh_control_run_as_user cliff "sudo - echo '$KEY' >> ~/.ssh/authorized_keys; chmod 644 ~/.ssh/authorized_keys" $HOST
+
+  # Many systems disallow root login by password, and sudo through ssh is ugly...
+  ssh_control_run_as_user cliff "echo $KEY > /tmp/key_$$; sudo -S cat /root/.ssh/authorized_keys /tmp/key_$$ > /tmp/root_auth_keys_$$; sudo -S mv /tmp/root_auth_keys_$$ /root/.ssh/authorized_keys; sudo -S chmod 644 /root/.ssh/authorized_keys; sudo -S chown root /root/.ssh/authorized_keys" $HOST
+  ssh_control_run_as_user root "cat ~/.ssh/authorized_keys | sort | uniq > /tmp/auth_keys_$$ ; cat /tmp/auth_keys_$$ > ~/.ssh/authorized_keys" $HOST
+}
+
+
 ssh_control_remove_hostkey () {
   local HOST=$1
   local HOST_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
@@ -120,7 +140,8 @@ ssh_control_wait_for_host_up_these_hosts () {
 }
 
 ssh_control_run_as_user () {
-  local USER=$1 COMMAND=$2 HOST=$3 HOST_IP=$4
+  local USER=$1 COMMAND=$2 HOST=$3
+  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
 
   local OUTPUT CODE
   OUTPUT=$(ssh -o ConnectTimeout=10 -l $USER $HOST_IP "$COMMAND")
