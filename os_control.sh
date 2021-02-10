@@ -11,9 +11,9 @@ SYSTEM_ILO=2
 DEBUG=true
 
 os_control_graceful_stop () {
-  local HOST=$1 IP=$2 ILO_IP=$3
+  local HOST=$1 HOST_IP=$2 ILO_IP=$3
 
-  ssh_control_run_as_user root poweroff $HOST $IP
+  ssh_control_run_as_user root poweroff $HOST $HOST_IP
   OUTPUT=`ssh_control_wait_for_host_down $HOST $ILO_IP`
   [[ $? == 0 ]] || ilo_power_off $HOST $ILO_IP
   OUTPUT=`ssh_control_wait_for_host_down $HOST $ILO_IP`
@@ -21,7 +21,7 @@ os_control_graceful_stop () {
 }
 
 os_control_graceful_stop_these_hosts () {
-  local PIDS="" HOST IP ILO_IP
+  local PIDS="" HOST HOST_IP ILO_IP
 
   for HOST in $@ now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -32,9 +32,9 @@ os_control_graceful_stop_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      local IP=`getent hosts $HOST | awk '{print $1}'`
+      local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
       local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      os_control_graceful_stop $HOST $IP $ILO_IP
+      os_control_graceful_stop $HOST $HOST_IP $ILO_IP
       PIDS="$PIDS:$!"
       echo "Stopping $HOST..."
     fi
@@ -45,14 +45,14 @@ os_control_graceful_stop_these_hosts () {
 # STATE="BOOTED|IN_BETWEEN|OFF"
 os_control_get_system_state () {
   local HOST=$1
-  local IP=`getent hosts $HOST | awk '{print $1}'`
+  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   local LOGIN_STATE STATE RETVAL
   local PWR_STATE=$(ilo_power_get_state $HOST $ILO_IP | awk '{print $3}')
 
   if [[ $PWR_STATE == On ]]; then
-    HOSTNAME=`ssh_control_run_as_user root hostname $HOST $IP`
+    HOSTNAME=`ssh_control_run_as_user root hostname $HOST $HOST_IP`
     RETVAL=$?
     if [[ $RETVAL == 0 ]]; then
       STATE="BOOTED"
@@ -72,19 +72,19 @@ os_control_get_system_state () {
 # RETURN "$BOOTDEV:$INSTALLATION=admin|default"
 os_control_boot_info () {
   local HOST=$1
-  local IP=`getent hosts $HOST | awk '{print $1}'`
+  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   local INSTALLATION HOSTNAME BOOTDEV
-  local STATE=$(os_control_get_system_state $HOST $IP)
+  local STATE=$(os_control_get_system_state $HOST $HOST_IP)
   if [[ $STATE == "BOOTED" ]]; then
-    HOSTNAME=$(ssh_control_run_as_user root hostname $HOST $IP)
+    HOSTNAME=$(ssh_control_run_as_user root hostname $HOST $HOST_IP)
     if [[ $(echo $HOSTNAME | awk -F'.' '{print $1}' | awk -F'-' '{print $2}') == "admin" ]]; then
       INSTALLATION="admin"
     else
       INSTALLATION="default"
     fi
-    BOOTDEV=$(ssh_control_run_as_user root "mount" $HOST $IP | grep ' /boot ' | awk '{print $1}')
+    BOOTDEV=$(ssh_control_run_as_user root "mount" $HOST $HOST_IP | grep ' /boot ' | awk '{print $1}')
   elif [[ $STATE == "IN_BETWEEN" ]]; then
     echo "$HOST is not BOOTED!"
     return 1
@@ -102,27 +102,27 @@ os_control_boot_info () {
 os_control_boot_to_target_installation () {
   # $TARGET==[admin|default]
   local HOST=$1 TARGET=$2
-  local IP=`getent hosts $HOST | awk '{print $1}'`
+  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
   
   local OUTPUT
-  local OS_BOOT_INFO=`os_control_boot_info $HOST $IP`
+  local OS_BOOT_INFO=`os_control_boot_info $HOST $HOST_IP`
   local RETVAL=$?
 
   # IF IN_BETWEEN OFF and BOOTED, GET TO A DETERMINATE STATE
   if [[ $RETVAL == 1 ]]; then
     # host may be booting...
-    OUTPUT=`ssh_control_wait_for_host_up $HOST $IP`
+    OUTPUT=`ssh_control_wait_for_host_up $HOST $HOST_IP`
     # Wait a long time for an OS before kicking over
     if [[ $RETVAL != 0 ]]; then
-      OUTPUT=`ssh_control_wait_for_host_up $HOST $IP`
+      OUTPUT=`ssh_control_wait_for_host_up $HOST $HOST_IP`
       if [[ $? != 0 ]]; then
         OUTPUT=$(ilo_power_off $HOST $ILO_IP)
         OUTPUT=`ssh_control_wait_for_host_down $HOST $ILO_IP`
         [[ $? == 0 ]] || { echo ERROR shutting down $HOST!; return 1; }
       fi
     fi
-    OS_BOOT_INFO=`os_control_boot_info $HOST $IP`
+    OS_BOOT_INFO=`os_control_boot_info $HOST $HOST_IP`
     RETVAL=$?
   fi
 
@@ -135,7 +135,7 @@ os_control_boot_to_target_installation () {
       return
     else
       # POWER OFF HOST
-      OUTPUT=$(ssh_control_run_as_user root poweroff $HOST $IP)
+      OUTPUT=$(ssh_control_run_as_user root poweroff $HOST $HOST_IP)
       OUTPUT=`ssh_control_wait_for_host_down $HOST $ILO_IP`
       if [[ $? != 0 ]]; then
         OUTPUT=$(ilo_power_off $HOST $ILO_IP)
@@ -149,7 +149,7 @@ os_control_boot_to_target_installation () {
     return 1
   fi
 
-  OS_BOOT_INFO=`os_control_boot_info $HOST $IP`
+  OS_BOOT_INFO=`os_control_boot_info $HOST $HOST_IP`
   RETVAL=$?
 
   # HOST SHOULD BE OFF AT THIS POINT
@@ -164,9 +164,9 @@ os_control_boot_to_target_installation () {
     else
       OUTPUT=$(ilo_power_on $HOST $ILO_IP)
     fi
-    OUTPUT=`ssh_control_wait_for_host_up $HOST $IP`
+    OUTPUT=`ssh_control_wait_for_host_up $HOST $HOST_IP`
     if [[ $? != 0 ]]; then
-      OUTPUT=`ssh_control_wait_for_host_up $HOST $IP`
+      OUTPUT=`ssh_control_wait_for_host_up $HOST $HOST_IP`
       [[ $? == 0 ]] || { echo "ERROR BOOTING $HOST!"; return 1; }
     fi
   else
@@ -174,7 +174,7 @@ os_control_boot_to_target_installation () {
     return 1
   fi
 
-  OS_BOOT_INFO=`os_control_boot_info $HOST $IP`
+  OS_BOOT_INFO=`os_control_boot_info $HOST $HOST_IP`
   RETVAL=$?
 
   # HOST SHOULD BE BOOTED TO $TARGET AT THIS POINT

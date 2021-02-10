@@ -3,19 +3,19 @@
 DEFAULT_BOOT_ORDER="1:5:2:3:4"
 
 ilo_boot_get_order () {
-  local HOST=$1 IP=$2
+  local HOST=$1 ILO_IP=$2
 
   local BOOTS BOOTDEV
   BOOTS=$( echo $(for BOOTDEV in `seq 1 5`; do
-    ssh -i ~/.ssh/id_rsa_ilo2 $IP -l stack "show /system1/bootconfig1/bootsource$BOOTDEV" | grep bootorder | awk -F'=' '{print $2}' | sed  's/.*\([0-9]\).*/\1/g'
+    ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "show /system1/bootconfig1/bootsource$BOOTDEV" | grep bootorder | awk -F'=' '{print $2}' | sed  's/.*\([0-9]\).*/\1/g'
   done) | sed 's/ /:/g' )
-  echo $HOST:$IP:$BOOTS
+  echo $HOST:$ILO_IP:$BOOTS
 }
 
 
 ilo_boot_set_order () {
-  local HOST IP BOOT_ORDER
-  read HOST IP BOOT_ORDER <<< `echo $1 | sed 's/:/ /g' | awk '{print $1 " " $2 " " $1 ":" $3 ":" $4 ":" $5 ":" $6 ":" $7}'`
+  local HOST ILO_IP BOOT_ORDER
+  read HOST ILO_IP BOOT_ORDER <<< `echo $1 | sed 's/:/ /g' | awk '{print $1 " " $2 " " $1 ":" $3 ":" $4 ":" $5 ":" $6 ":" $7}'`
   
   local -a BOOTS=()
   BOOTS=(${BOOT_ORDER//:/ })
@@ -25,7 +25,7 @@ ilo_boot_set_order () {
     COMPLETED=""
     if [[ ${BOOTS[$DEVICE]} == $BOOTPOSITION ]]; then
       while [[ $COMPLETED == "" ]]; do
-        OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $IP -l stack "set /system1/bootconfig1/bootsource$DEVICE bootorder=$BOOTPOSITION" | tr '\r' '\n')
+        OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "set /system1/bootconfig1/bootsource$DEVICE bootorder=$BOOTPOSITION" | tr '\r' '\n')
         COMPLETED=$(echo "$OUTPUT" | grep "status_tag=COMMAND COMPLETED")
         STATUS_TAG=$(echo "$OUTPUT" | grep "status_tag")
         IN_POST=$(echo "$OUTPUT" | grep "unable to set boot orders until system completes POST.")
@@ -54,10 +54,10 @@ ilo_boot_set_order () {
 
 
 ilo_boot_set_first_boot () {
-  local BOOTDEV=$1 HOST=$2 IP=$3
+  local BOOTDEV=$1 HOST=$2 ILO_IP=$3
   COMPLETED=""
   while [[ $COMPLETED == "" ]]; do
-    OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $IP -l stack "set /system1/bootconfig1/bootsource$BOOTDEV bootorder=1" | tr '\r' '\n')
+    OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "set /system1/bootconfig1/bootsource$BOOTDEV bootorder=1" | tr '\r' '\n')
     COMPLETED=$(echo "$OUTPUT" | grep "status_tag=COMMAND COMPLETED")
     STATUS_TAG=$(echo "$OUTPUT" | grep "status_tag")
     IN_POST=$(echo $OUTPUT | grep "unable to set boot orders until system completes POST.")
@@ -100,8 +100,8 @@ ilo_boot_set_order_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      local IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      ilo_boot_set_order "$HOST:$IP:$ORDER" &
+      local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+      ilo_boot_set_order "$HOST:$ILO_IP:$ORDER" &
       PIDS="$PIDS:$!"
       echo "Setting boot order for $HOST: $!"
     fi
@@ -121,8 +121,8 @@ ilo_boot_set_defaults_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      local IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      ilo_boot_set_order "$HOST:$IP:$DEFAULT_BOOT_ORDER" &
+      local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+      ilo_boot_set_order "$HOST:$ILO_IP:$DEFAULT_BOOT_ORDER" &
       PIDS="$PIDS:$!"
       echo "Setting boot defaults for $HOST: $!"
     fi
@@ -140,9 +140,9 @@ ilo_boot_set_defaults_all_ilo2_hosts () {
 
 
 ilo_boot_set_onetimeboot_ipmi () {
-  local TARGET=$1 HOST=$2 IP=$3
+  local TARGET=$1 HOST=$2 ILO_IP=$3
 
-  ipmitool -I lanplus -H $IP -U stack -f ilo_pass chassis bootdev $TARGET
+  ipmitool -I lanplus -H $ILO_IP -U stack -f ilo_pass chassis bootdev $TARGET
 }
 
 ilo_boot_set_onetimeboot_ipmi_these_hosts () {
@@ -157,8 +157,8 @@ ilo_boot_set_onetimeboot_ipmi_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      local IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      ilo_boot_set_onetimeboot_ipmi $TARGET $HOST $IP &
+      local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+      ilo_boot_set_onetimeboot_ipmi $TARGET $HOST $ILO_IP &
       PIDS="$PIDS:$!"
       echo "Setting Onetime Boot to PXE for $HOST: $!"
     fi
@@ -182,18 +182,17 @@ ilo_boot_set_onetimeboot_ipmi_all_ilo2_hosts () {
 }
 
 ilo_boot_get_order_these_hosts () {
-  local PIDS="" HOST
+  local PIDS="" HOST ILO_IP PID
   for HOST in $@ now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
-      local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
         echo "Return code for PID $PID: $?"
       done
     else
-      local IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      ilo_boot_get_order $HOST $IP &
+      ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+      ilo_boot_get_order $HOST $ILO_IP &
       PIDS="$PIDS:$!"
       echo "Getting boot order for $HOST: $!"
     fi

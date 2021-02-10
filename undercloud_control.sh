@@ -86,7 +86,7 @@ undercloud_control_restore () {
   # DEST=[admb|bkgn|etc]
   # FINAL_TARGET=[admin|default]
   local HOST=$1 SRC=$2 DEST=$3 FINAL_TARGET=$4
-  local IP=`getent hosts $HOST | awk '{print $1}'`
+  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   local NOW=`date +%Y%m%d-%H%M`
@@ -98,12 +98,12 @@ undercloud_control_restore () {
   fi
 
   local SCRIPT=`undercloud_control_make_restore_script $HOST $SRC $DEST`
-  ssh_control_sync_as_user root $SCRIPT /root/undercloud_restore_${NOW}.sh dmb $IP
-  ssh_control_run_as_user root "chmod 755 /root/undercloud_restore_${NOW}.sh" dmb $IP
-  SYNC_OUTPUT=$(ssh_control_run_as_user root "/root/undercloud_restore_${NOW}.sh" dmb $IP)
+  ssh_control_sync_as_user root $SCRIPT /root/undercloud_restore_${NOW}.sh dmb $HOST_IP
+  ssh_control_run_as_user root "chmod 755 /root/undercloud_restore_${NOW}.sh" dmb $HOST_IP
+  SYNC_OUTPUT=$(ssh_control_run_as_user root "/root/undercloud_restore_${NOW}.sh" dmb $HOST_IP)
 
   echo "$SYNC_OUTPUT" > /tmp/restore_output_$$.log
-  ssh_control_sync_as_user root /tmp/restore_output_$$.log /root/restore_output_$NOW.log dmb $IP
+  ssh_control_sync_as_user root /tmp/restore_output_$$.log /root/restore_output_$NOW.log dmb $HOST_IP
  
   if [[ $FINAL_TARGET == "default" ]]; then
     os_control_boot_to_target_installation $HOST "default"
@@ -122,7 +122,7 @@ undercloud_control_backup () {
   # FINAL_TARGET=[admin|default]
   # BACKUPLINK=dumbledore_02_Ussuri_Undercloud
   local HOST=$1 SRC=$2 DEST=$3 FINAL_TARGET=$4 BACKUPLINK=$5
-  local IP=`getent hosts $HOST | awk '{print $1}'`
+  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   local NOW=`date +%Y%m%d-%H%M`
@@ -134,12 +134,12 @@ undercloud_control_backup () {
   fi
 
   local SCRIPT=`undercloud_control_make_backup_script $HOST $SRC $DEST $BACKUPLINK`
-  ssh_control_sync_as_user root $SCRIPT /root/undercloud_backup_${NOW}.sh dmb $IP
-  ssh_control_run_as_user root "chmod 755 /root/undercloud_backup_${NOW}.sh" dmb $IP
-  SYNC_OUTPUT=$(ssh_control_run_as_user root "/root/undercloud_backup_${NOW}.sh" dmb $IP)
+  ssh_control_sync_as_user root $SCRIPT /root/undercloud_backup_${NOW}.sh dmb $HOST_IP
+  ssh_control_run_as_user root "chmod 755 /root/undercloud_backup_${NOW}.sh" dmb $HOST_IP
+  SYNC_OUTPUT=$(ssh_control_run_as_user root "/root/undercloud_backup_${NOW}.sh" dmb $HOST_IP)
 
   echo "$SYNC_OUTPUT" > /tmp/backup_output_$$.log
-  ssh_control_sync_as_user root /tmp/backup_output_$$.log /root/backup_output_$NOW.log dmb $IP
+  ssh_control_sync_as_user root /tmp/backup_output_$$.log /root/backup_output_$NOW.log dmb $HOST_IP
 
 
   if [[ $FINAL_TARGET == "default" ]]; then
@@ -167,16 +167,16 @@ undercloud_control_restore_dumbledore () {
 
 undercloud_control_build_the_whole_fucking_thing () {
   local HOST=$1
-  local IP=`getent hosts $HOST | awk '{print $1}'`
+  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   undercloud_control_restore dmb admb /backups/undercloud_dumps/dumbledore_01_CentOS_8 default
-  ssh_control_run_as_user root "DEFOPTS=true ~cliff/CODE/feralcoder/train8/setup_undercloud.sh" dmb $IP
-  # OUTPUT=$(run_as_user root "~cliff/CODE/feralcoder/train8/verify_undercloud.sh" dmb $IP)
+  ssh_control_run_as_user root "DEFOPTS=true ~cliff/CODE/feralcoder/train8/setup_undercloud.sh" dmb $HOST_IP
+  # OUTPUT=$(run_as_user root "~cliff/CODE/feralcoder/train8/verify_undercloud.sh" dmb $HOST_IP)
   # [[ $OUTPUT == "UNDERCLOUD OK" ]] || { echo "Undercloud installation incomplete, check it out!"; return 1; }
   undercloud_control_backup dmb admb /backups/undercloud_dumps default new-dumbledore_02_Ussuri_Undercloud
-  ssh_control_run_as_user root "DEFOPTS=true ~cliff/CODE/feralcoder/train8/setup_overcloud.sh" dmb $IP
-  # OUTPUT=$(run_as_user root "~cliff/CODE/feralcoder/train8/verify_overcloud.sh" dmb $IP)
+  ssh_control_run_as_user root "DEFOPTS=true ~cliff/CODE/feralcoder/train8/setup_overcloud.sh" dmb $HOST_IP
+  # OUTPUT=$(run_as_user root "~cliff/CODE/feralcoder/train8/verify_overcloud.sh" dmb $HOST_IP)
   # [[ $OUTPUT == "OVERCLOUD OK" ]] || { echo "Overcloud installation incomplete, check it out!"; return 1; }
   undercloud_control_backup dmb admb /backups/undercloud_dumps default new-dumbledore_03_Ussuri_Overcloud
 }

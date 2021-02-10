@@ -23,13 +23,13 @@ stack_control_get_instance_ips_all () {
 }
 
 stack_control_get_instance_ip () {
-  local INSTANCE=$1 IP
+  local INSTANCE=$1 INSTANCE_IP
 
-  IP=$(stack_control_get_instance_ips | grep $INSTANCE | awk -F':' '{print $2}')
+  INSTANCE_IP=$(stack_control_get_instance_ips | grep $INSTANCE | awk -F':' '{print $2}')
 }
 
 stack_control_get_node_ip_these_hosts () {
-  local HOST LONG_HOST NODE_OUTPUT INSTANCE_ID INSTANCE_IPS IP
+  local HOST LONG_HOST NODE_OUTPUT INSTANCE_ID INSTANCE_IPS INSTANCE_IP
   local HOST_LIST=""
 
   NODE_OUTPUT="`ssh_control_run_as_user root "su - stack -c '. stackrc && openstack baremetal node list'" $UNDERCLOUD_HOST $UNDERCLOUD_IP`"
@@ -47,11 +47,11 @@ stack_control_get_node_ip_these_hosts () {
     INSTANCE_ID=$(echo "$HOST_LIST" | grep "$HOST:" | awk -F':' '{print $2}')
     if [[ $(echo $INSTANCE_ID | grep  -E '[^ -]{3,}-[^ -]{3,}') == "" ]] ; then
       # This host has no instance
-      IP=UNKNOWN
+      INSTANCE_IP=UNKNOWN
     else
-      IP=$(echo "$INSTANCE_IPS" | grep $INSTANCE_ID | awk -F':' '{print $2}')
+      INSTANCE_IP=$(echo "$INSTANCE_IPS" | grep $INSTANCE_ID | awk -F':' '{print $2}')
     fi
-    echo "$HOST:$IP"
+    echo "$HOST:$INSTANCE_IP"
   done
 }
 
@@ -61,9 +61,9 @@ stack_control_get_node_ip () {
 }
 
 stack_control_graceful_stop_node () {
-  local HOST=$1 NODE_IP=$2 IP=$3 ILO_IP=$4
+  local HOST=$1 HOST_IP=$2 ILO_IP=$3 INSTANCE_IP=$4
 
- ssh_control_run_as_user root "su - stack -c '. stackrc && ssh heat-admin@$NODE_IP sudo poweroff'" $UNDERCLOUD_HOST $UNDERCLOUD_IP
+ ssh_control_run_as_user root "su - stack -c '. stackrc && ssh heat-admin@$INSTANCE_IP sudo poweroff'" $UNDERCLOUD_HOST $UNDERCLOUD_IP
   OUTPUT=`ssh_control_wait_for_host_down $HOST $ILO_IP`
   [[ $? == 0 ]] || power_off $HOST $ILO_IP
   OUTPUT=`ssh_control_wait_for_host_down $HOST $ILO_IP`
@@ -71,9 +71,9 @@ stack_control_graceful_stop_node () {
 }
 
 stack_control_graceful_stop_node_these_hosts () {
-  local PIDS="" HOST IP ILO_IP NODE_IP
+  local PIDS="" HOST HOST_IP ILO_IP INSTANCE_IP
 
-  local NODE_IPS="$(stack_control_get_node_ip_these_hosts $@)"
+  local INSTANCE_IPS="$(stack_control_get_node_ip_these_hosts $@)"
 
   for HOST in $@ now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -84,11 +84,11 @@ stack_control_graceful_stop_node_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      IP=`getent hosts $HOST | awk '{print $1}'`
+      HOST_IP=`getent hosts $HOST | awk '{print $1}'`
       ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      NODE_IP=$(echo "$NODE_IPS" | grep $HOST | awk -F':' '{print $2}')
+      INSTANCE_IP=$(echo "$INSTANCE_IPS" | grep $HOST | awk -F':' '{print $2}')
 
-      stack_control_graceful_stop_node $HOST $NODE_IP $IP $ILO_IP &
+      stack_control_graceful_stop_node $HOST $HOST_IP $ILO_IP $INSTANCE_IP &
 
       PIDS="$PIDS:$!"
       echo "Stopping $HOST..."
@@ -98,7 +98,7 @@ stack_control_graceful_stop_node_these_hosts () {
 
 stack_control_shutdown_stack () {
   local CONTROL_WAIT=300
-  local IP ILO_IP
+  local HOST_IP ILO_IP
 
   echo "Bringing down Compute Nodes: $COMPUTE_HOSTS"
   stack_control_graceful_stop_node_these_hosts $COMPUTE_HOSTS
@@ -107,7 +107,7 @@ stack_control_shutdown_stack () {
   local HOST
   for HOST in $TERNARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $PRIMARY_CONTROL_HOSTS; do
     echo "Stopping: $HOST"
-    IP=`getent hosts $HOST | awk '{print $1}'`
+    HOST_IP=`getent hosts $HOST | awk '{print $1}'`
     ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
     stack_control_graceful_stop_node_these_hosts $HOST
     [[ $? == 0 ]] || { echo "Failed to stop Control Node: $HOST, EXITING!"; return 1; }
@@ -121,11 +121,11 @@ stack_control_startup_stack () {
   # THIS NEEDS WORK - NO STARTUP VALIDATION - root logins don't work!
   echo "Starting Stack..."
   local CONTROL_WAIT=300
-  local HOST IP ILO_IP
+  local HOST HOST_IP ILO_IP
 
   echo "Bringing up Control Nodes: $PRIMARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $TERNARY_CONTROL_HOSTS"
   for HOST in $PRIMARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $TERNARY_CONTROL_HOSTS; do
-    IP=`getent hosts $HOST | awk '{print $1}'`
+    HOST_IP=`getent hosts $HOST | awk '{print $1}'`
     ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
     echo "Starting: $HOST"
     # boot_to_target_installation $HOST default
