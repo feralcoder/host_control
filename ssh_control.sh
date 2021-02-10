@@ -5,12 +5,18 @@
 . ilo_boot.sh
 . ilo_boot_target.sh
 
+ssh_control_remove_hostkey () {
+  local HOST=$1
+  local HOST_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  ssh-keygen -R $HOST_IP
+}
+
 ssh_control_get_hostkey () {
   local HOST=$1
   local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
-  ssh-keygen -R $HOST_IP
   ssh-keyscan -T 30 $HOST_IP >> ~/.ssh/known_hosts
-  ( grep "$HOST_IP" ~/.ssh/known_hosts ) || {
+  local OUTPUT
+  ( OUTPUT=`grep "$HOST_IP" ~/.ssh/known_hosts` ) || {
     echo "Failed to retrieve host key for $HOST!"
     return 1
   }
