@@ -5,6 +5,36 @@
 . ilo_boot.sh
 . ilo_boot_target.sh
 
+ssh_control_get_hostkey () {
+  local HOST=$1
+  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
+  ssh-keygen -R $HOST_IP
+  ssh-keyscan -T 30 $HOST_IP >> ~/.ssh/known_hosts
+  ( grep "$HOST_IP" ~/.ssh/known_hosts ) || {
+    echo "Failed to retrieve host key for $HOST!"
+    return 1
+  }
+}
+
+ssh_control_get_hostkey_these_hosts () {
+  local PIDS="" HOST HOST_IP
+  for HOST in $@ now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      HOST_IP=`getent hosts $HOST | awk '{print $1}'`
+      ssh_control_get_hostkey $HOST $HOST_IP &
+      PIDS="$PIDS:$!"
+      echo "Getting host key for $HOST: $!"
+    fi
+  done
+}
+
 ssh_control_wait_for_host_down () {
   local HOST=$1 ILO_IP=$2
   local ATTEMPTS=3 INTERVAL=10
