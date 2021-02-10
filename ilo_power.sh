@@ -51,9 +51,34 @@ ilo_power_off () {
   [[ "$3" != "" ]] && COUNT=$3 || COUNT=5
   [[ "$4" != "" ]] && INTERVAL=$4 || INTERVAL=10
 
-  echo "Powering off $HOST (soft)..."
-  local OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $IP -l stack "power off")
+  local TRIES=3 OUTPUT
+  for TRY in `seq 1 $TRIES`; do
+    echo "Powering off $HOST (soft)..."
+    OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $IP -l stack "power off")
+    if ( echo $OUTPUT | grep 'powering off\|already off' ) ; then
+      break # ILO COMMAND WAS DELIVERED - BREAK AND CONTINUE WITH WAITS BELOW
+    else
+      echo "Failed to send ILO power off command."
+      if [[ $TRY != $TRIES ]] ; then
+        echo "Trying again in 10 seconds."
+        sleep 10
+      else # ILO COMMANDS FAILED - USE IPMI AND RETURN FROM HERE
+        echo "Out of tries, ILO not responsive."
+        echo "Going straight for IPMI chassis control."
+        OUTPUT=$(ipmitool -I lanplus -H $IP -U stack -f ilo_pass chassis power off)
+        if [[ $(echo "$OUTPUT" | grep 'Down.Off') == "" ]]; then
+          echo "FAILED to power off $HOST!"
+          return 1
+        else
+          echo "$HOST is powered off via chassis control."
+          return 0
+        fi
+      fi
+    fi
+  done
+    
 
+  # ILO COMMAND DELIVERED - WAIT, THEN GET MORE AGGRESSIVE IF NEEDED
   if ( ilo_power_wait_for_off $HOST $IP $COUNT $INTERVAL ) ; then
     echo "$HOST is powered off."
   else
@@ -84,7 +109,7 @@ ilo_power_on () {
   if ( ilo_power_wait_for_on $HOST $IP $COUNT $INTERVAL ) ; then
     echo "$HOST is powered on".
   else
-    echo "$HOST did not power on.  Turning on via ipmi chassis power on."
+    echo "$HOST did not power on via ILO command.  Turning on via ipmi chassis power on."
     OUTPUT=$(ipmitool -I lanplus -H $IP -U stack -f ilo_pass chassis power on)
     if [[ $(echo "$OUTPUT" | grep 'Up.On') == "" ]]; then
       echo "FAILED to power on $HOST!"
