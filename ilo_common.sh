@@ -16,6 +16,6 @@ COMPUTE_HOSTS="mtn lmn bmn neo"
 
 ALL_HOSTS="manhattan lawnmowerman bowman kerrigan neo strange merlin gandalf yoda dumbledore"
 UNDERCLOUD_HOSTS="kerrigan dumbledore"
-OVERCLOUD_HOSTS="manhattan lawnmowerman bowman neo merlin gandalf yoda"
+OVERCLOUD_HOSTS="manhattan lawnmowerman bowman neo merlin gandalf strange"
 
 ALL_HOSTS_MINUS_ADMIN="manhattan lawnmowerman bowman kerrigan neo strange merlin gandalf dumbledore"
