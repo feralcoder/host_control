@@ -65,29 +65,50 @@ ssh_control_distribute_admin_key_these_hosts () {
   done
 }
 
+ssh_control_get_all_names () {
+  local HOST=$1
+  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
+  local HOSTNAMES=`grep "$HOST_IP " /etc/hosts | sed 's/^[^ ]*[ ]*//g'`
+  echo $HOSTNAMES
+}
 
 ssh_control_remove_hostkey () {
   local HOST=$1
-  local HOST_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-  ssh-keygen -R $HOST
+  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
+  local ALL_NAMES=`ssh_control_get_all_names $HOST`
+  local NAME
+  for NAME in $ALL_NAMES; do
+    ssh-keygen -R $NAME
+  done
   ssh-keygen -R $HOST_IP
 }
 
 ssh_control_get_hostkey () {
   local HOST=$1
   local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
-
-  ssh-keyscan -T 30 $HOST >> ~/.ssh/known_hosts
   ssh-keyscan -T 30 $HOST_IP >> ~/.ssh/known_hosts
   local OUTPUT
   ( OUTPUT=`grep "$HOST_IP" ~/.ssh/known_hosts` ) || {
     echo "Failed to retrieve host key for $HOST!"
     return 1
   }
+
+  local ALL_NAMES=`ssh_control_get_all_names $HOST`
+  local NAME
+  for NAME in $ALL_NAMES; do
+    ssh-keyscan -T 30 $NAME >> ~/.ssh/known_hosts
+    ( OUTPUT=`grep "$NAME" ~/.ssh/known_hosts` ) || {
+      echo "Failed to retrieve host key for $NAME!"
+      return 1
+    }
+  done
 }
 
-ssh_control_get_hostkey_these_hosts () {
+ssh_control_refetch_hostkey_these_hosts () {
   local PIDS="" HOST HOST_IP
+  for HOST in $@ ; do
+    ssh_control_remove_hostkey $HOST
+  done
   for HOST in $@ now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
