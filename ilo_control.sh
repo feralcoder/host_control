@@ -31,7 +31,7 @@ ilo_control_get_ilo_hostkey_these_hosts () {
       done
     else
       ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      ilo_control_get_ilo_hostkey $HOST $ILO_IP &
+      ilo_control_get_ilo_hostkey $HOST &
       PIDS="$PIDS:$!"
       echo "Getting host key for $HOST: $!"
     fi
