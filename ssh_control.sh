@@ -5,7 +5,14 @@
 . ilo_boot.sh
 . ilo_boot_target.sh
 
-ssh_control_distribute_admin_key () {
+
+ssh_control_uniqify_keys () {
+  local HOST=$1
+  ssh_control_run_as_user cliff "cat ~/.ssh/authorized_keys | sort | uniq > /tmp/auth_keys_$$ ; cat /tmp/auth_keys_$$ > ~/.ssh/authorized_keys" $HOST
+  ssh_control_run_as_user root "cat ~/.ssh/authorized_keys | sort | uniq > /tmp/auth_keys_$$ ; cat /tmp/auth_keys_$$ > ~/.ssh/authorized_keys" $HOST
+}
+
+ssh_control_push_key () {
   local HOST=$1
 
   [[ -f ~/.ssh/pubkeys/id_rsa.pub ]] && {
@@ -16,12 +23,46 @@ ssh_control_distribute_admin_key () {
   }
 
   ssh_control_run_as_user cliff "echo '$KEY' >> ~/.ssh/authorized_keys; chmod 644 ~/.ssh/authorized_keys" $HOST
-  ssh_control_run_as_user cliff "cat ~/.ssh/authorized_keys | sort | uniq > /tmp/auth_keys_$$ ; cat /tmp/auth_keys_$$ > ~/.ssh/authorized_keys" $HOST
-  ssh_control_run_as_user cliff "sudo - echo '$KEY' >> ~/.ssh/authorized_keys; chmod 644 ~/.ssh/authorized_keys" $HOST
 
-  # Many systems disallow root login by password, and sudo through ssh is ugly...
-  ssh_control_run_as_user cliff "echo $KEY > /tmp/key_$$; sudo -S cat /root/.ssh/authorized_keys /tmp/key_$$ > /tmp/root_auth_keys_$$; sudo -S mv /tmp/root_auth_keys_$$ /root/.ssh/authorized_keys; sudo -S chmod 644 /root/.ssh/authorized_keys; sudo -S chown root /root/.ssh/authorized_keys" $HOST
-  ssh_control_run_as_user root "cat ~/.ssh/authorized_keys | sort | uniq > /tmp/auth_keys_$$ ; cat /tmp/auth_keys_$$ > ~/.ssh/authorized_keys" $HOST
+  # TEST access to root with key, before committing to sudo entries...
+  OUTPUT=`ssh -o NumberOfPasswordPrompts=0  root@$HOST hostname`
+  [[ $? == 0 ]] || {
+    # Many systems disallow root login by password, and sudo through ssh is ugly...
+    ssh_control_run_as_user cliff "echo $KEY > /tmp/key_$$; sudo -S cat /root/.ssh/authorized_keys /tmp/key_$$ > /tmp/root_auth_keys_$$; sudo -S mv /tmp/root_auth_keys_$$ /root/.ssh/authorized_keys; sudo -S chmod 644 /root/.ssh/authorized_keys; sudo -S chown root /root/.ssh/authorized_keys" $HOST
+  }
+}
+
+ssh_control_distribute_admin_key_these_hosts () {
+  local PIDS="" HOST
+
+  [[ -f ~/.ssh/pubkeys/id_rsa.pub ]] && {
+    local KEY=`cat ~/.ssh/pubkeys/id_rsa.pub`
+  } || {
+    echo "No public key to push!"
+    return 1
+  }
+
+  # This part is serialized, because it requires IO from user
+  for HOST in $@; do
+    echo "Started Key Push for $HOST: $!"
+    ssh_control_push_key $HOST
+  done
+
+  # This can be done in parallel
+  for HOST in $@ now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      ssh_control_uniqify_keys $HOST &
+      PIDS="$PIDS:$!"
+      echo "Started Key Cleanup for $HOST: $!"
+    fi
+  done
 }
 
 
