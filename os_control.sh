@@ -36,7 +36,7 @@ os_control_graceful_stop_these_hosts () {
     else
       local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
       local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-      os_control_graceful_stop $HOST
+      os_control_graceful_stop $HOST &
       PIDS="$PIDS:$!"
       echo "Stopping $HOST..."
     fi
@@ -99,6 +99,25 @@ os_control_boot_info () {
   fi
 
   echo "$BOOTDEV:$INSTALLATION"
+}
+
+os_control_boot_info_these_hosts () {
+  local PIDS="" HOST
+
+  for HOST in $@ now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      echo "$HOST is booted to: $(os_control_boot_info $HOST)" &
+      PIDS="$PIDS:$!"
+      echo "Getting OS Boot Info For $HOST..."
+    fi
+  done
 }
 
 os_control_boot_to_target_installation () {
