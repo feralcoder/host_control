@@ -6,13 +6,12 @@ ilo_power_get_state () {
   local HOST=$1 STATE
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
-  STATE=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power" | grep "server power is currently" | awk -F':' '{print $3}' | tr '\r' ' ' | sed -r 's/[^a-zA-Z]*([a-zA-Z]+)[^a-zA-Z]*/\1/g' )
+  STATE=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power" | grep -i "server power is currently" | awk -F':' '{print $3}' | tr '\r' ' ' | sed -r 's/[^a-zA-Z]*([a-zA-Z]+)[^a-zA-Z]*/\1/g' )
   echo "$HOST is $STATE"
 }
 
 ilo_power_wait_for_off () {
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   local COUNT INTERVAL
   [[ "$2" != "" ]] && COUNT=$2 || COUNT=5
@@ -32,7 +31,6 @@ ilo_power_wait_for_off () {
 
 ilo_power_wait_for_on () {
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   local COUNT INTERVAL
   [[ "$2" != "" ]] && COUNT=$2 || COUNT=5
@@ -59,10 +57,11 @@ ilo_power_off () {
   [[ "$3" != "" ]] && INTERVAL=$3 || INTERVAL=10
 
   local TRIES=3 OUTPUT
+echo ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power off"
   for TRY in `seq 1 $TRIES`; do
     echo "Powering off $HOST (soft)..."
     OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power off")
-    if ( echo $OUTPUT | grep 'powering off\|already off' ) ; then
+    if ( echo $OUTPUT | grep -i 'powering off\|already off' ) ; then
       break # ILO COMMAND WAS DELIVERED - BREAK AND CONTINUE WITH WAITS BELOW
     else
       echo "Failed to send ILO power off command."
@@ -73,7 +72,7 @@ ilo_power_off () {
         echo "Out of tries, ILO not responsive."
         echo "Going straight for IPMI chassis control."
         OUTPUT=$(ipmitool -I lanplus -H $ILO_IP -U stack -f ilo_pass chassis power off)
-        if [[ $(echo "$OUTPUT" | grep 'Down.Off') == "" ]]; then
+        if [[ $(echo "$OUTPUT" | grep -i 'Down.Off') == "" ]]; then
           echo "FAILED to power off $HOST!"
           return 1
         else
@@ -96,7 +95,7 @@ ilo_power_off () {
     else
       echo "$HOST did not hard power off.  Time to use ipmi chassis control!"
       OUTPUT=$(ipmitool -I lanplus -H $ILO_IP -U stack -f ilo_pass chassis power off)
-      if [[ $(echo "$OUTPUT" | grep 'Down.Off') == "" ]]; then
+      if [[ $(echo "$OUTPUT" | grep -i 'Down.Off') == "" ]]; then
         echo "FAILED to power off $HOST!"
         return 1
       else
@@ -120,7 +119,7 @@ ilo_power_on () {
   else
     echo "$HOST did not power on via ILO command.  Turning on via ipmi chassis power on."
     OUTPUT=$(ipmitool -I lanplus -H $ILO_IP -U stack -f ilo_pass chassis power on)
-    if [[ $(echo "$OUTPUT" | grep 'Up.On') == "" ]]; then
+    if [[ $(echo "$OUTPUT" | grep -i 'Up.On') == "" ]]; then
       echo "FAILED to power on $HOST!"
       return 1
     else
@@ -131,7 +130,6 @@ ilo_power_on () {
 
 ilo_power_off_these_hosts () {
   local PIDS="" HOST 
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   for HOST in $@ now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -142,7 +140,6 @@ ilo_power_off_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
       ilo_power_off $HOST &
       PIDS="$PIDS:$!"
       echo "Started Power Off for $HOST: $!"
@@ -151,7 +148,7 @@ ilo_power_off_these_hosts () {
 }
 
 ilo_power_on_these_hosts () {
-  local PIDS="" HOST ILO_IP
+  local PIDS="" HOST
   for HOST in $@ now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -161,7 +158,6 @@ ilo_power_on_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
       ilo_power_on $HOST &
       PIDS="$PIDS:$!"
       echo "Started Power On for $HOST: $!"
@@ -207,7 +203,7 @@ ilo_power_on_all_hosts () {
 
 
 ilo_power_get_state_these_hosts () {
-  local PIDS="" HOST ILO_IP
+  local PIDS="" HOST
   for HOST in $@ now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -217,7 +213,6 @@ ilo_power_get_state_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
       ilo_power_get_state $HOST &
       PIDS="$PIDS:$!"
       echo "Getting power state for $HOST: $!"
