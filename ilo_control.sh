@@ -37,3 +37,28 @@ ilo_control_get_ilo_hostkey_these_hosts () {
     fi
   done
 }
+
+ilo_control_add_user () {
+  local USER=$1 PASS=$2 HOST=$3
+
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+
+  ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l admin "create /map1/accounts1 username=$USER password=$PASS group=admin,config,oemhp_vm,oemhp_rc,oemhp_power"
+}
+
+ilo_control_add_ilo2_user_keys () {
+  local HOST=$1
+
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "oemhp_loadSSHKey /map1/config1/ -source http://192.168.1.82:8080/share/ssh_keys/id_rsa_ilo2_stack_cliff@loki.pub"
+  ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "oemhp_loadSSHKey /map1/config1/ -source http://192.168.1.82:8080/share/ssh_keys/id_rsa_ilo2_admin_cliff@loki.pub"
+}
+
+ilo_control_add_ilo4_user_keys () {
+  local HOST=$1
+
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "oemhp_loadSSHKey /map1/config1/ -source http://192.168.1.82:8080/share/ssh_keys/id_rsa_ilo2.pub"
+  ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "oemhp_loadSSHKey /map1/accounts1/stack/ -source http://192.168.1.82:8080/share/ssh_keys/id_rsa_ilo2.pub"
+  ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "oemhp_loadSSHKey /map1/accounts1/admin/ -source http://192.168.1.82:8080/share/ssh_keys/id_rsa_ilo2.pub"
+}
