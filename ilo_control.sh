@@ -1,6 +1,26 @@
 #!/bin/bash
 
 
+ilo_control_get_hw_gen () {
+  local HOST=$1
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local GENERATION
+
+  local TRY TRIES=5 INTERVAL=10
+  for TRY in `seq 1 $TRIES`; do
+    GENERATION=`ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "show system1 name" | grep "name=" | awk -F'=' '{print $2}' | awk '{print $3}'`
+    [[ $? == "0" ]] && {
+      if [[ $GENERATION == "G6" ]]; then
+        echo 6; return 0
+      elif [[ $GENERATION == "Gen8" ]]; then
+        echo 8; return 0
+      fi
+    }
+    sleep $INTERVAL
+  done
+  return 1
+}
+
 ilo_control_remove_ilo_hostkey () {
   local HOST=$1
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`

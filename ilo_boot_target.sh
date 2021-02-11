@@ -76,6 +76,39 @@ ilo_boot_target_once_ilo4_these_hosts () {
   done
 }
 
+ilo_boot_target_once_these_hosts () {
+  local TARGET=$1 HOSTS=$2
+
+  local PIDS="" HOST
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      GENERATION=`ilo_control_get_hw_gen`
+      [[ $? == 0 ]] && {
+        if [[ "$GENERATION" == "6" ]]; then
+          ilo_boot_target_once_ilo2 $TARGET $HOST &
+          PIDS="$PIDS:$!"
+        elif [[ "$GENERATION" == "8" ]]; then
+          ilo_boot_target_once_ilo4 $TARGET $HOST &
+          PIDS="$PIDS:$!"
+        else
+          echo "Unknown HW Gen $GENERATION for $HOST!"
+          next
+        fi
+        echo "Started Targeted DEV=$TARGET boot for $HOST: $!"
+      } || {
+        echo "Could not get HW Gen for $HOST!"
+      }
+    fi
+  done
+}
+
 
 ilo_boot_target_once_all_hosts () {
   local TARGET=$1
