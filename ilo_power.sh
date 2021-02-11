@@ -57,11 +57,10 @@ ilo_power_off () {
   [[ "$3" != "" ]] && INTERVAL=$3 || INTERVAL=10
 
   local TRIES=3 OUTPUT
-echo ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power off"
   for TRY in `seq 1 $TRIES`; do
     echo "Powering off $HOST (soft)..."
     OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power off")
-    if ( echo $OUTPUT | grep -i 'powering off\|already off' ) ; then
+    if ( OUTPUT=`echo $OUTPUT | grep -i 'power off\|powering off\|already off'` ) ; then
       break # ILO COMMAND WAS DELIVERED - BREAK AND CONTINUE WITH WAITS BELOW
     else
       echo "Failed to send ILO power off command."
