@@ -2,14 +2,14 @@
 
 ilo_control_get_all_names () {
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
   local ILO_NAMES=`grep "$ILO_IP " /etc/hosts | sed 's/^[^ ]*[ ]*//g'`
   echo $ILO_NAMES
 }
 
 ilo_control_get_hw_gen () {
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
   local GENERATION
 
   local TRY TRIES=5 INTERVAL=10
@@ -29,7 +29,7 @@ ilo_control_get_hw_gen () {
 
 ilo_control_remove_ilo_hostkey () {
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
   local ALL_NAMES=`ilo_control_get_all_names $HOST`
   local NAME
   touch ~/.ssh/known_hosts
@@ -43,7 +43,7 @@ ilo_control_get_ilo_hostkey () {
   # TAKES SHORT HOSTNAME - NOT ILO NAMES!
   # If you have ilo names, use ssh_control_get_hostkey instead!
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
   ssh-keyscan -T 30 $ILO_IP >> ~/.ssh/known_hosts
   local OUTPUT
   ( OUTPUT=`grep "$ILO_IP" ~/.ssh/known_hosts` ) || {
@@ -77,7 +77,7 @@ ilo_control_refetch_ilo_hostkey_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+      ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
       ilo_control_get_ilo_hostkey $HOST &
       PIDS="$PIDS:$!"
       echo "Getting host key for $HOST: $!"
@@ -88,7 +88,7 @@ ilo_control_refetch_ilo_hostkey_these_hosts () {
 ilo_control_add_user () {
   local USER=$1 PASS=$2 HOST=$3
 
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l admin "create /map1/accounts1 username=$USER password=$PASS group=admin,config,oemhp_vm,oemhp_rc,oemhp_power"
 }
@@ -96,7 +96,7 @@ ilo_control_add_user () {
 ilo_control_add_ilo2_user_keys () {
   local HOST=$1
 
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
   ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "oemhp_loadSSHKey /map1/config1/ -source http://192.168.1.82:8080/share/ssh_keys/id_rsa_ilo2_stack_cliff@loki.pub"
   ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "oemhp_loadSSHKey /map1/config1/ -source http://192.168.1.82:8080/share/ssh_keys/id_rsa_ilo2_admin_cliff@loki.pub"
 }
@@ -104,7 +104,7 @@ ilo_control_add_ilo2_user_keys () {
 ilo_control_add_ilo4_user_keys () {
   local HOST=$1
 
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
   ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "oemhp_loadSSHKey /map1/config1/ -source http://192.168.1.82:8080/share/ssh_keys/id_rsa_ilo2.pub"
   ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "oemhp_loadSSHKey /map1/accounts1/stack/ -source http://192.168.1.82:8080/share/ssh_keys/id_rsa_ilo2.pub"
   ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "oemhp_loadSSHKey /map1/accounts1/admin/ -source http://192.168.1.82:8080/share/ssh_keys/id_rsa_ilo2.pub"

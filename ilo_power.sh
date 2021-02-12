@@ -4,7 +4,7 @@
 
 ilo_power_get_state () {
   local HOST=$1 STATE
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   STATE=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power" | grep -i "server power is currently" | awk -F':' '{print $3}' | tr '\r' ' ' | sed -r 's/[^a-zA-Z]*([a-zA-Z]+)[^a-zA-Z]*/\1/g' )
   echo "$HOST is $STATE"
@@ -50,7 +50,7 @@ ilo_power_wait_for_on () {
 
 ilo_power_off () {
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   local COUNT INTERVAL
   [[ "$2" != "" ]] && COUNT=$2 || COUNT=5
@@ -107,7 +107,7 @@ ilo_power_off () {
 
 ilo_power_on () {
   local HOST=$1 COUNT
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   local COUNT INTERVAL
   [[ "$2" != "" ]] && COUNT=$2 || COUNT=5

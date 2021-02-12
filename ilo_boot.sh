@@ -4,7 +4,7 @@ DEFAULT_BOOT_ORDER="1:5:2:3:4"
 
 ilo_boot_get_order () {
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   local BOOTS BOOTDEV
   BOOTS=$( echo $(for BOOTDEV in `seq 1 5`; do
@@ -17,7 +17,7 @@ ilo_boot_get_order () {
 ilo_boot_set_order () {
   local HOST ILO_IP BOOT_ORDER
   read HOST BOOT_ORDER <<< `echo $1 | sed 's/:/ /g' | awk '{print $1 " " $1 ":" $2 ":" $3 ":" $4 ":" $5 ":" $6}'`
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
   
   local -a BOOTS=()
   BOOTS=(${BOOT_ORDER//:/ })
@@ -57,7 +57,7 @@ ilo_boot_set_order () {
 
 ilo_boot_set_first_boot () {
   local BOOTDEV=$1 HOST=$2
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   COMPLETED=""
   while [[ $COMPLETED == "" ]]; do
@@ -141,7 +141,7 @@ ilo_boot_set_defaults_all_ilo2_hosts () {
 
 ilo_boot_set_onetimeboot () {
   local TARGET=$1 HOST=$2
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   local GENERATION=`ilo_control_get_hw_gen $HOST`
   [[ $? == 0 ]] && {
@@ -184,7 +184,7 @@ ilo_boot_set_onetimeboot_these_hosts () {
 
 ilo_boot_set_onetimeboot_ipmi () {
   local TARGET=$1 HOST=$2
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   ipmitool -I lanplus -H $ILO_IP -U stack -f ilo_pass chassis bootdev $TARGET
 }
