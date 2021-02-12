@@ -6,14 +6,29 @@
 . ilo_boot_target.sh
 
 
+
+ssh_control_get_password () {
+  local PASSWORD
+
+  read -s -p "Enter Password: " PASSWORD
+  touch /tmp/password_$$
+  chmod 600 /tmp/password_$$
+  echo $PASSWORD > /tmp/password_$$
+  echo /tmp/password_$$
+}
+
+
 ssh_control_uniqify_keys () {
   local HOST=$1
   ssh_control_run_as_user cliff "cat ~/.ssh/authorized_keys | sort | uniq > /tmp/auth_keys_$$ ; cat /tmp/auth_keys_$$ > ~/.ssh/authorized_keys" $HOST
   ssh_control_run_as_user root "cat ~/.ssh/authorized_keys | sort | uniq > /tmp/auth_keys_$$ ; cat /tmp/auth_keys_$$ > ~/.ssh/authorized_keys" $HOST
 }
 
+
 ssh_control_push_key () {
-  local HOST=$1
+  local HOST=$1 PASSFILE=$2
+  local DELETE_PASSFILE=false
+  local REMOTE_PASSFILE=/tmp/$RANDOM
 
   [[ -f ~/.ssh/pubkeys/id_rsa.pub ]] && {
     local KEY=`cat ~/.ssh/pubkeys/id_rsa.pub`
@@ -22,15 +37,30 @@ ssh_control_push_key () {
     return 1
   }
 
-  ssh_control_run_as_user cliff "echo '$KEY' >> ~/.ssh/authorized_keys; chmod 644 ~/.ssh/authorized_keys" $HOST
+  local SSH_SETUP_CMD="[[ -d ~/.ssh/ ]] || ssh-keygen -t dsa -f ~/.ssh/id_rsa -P ''"
+  local AUTH_KEYS_SETUP_CMD="echo '$KEY' >> ~/.ssh/authorized_keys; chmod 644 ~/.ssh/authorized_keys"
+  ssh_control_run_as_user cliff "$SSH_SETUP_CMD; $AUTH_KEYS_SETUP_CMD" $HOST
 
-  # TEST access to root with key, before committing to sudo entries...
-  OUTPUT=`ssh -o NumberOfPasswordPrompts=0  root@$HOST hostname`
+  # TEST access to root with key, before committing to password prompting and sudo
+  TESTROOT=`ssh -o NumberOfPasswordPrompts=0  root@$HOST hostname 2> /dev/null`
   [[ $? == 0 ]] || {
+    # PASSFILE may have been passed to us...
+    [[ $PASSFILE == "" ]] && {
+      PASSFILE=`ssh_control_get_password`
+      # ONLY DELETE it if we created it...
+      DELETE_PASSFILE=true
+    }
+
+    ssh_control_sync_as_user cliff $PASSFILE $REMOTE_PASSFILE $HOST
     # Many systems disallow root login by password, and sudo through ssh is ugly...
-    ssh_control_run_as_user cliff "echo $KEY > /tmp/key_$$; sudo -S cat /root/.ssh/authorized_keys /tmp/key_$$ > /tmp/root_auth_keys_$$; sudo -S mv /tmp/root_auth_keys_$$ /root/.ssh/authorized_keys; sudo -S chmod 644 /root/.ssh/authorized_keys; sudo -S chown root /root/.ssh/authorized_keys" $HOST
+    local SUDO_AUTH_CMD="cat $REMOTE_PASSFILE | sudo -S ls > /dev/null"
+    local AUTH_KEY_SETUP_CMD="echo $KEY | sudo -S su - -c 'tee -a /root/.ssh/authorized_keys' > /dev/null; sudo -S chmod 644 /root/.ssh/authorized_keys; sudo -S chown root /root/.ssh/authorized_keys"
+    ssh_control_run_as_user cliff "$SUDO_AUTH_CMD; $AUTH_KEY_SETUP_CMD; rm $REMOTE_PASSFILE" $HOST
   }
+
+  [[ $DELETE_PASSFILE == "true" ]] && rm $PASSFILE    # Only delete it if we created it...
 }
+
 
 ssh_control_distribute_admin_key_these_hosts () {
   local PIDS="" HOST
@@ -43,10 +73,12 @@ ssh_control_distribute_admin_key_these_hosts () {
   }
 
   # This part is serialized, because it requires IO from user
+  local PASSFILE=`ssh_control_get_password`
   for HOST in $@; do
     echo "Started Key Push for $HOST: $!"
-    ssh_control_push_key $HOST
+    ssh_control_push_key $HOST $PASSFILE
   done
+  rm $PASSFILE
 
   # This can be done in parallel
   for HOST in $@ now_wait; do
@@ -64,6 +96,7 @@ ssh_control_distribute_admin_key_these_hosts () {
     fi
   done
 }
+
 
 ssh_control_get_all_names () {
   local HOST=$1
