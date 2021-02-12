@@ -8,7 +8,21 @@ ilo_boot_get_order () {
 
   local BOOTS BOOTDEV
   BOOTS=$( echo $(for BOOTDEV in `seq 1 5`; do
-    ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "show /system1/bootconfig1/bootsource$BOOTDEV" | grep bootorder | awk -F'=' '{print $2}' | sed  's/.*\([0-9]\).*/\1/g'
+    local COUNT=120 INTERVAL=10 # WAIT FOR UP TO 20 MINUTES!  POST Can Take a While on BIGMEM Machines...
+    local i
+    for i in `seq 1 $COUNT`; do
+      local SSH_CMD="ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack"
+      local ILO_CMD="show /system1/bootconfig1/bootsource$BOOTDEV"
+      local CLEAN_OUTPUT_CMD="grep bootorder | awk -F'=' '{print $2}' | sed  's/.*\([0-9]\).*/\1/g'"
+      local OUTPUT=`$SSH_CMD "$ILO_CMD" | grep bootorder | awk -F'=' '{print $2}' | sed  's/.*\([0-9]\).*/\1/g'`
+      [[ $? == 0 ]] && {
+        echo $OUTPUT
+        break
+      } || {
+        echo "Problem getting bootorder for bootsource$BOOTDEV on $HOST" 1>&2
+        [[ $i < $COUNT ]] && { echo "Retrying in $INTERVAL seconds." 1>&2; sleep $INTERVAL; }
+      }
+    done
   done) | sed 's/ /:/g' )
   echo $HOST:$BOOTS
 }
@@ -146,8 +160,18 @@ ilo_boot_set_onetimeboot () {
       echo "Cannot set onetimeboot for Gen 6 (ILO2) Servers!  Boot $HOST to $TARGET manually. :("
       return 1
     elif [[ "$GENERATION" == "8" ]]; then
-      ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "onetimeboot $TARGET"
-      echo "Setting Onetime Boot to $TARGET for $HOST."
+      local COUNT=120 INTERVAL=10 # WAIT FOR UP TO 20 MINUTES!  POST Can Take a While on BIGMEM Machines...
+      local i
+      for i in `seq 1 $COUNT`; do
+        echo "Setting Onetime Boot to $TARGET for $HOST."
+        ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "onetimeboot $TARGET"
+        [[ $? == 0 ]] && {
+          break
+        } || {
+          echo "Problem setting onetimeboot $TARGET on $HOST" 1>&2
+          [[ $i < $COUNT ]] && { echo "Retrying in $INTERVAL seconds." 1>&2; sleep $INTERVAL; }
+        }
+      done
     else
       echo "Unknown HW Gen $GENERATION for $HOST!"
       return 1
