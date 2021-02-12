@@ -203,3 +203,24 @@ os_control_boot_to_target_installation () {
     return 1
   fi
 }
+
+os_control_boot_to_target_installation_these_hosts () {
+  local TARGET=$1 HOSTS=$2
+  local PIDS="" HOST
+
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      os_control_boot_to_target_installation $TARGET $HOST &
+      PIDS="$PIDS:$!"
+      echo "Booting $HOST to $TARGET.  This may take a while..."
+    fi
+  done
+}
+
