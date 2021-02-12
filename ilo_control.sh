@@ -3,8 +3,8 @@
 ilo_control_get_all_names () {
   local HOST=$1
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
-  local ILONAMES=`grep "$ILO_IP " /etc/hosts | sed 's/^[^ ]*[ ]*//g'`
-  echo $ILONAMES
+  local ILO_NAMES=`grep "$ILO_IP " /etc/hosts | sed 's/^[^ ]*[ ]*//g'`
+  echo $ILO_NAMES
 }
 
 ilo_control_get_hw_gen () {
