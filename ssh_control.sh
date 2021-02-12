@@ -216,7 +216,7 @@ ssh_control_run_as_user () {
   return $CODE
 }
 
-ssh_control_run_as_user_on_these_hosts () {
+ssh_control_run_as_user_these_hosts () {
   local USER=$1 COMMAND=$2 HOSTS=$3
   local HOST
 
@@ -280,5 +280,5 @@ ssh_control_sync_as_user_to_all_hosts () {
 }
 ssh_control_run_as_user_on_all_hosts () {
   local USER=$1 COMMAND=$2
-  ssh_control_run_as_user_on_these_hosts $USER $COMMAND "$ALL_HOSTS"
+  ssh_control_run_as_user_these_hosts $USER $COMMAND "$ALL_HOSTS"
 }
