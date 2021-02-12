@@ -39,8 +39,10 @@ ilo_control_remove_ilo_hostkey () {
 }
 
 ilo_control_get_ilo_hostkey () {
+  # TAKES SHORT HOSTNAME - NOT ILO NAMES!
+  # If you have ilo names, use ssh_control_get_hostkey instead!
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST | awk '{print $1}'`
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
   ssh-keyscan -T 30 $ILO_IP >> ~/.ssh/known_hosts
   local OUTPUT
   ( OUTPUT=`grep "$ILO_IP" ~/.ssh/known_hosts` ) || {
