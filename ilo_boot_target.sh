@@ -2,7 +2,6 @@
 
 ilo_boot_target_once_ilo2 () {
   local TARGET=$1 HOST=$2
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   STATE=$(ilo_power_get_state $HOST | awk '{print $3}')
   [[ $STATE == "Off" ]] || { echo "Server $HOST is ON, Exiting!"; return 1; }

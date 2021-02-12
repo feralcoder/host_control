@@ -12,8 +12,6 @@ DEBUG=true
 
 os_control_graceful_stop () {
   local HOST=$1
-  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   ssh_control_run_as_user root poweroff $HOST
   OUTPUT=`ssh_control_wait_for_host_down $HOST`
@@ -23,7 +21,7 @@ os_control_graceful_stop () {
 }
 
 os_control_graceful_stop_these_hosts () {
-  local PIDS="" HOST HOST_IP ILO_IP
+  local PIDS="" HOST
 
   for HOST in $@ now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -34,8 +32,6 @@ os_control_graceful_stop_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
-      local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
       os_control_graceful_stop $HOST &
       PIDS="$PIDS:$!"
       echo "Stopping $HOST..."
@@ -47,8 +43,6 @@ os_control_graceful_stop_these_hosts () {
 # STATE="BOOTED|IN_BETWEEN|OFF"
 os_control_get_system_state () {
   local HOST=$1
-  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   local LOGIN_STATE STATE RETVAL
   local PWR_STATE=$(ilo_power_get_state $HOST | awk '{print $3}')
@@ -74,8 +68,6 @@ os_control_get_system_state () {
 # RETURN "$BOOTDEV:$INSTALLATION=admin|default"
 os_control_boot_info () {
   local HOST=$1
-  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
   local INSTALLATION HOSTNAME BOOTDEV
   local STATE=$(os_control_get_system_state $HOST)
@@ -123,8 +115,6 @@ os_control_boot_info_these_hosts () {
 os_control_boot_to_target_installation () {
   # $TARGET==[admin|default]
   local HOST=$1 TARGET=$2
-  local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
   
   local OUTPUT
   local OS_BOOT_INFO=`os_control_boot_info $HOST`
