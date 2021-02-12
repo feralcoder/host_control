@@ -168,6 +168,7 @@ ssh_control_wait_for_host_down () {
   local STATE="" INTERVAL=3
   while [[ $STATE != "Off" ]]; do
     STATE=$(ilo_power_get_state $HOST | awk '{print $3}')
+    local COUNT
     for COUNT in `seq 1 3`; do
       [[ $STATE == "Off" ]] && break
       echo "$HOST still powered on, checking again in $INTERVAL seconds..."
