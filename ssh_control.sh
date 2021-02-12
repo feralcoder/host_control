@@ -281,7 +281,7 @@ ssh_control_sync_as_user () {
   echo "$OUTPUT"
 }
 
-ssh_control_sync_as_user_to_these_hosts () {
+ssh_control_sync_as_user_these_hosts () {
   local USER=$1 SOURCE=$2 DEST=$3 HOSTS=$4
   local HOST
 
@@ -311,7 +311,7 @@ ssh_control_wait_for_host_down_all_hosts () {
 
 ssh_control_sync_as_user_to_all_hosts () {
   local USER=$1 SOURCE=$2 DEST=$3
-  ssh_control_sync_as_user_to_these_hosts $USER $SOURCE $DEST "$ALL_HOSTS"
+  ssh_control_sync_as_user_these_hosts $USER $SOURCE $DEST "$ALL_HOSTS"
 }
 ssh_control_run_as_user_on_all_hosts () {
   local USER=$1 COMMAND=$2
