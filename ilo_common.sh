@@ -14,8 +14,12 @@ TERNARY_CONTROL_HOSTS="gnd"
 CONTROL_HOSTS="$PRIMARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $TERNARY_CONTROL_HOSTS"
 COMPUTE_HOSTS="mtn lmn bmn neo"
 
-ALL_HOSTS="manhattan lawnmowerman bowman kerrigan neo strange merlin gandalf yoda dumbledore"
-UNDERCLOUD_HOSTS="kerrigan dumbledore"
-OVERCLOUD_HOSTS="manhattan lawnmowerman bowman neo merlin gandalf strange"
+ALL_HOSTS="mtn lmn bmn kgn neo str mrl gnd yda dmb"
+UNDERCLOUD_HOSTS="kgn dmb"
+OVERCLOUD_HOSTS="mtn lmn bmn neo mrl gnd str"
 
-ALL_HOSTS_MINUS_ADMIN="manhattan lawnmowerman bowman kerrigan neo strange merlin gandalf dumbledore"
+ALL_HOSTS_MINUS_ADMIN="mtn lmn bmn kgn neo str mrl gnd dmb"
+
+
+
+ALL_HOSTS_LONGNAMES="manhattan lawnmowerman bowman kerrigan neo strange merlin gandalf yoda dumbledore"
