@@ -260,7 +260,7 @@ ssh_control_sync_as_user_to_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      ssh_control_sync_as_user $USER $SOURCE $DEST $HOST
+      ssh_control_sync_as_user $USER $SOURCE $DEST $HOST &
       PIDS="$PIDS:$!"
       echo "Syncing $SOURCE to $HOST"
     fi
