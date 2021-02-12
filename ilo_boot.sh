@@ -143,12 +143,27 @@ ilo_boot_set_onetimeboot () {
   local TARGET=$1 HOST=$2
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
 
-  ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "onetimeboot $TARGET"
+  local GENERATION=`ilo_control_get_hw_gen $HOST`
+  [[ $? == 0 ]] && {
+    if [[ "$GENERATION" == "6" ]]; then
+      echo "Cannot set onetimeboot for Gen 6 (ILO2) Servers!  Boot $HOST to $TARGET manually. :("
+      return 1
+    elif [[ "$GENERATION" == "8" ]]; then
+      ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "onetimeboot $TARGET"
+      echo "Setting Onetime Boot to $TARGET for $HOST."
+    else
+      echo "Unknown HW Gen $GENERATION for $HOST!"
+      return 1
+    fi
+  } || {
+    echo "Could not get HW Gen for $HOST!"
+  }
+
 }
 
 ilo_boot_set_onetimeboot_these_hosts () {
   local TARGET=$1 HOSTS=$2
-  local HOST PIDS="" GENERATION
+  local HOST PIDS=""
 
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -159,22 +174,9 @@ ilo_boot_set_onetimeboot_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      GENERATION=`ilo_control_get_hw_gen $HOST`
-      [[ $? == 0 ]] && {
-        if [[ "$GENERATION" == "6" ]]; then
-          echo "Cannot set onetimeboot for Gen 6 (ILO2) Servers!  Boot $HOST to $TARGET manually. :("
-          continue
-        elif [[ "$GENERATION" == "8" ]]; then
-          ilo_boot_set_onetimeboot $TARGET $HOST &
-          PIDS="$PIDS:$!"
-        else
-          echo "Unknown HW Gen $GENERATION for $HOST!"
-          continue
-        fi
-        echo "Setting Onetime Boot to $TARGET for $HOST: $!"
-      } || {
-        echo "Could not get HW Gen for $HOST!"
-      }
+      ilo_boot_set_onetimeboot $TARGET $HOST &
+      PIDS="$PIDS:$!"
+      echo "Trying to set onetimeboot for $HOST: $!"
     fi
   done
 }
