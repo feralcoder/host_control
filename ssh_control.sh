@@ -111,6 +111,7 @@ ssh_control_remove_hostkey () {
   local HOST_IP=`getent hosts $HOST | awk '{print $1}'`
   local ALL_NAMES=`ssh_control_get_all_names $HOST`
   local NAME
+  touch ~/.ssh/known_hosts
   for NAME in $ALL_NAMES; do
     ssh-keygen -R $NAME
   done

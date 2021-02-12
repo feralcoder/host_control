@@ -32,6 +32,7 @@ ilo_control_remove_ilo_hostkey () {
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
   local ALL_NAMES=`ilo_control_get_all_names $HOST`
   local NAME
+  touch ~/.ssh/known_hosts
   for NAME in $ALL_NAMES; do
     ssh-keygen -R $NAME
   done
