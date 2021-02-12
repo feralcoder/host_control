@@ -189,43 +189,6 @@ ilo_power_cycle_these_hosts () {
   done
 }
 
-ilo_power_off_all_ilo2_hosts () {
-  ilo_power_off_these_hosts $ILO2_HOSTS
-}
-ilo_power_off_all_ilo4_hosts () {
-  ilo_power_off_these_hosts $ILO2_HOSTS
-}
-ilo_power_off_all_hosts () {
-  local PID_ILO2 PID_ILO4
-  ilo_power_off_these_hosts $ILO2_HOSTS &
-  PID_ILO2="$!"
-  echo "Started Power On for ILO2 Servers: $PID_ILO2"
-  ilo_power_off_these_hosts $ILO4_HOSTS &
-  PID_ILO4="$!"
-  echo "Started Power On for ILO4 Servers: $PID_ILO4"
-  wait $PID_ILO2
-  wait $PID_ILO4
-}
-ilo_power_on_all_ilo2_hosts () {
-  ilo_power_on_these_hosts $ILO2_HOSTS
-}
-ilo_power_on_all_ilo4_hosts () {
-  ilo_power_on_these_hosts $ILO4_HOSTS
-}
-ilo_power_on_all_hosts () {
-  local PID_ILO2 PID_ILO4
-  ilo_power_on_these_hosts $ILO2_HOSTS &
-  PID_ILO2="$!"
-  echo "Started Power On for ILO2 Servers: $PID_ILO2"
-  ilo_power_on_these_hosts $ILO4_HOSTS &
-  PID_ILO4="$!"
-  echo "Started Power On for ILO4 Servers: $PID_ILO4"
-  wait $PID_ILO2
-  wait $PID_ILO4
-}
-
-
-
 ilo_power_get_state_these_hosts () {
   local PIDS="" HOST
   for HOST in $@ now_wait; do
@@ -242,14 +205,4 @@ ilo_power_get_state_these_hosts () {
       echo "Getting power state for $HOST: $!"
     fi
   done
-}
-ilo_power_get_state_all_ilo2_hosts () {
-  ilo_power_get_state_these_hosts $ILO2_HOSTS
-}
-ilo_power_get_state_all_ilo4_hosts () {
-  ilo_power_get_state_these_hosts $ILO4_HOSTS
-}
-ilo_power_get_state_all_hosts () {
-  echo "Getting Power State For All Hosts."
-  ilo_power_get_state_these_hosts $ILO2_HOSTS $ILO4_HOSTS
 }
