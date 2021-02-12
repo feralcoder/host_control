@@ -88,7 +88,7 @@ ilo_boot_target_once_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      GENERATION=`ilo_control_get_hw_gen`
+      GENERATION=`ilo_control_get_hw_gen $HOST`
       [[ $? == 0 ]] && {
         if [[ "$GENERATION" == "6" ]]; then
           ilo_boot_target_once_ilo2 $TARGET $HOST &

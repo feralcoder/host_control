@@ -139,6 +139,45 @@ ilo_boot_set_defaults_all_ilo2_hosts () {
   ilo_boot_set_defaults_these_hosts $ILO2_HOSTS
 }
 
+ilo_boot_set_onetimeboot () {
+  local TARGET=$1 HOST=$2
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+
+  ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "onetimeboot $TARGET"
+}
+
+ilo_boot_set_onetimeboot_these_hosts () {
+  local TARGET=$1 HOSTS=$2
+  local HOST PIDS="" GENERATION
+
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      GENERATION=`ilo_control_get_hw_gen $HOST`
+      [[ $? == 0 ]] && {
+        if [[ "$GENERATION" == "6" ]]; then
+          echo "Cannot set onetimeboot for Gen 6 (ILO2) Servers!  Boot $HOST to $TARGET manually. :("
+          next
+        elif [[ "$GENERATION" == "8" ]]; then
+          ilo_boot_set_onetimeboot $TARGET $HOST &
+          PIDS="$PIDS:$!"
+        else
+          echo "Unknown HW Gen $GENERATION for $HOST!"
+          next
+        fi
+        echo "Setting Onetime Boot to $TARGET for $HOST: $!"
+      } || {
+        echo "Could not get HW Gen for $HOST!"
+      }
+    fi
+  done
+}
 
 
 ilo_boot_set_onetimeboot_ipmi () {
