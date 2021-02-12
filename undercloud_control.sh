@@ -89,7 +89,7 @@ undercloud_control_restore () {
 
   local NOW=`date +%Y%m%d-%H%M`
 
-  os_control_boot_to_target_installation $HOST "admin"
+  os_control_boot_to_target_installation admin $HOST
   if [[ $? != 0 ]]; then
     echo "Failed to boot $HOST to ADMIN!"
     return 1
@@ -104,7 +104,7 @@ undercloud_control_restore () {
   ssh_control_sync_as_user root /tmp/restore_output_$$.log /root/restore_output_$NOW.log dmb
  
   if [[ $FINAL_TARGET == "default" ]]; then
-    os_control_boot_to_target_installation $HOST "default"
+    os_control_boot_to_target_installation default $HOST
     if [[ $? != 0 ]]; then
       echo "Failed to boot $HOST to DEFAULT!"
       return 1
@@ -123,7 +123,7 @@ undercloud_control_backup () {
 
   local NOW=`date +%Y%m%d-%H%M`
 
-  os_control_boot_to_target_installation $HOST "admin"
+  os_control_boot_to_target_installation admin $HOST
   if [[ $? != 0 ]]; then
     echo "Failed to boot $HOST to ADMIN!"
     return 1
@@ -139,7 +139,7 @@ undercloud_control_backup () {
 
 
   if [[ $FINAL_TARGET == "default" ]]; then
-    os_control_boot_to_target_installation $HOST "default"
+    os_control_boot_to_target_installation default $HOST
     if [[ $? != 0 ]]; then
       echo "Failed to boot $HOST to DEFAULT!"
       return 1
