@@ -1,5 +1,11 @@
 #!/bin/bash
 
+ilo_control_get_all_names () {
+  local HOST=$1
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ILONAMES=`grep "$ILO_IP " /etc/hosts | sed 's/^[^ ]*[ ]*//g'`
+  echo $ILONAMES
+}
 
 ilo_control_get_hw_gen () {
   local HOST=$1
@@ -24,19 +30,37 @@ ilo_control_get_hw_gen () {
 ilo_control_remove_ilo_hostkey () {
   local HOST=$1
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
+  local ALL_NAMES=`ilo_control_get_all_names $HOST`
+  local NAME
+  for NAME in $ALL_NAMES; do
+    ssh-keygen -R $NAME
+  done
   ssh-keygen -R $ILO_IP
 }
 
 ilo_control_get_ilo_hostkey () {
+  local HOST=$1
+  local ILO_IP=`getent hosts $HOST | awk '{print $1}'`
   ssh-keyscan -T 30 $ILO_IP >> ~/.ssh/known_hosts
   local OUTPUT
   ( OUTPUT=`grep "$ILO_IP" ~/.ssh/known_hosts` ) || {
     echo "Failed to retrieve ipmi host key for $HOST!"
     return 1
   }
+
+  local ALL_ILO_NAMES=`ilo_control_get_all_names $HOST`
+  local NAME
+  for NAME in $ALL_ILO_NAMES; do
+    ssh-keyscan -T 30 $NAME >> ~/.ssh/known_hosts
+    ( OUTPUT=`grep "$NAME" ~/.ssh/known_hosts` ) || {
+      echo "Failed to retrieve host key for $NAME!"
+      return 1
+    }
+  done
 }
 
-ilo_control_get_ilo_hostkey_these_hosts () {
+
+ilo_control_refetch_ilo_hostkey_these_hosts () {
   local PIDS="" HOST ILO_IP
   for HOST in $@; do
     ilo_control_remove_ilo_hostkey $HOST
