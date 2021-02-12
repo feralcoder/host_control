@@ -32,7 +32,7 @@ ilo_boot_set_order () {
   local HOST ILO_IP BOOT_ORDER
   read HOST BOOT_ORDER <<< `echo $1 | sed 's/:/ /g' | awk '{print $1 " " $1 ":" $2 ":" $3 ":" $4 ":" $5 ":" $6}'`
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
-  
+
   local -a BOOTS=()
   BOOTS=(${BOOT_ORDER//:/ })
 
@@ -52,7 +52,7 @@ ilo_boot_set_order () {
               echo "$HOST Nonpositive error?  Retrying..."
               echo "$OUTPUT"
             else
-              echo "$HOST UNKNOWN ERROR, EXITING!!!"
+              echo "$HOST UNKNOWN ERROR: STATUS_TAG=$STATUS_TAG, EXITING!!!"
               echo "$OUTPUT"
               return
             fi
@@ -86,7 +86,7 @@ ilo_boot_set_first_boot () {
           echo "$HOST Nonpositive error?  Retrying..."
           echo "$OUTPUT"
         else
-          echo "$HOST UNKNOWN ERROR, EXITING!!!"
+          echo "$HOST UNKNOWN ERROR: STATUS_TAG=$STATUS_TAG, EXITING!!!"
           echo "$OUTPUT"
           return
         fi
