@@ -14,11 +14,11 @@ ilo_control_get_hw_gen () {
 
   local TRY TRIES=5 INTERVAL=10
   for TRY in `seq 1 $TRIES`; do
-    GENERATION=`ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "show system1 name" | grep "name=" | awk -F'=' '{print $2}' | awk '{print $3}'`
+    GENERATION=`ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "show system1 name" | grep "name=" | tr '\r' ' ' | awk -F'=' '{print $2}' | awk '{print $3}'`
     [[ $? == "0" ]] && {
-      if [[ $GENERATION == "G6" ]]; then
+      if [[ $GENERATION == G6 ]]; then
         echo 6; return 0
-      elif [[ $GENERATION == "Gen8" ]]; then
+      elif [[ $GENERATION == Gen8 ]]; then
         echo 8; return 0
       fi
     }
