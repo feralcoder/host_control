@@ -133,7 +133,3 @@ mount_all_boots
 set_all_grub_nocrossboot
 fix_grub
 restore_all_other_grub
-<<<<<<< HEAD
-
-=======
->>>>>>> 009a449... Grub-fixing scripts
