@@ -98,7 +98,7 @@ ilo_boot_target_once_these_hosts () {
           PIDS="$PIDS:$!"
         else
           echo "Unknown HW Gen $GENERATION for $HOST!"
-          next
+          continue
         fi
         echo "Started Targeted DEV=$TARGET boot for $HOST: $!"
       } || {

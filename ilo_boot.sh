@@ -163,13 +163,13 @@ ilo_boot_set_onetimeboot_these_hosts () {
       [[ $? == 0 ]] && {
         if [[ "$GENERATION" == "6" ]]; then
           echo "Cannot set onetimeboot for Gen 6 (ILO2) Servers!  Boot $HOST to $TARGET manually. :("
-          next
+          continue
         elif [[ "$GENERATION" == "8" ]]; then
           ilo_boot_set_onetimeboot $TARGET $HOST &
           PIDS="$PIDS:$!"
         else
           echo "Unknown HW Gen $GENERATION for $HOST!"
-          next
+          continue
         fi
         echo "Setting Onetime Boot to $TARGET for $HOST: $!"
       } || {
