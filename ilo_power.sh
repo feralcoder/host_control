@@ -104,6 +104,7 @@ ilo_power_off () {
   fi
 }
 
+
 ilo_power_on () {
   local HOST=$1 COUNT
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}'`
@@ -126,6 +127,7 @@ ilo_power_on () {
     fi
   fi
 }
+
 
 ilo_power_off_these_hosts () {
   local PIDS="" HOST 
