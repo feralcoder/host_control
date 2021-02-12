@@ -1,8 +1,5 @@
 #!/bin/bash -x
-echo "$2"
-SOURCE="${BASH_SOURCE[0]}"
-echo $(dirname $SOURCE)
-
+CONTROL_SOURCE="${BASH_SOURCE[0]}"
 
 # Run only this file to include the others:
 . ilo_common.sh
@@ -15,5 +12,3 @@ echo $(dirname $SOURCE)
 . os_control.sh  
 . undercloud_control.sh
 . stack_control.sh  
-
-echo $my_dir
