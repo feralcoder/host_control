@@ -54,8 +54,9 @@ ssh_control_push_key () {
     ssh_control_sync_as_user cliff $PASSFILE $REMOTE_PASSFILE $HOST
     # Many systems disallow root login by password, and sudo through ssh is ugly...
     local SUDO_AUTH_CMD="cat $REMOTE_PASSFILE | sudo -S ls > /dev/null"
+    local SSH_SETUP_CMD="sudo -S su - -c '[[ -d ~/.ssh/ ]] || ssh-keygen -t dsa -f ~/.ssh/id_rsa -P \"\"'"
     local AUTH_KEY_SETUP_CMD="echo $KEY | sudo -S su - -c 'tee -a /root/.ssh/authorized_keys' > /dev/null; sudo -S chmod 644 /root/.ssh/authorized_keys; sudo -S chown root /root/.ssh/authorized_keys"
-    ssh_control_run_as_user cliff "$SUDO_AUTH_CMD; $AUTH_KEY_SETUP_CMD; rm $REMOTE_PASSFILE" $HOST
+    ssh_control_run_as_user cliff "$SUDO_AUTH_CMD; $SSH_SETUP_CMD; $AUTH_KEY_SETUP_CMD; rm $REMOTE_PASSFILE" $HOST
   }
 
   [[ $DELETE_PASSFILE == "true" ]] && rm $PASSFILE    # Only delete it if we created it...
