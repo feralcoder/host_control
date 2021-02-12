@@ -131,12 +131,9 @@ ilo_boot_set_defaults_these_hosts () {
   done
 }
 
-ilo_boot_set_defaults_all_hosts () {
-  ilo_boot_set_defaults_these_hosts $ILO2_HOSTS $ILO4_HOSTS
-}
-
-ilo_boot_set_defaults_all_ilo2_hosts () {
-  ilo_boot_set_defaults_these_hosts $ILO2_HOSTS
+ilo_boot_set_defaults () {
+  local HOST=$1
+  ilo_boot_set_defaults_these_hosts $HOST
 }
 
 ilo_boot_set_onetimeboot () {
@@ -208,21 +205,6 @@ ilo_boot_set_onetimeboot_ipmi_these_hosts () {
   done
 }
 
-
-ilo_boot_set_onetimeboot_ipmi_all_hosts () {
-  local TARGET=$1
-  ilo_boot_set_onetimeboot_ipmi_these_hosts $TARGET "$ILO2_HOSTS $ILO4_HOSTS"
-}
-
-ilo_boot_set_onetimeboot_ipmi_all_ilo4_hosts () {
-  local TARGET=$1
-  ilo_boot_set_onetimeboot_ipmi_these_hosts $TARGET "$ILO4_HOSTS"
-}
-
-ilo_boot_set_onetimeboot_ipmi_all_ilo2_hosts () {
-  local TARGET=$1
-  ilo_boot_set_onetimeboot_ipmi_these_hosts $TARGET "$ILO2_HOSTS"
-}
 
 ilo_boot_get_order_these_hosts () {
   local PIDS="" HOST PID
