@@ -40,6 +40,16 @@ restore_all_other_grub () {
   done
 }
 
+fix_timeout () {
+#  Don't change default in /etc/, for now...
+#  cat /etc/default/grub | sed "s/GRUB_TIMEOUT=.*/GRUB_TIMEOUT=$TIMEOUT/g" > /tmp/grub_$$ && cat /tmp/grub_$$ > /etc/default/grub
+
+  ## DON'T REGENERATE grub.cfg, EDIT IN PLACE FOR SAFEST CHANGE
+  # grub2-mkconfig -o /boot/grub2/grub.cfg
+  cat /boot/grub2/grub.cfg | sed -r "s/set timeout=-*[0-9]+/set timeout=$TIMEOUT/g" > /tmp/grub.cfg_$$
+  cat /tmp/grub.cfg_$$ > /boot/grub2/grub.cfg
+}
+
 fix_grub () {
   # IN CASE CURRENT ROOT/BOOT MOUNTS ARE MISMATCHED...  USE xxx_boot TO SET xxx_root.
   BOOT_DRIVE=`mount | grep "/boot " | awk '{print $1}' | sed 's/[0-9]*$//g'`
@@ -91,14 +101,13 @@ EOF
       cat loader/entries/$i | sed "s/title .*CentOS/title $ROOT_LABEL CentOS/g" > /tmp/${i}_$$ && cp /tmp/${i}_$$ loader/entries/$i
   done
 
-
-  # UPDATE GRUB: SELF-BOOT, NO_TIMEOUT
+  # UPDATE GRUB: SELF-BOOT
   cp -f /etc/default/grub /etc/default/grub.orig
-  cat /etc/default/grub | sed "s/GRUB_DEFAULT=saved/GRUB_DEFAULT=0/g" | sed "s/set timeout=-*[0-9]+/set timeout=$TIMEOUT/g" | sed "s/ resume=.*/ noresume\"/g" > /tmp/grub_$$ && cat /tmp/grub_$$ > /etc/default/grub
+  cat /etc/default/grub | sed "s/GRUB_DEFAULT=saved/GRUB_DEFAULT=0/g" | sed "s/ resume=.*/ noresume\"/g" > /tmp/grub_$$ && cat /tmp/grub_$$ > /etc/default/grub
   cp -f /boot/grub2/grub.cfg /boot/grub2/grub.cfg-orig
 
   grub2-mkconfig -o /boot/grub2/grub.cfg
-
+  fix_timeout
 
   # REMOVE hint-bios, hint-efi
   cat grub2/grub.cfg | sed 's/--hint-[^ ]*/ /g' > /tmp/grub.cfg_$$ && cat /tmp/grub.cfg_$$ > grub2/grub.cfg
@@ -124,4 +133,7 @@ mount_all_boots
 set_all_grub_nocrossboot
 fix_grub
 restore_all_other_grub
+<<<<<<< HEAD
 
+=======
+>>>>>>> 009a449... Grub-fixing scripts
