@@ -128,6 +128,11 @@ ilo_power_on () {
   fi
 }
 
+ilo_power_cycle () {
+  local HOST=$1
+  ilo_power_off $HOST
+  ilo_power_on $HOST
+}
 
 ilo_power_off_these_hosts () {
   local PIDS="" HOST 
@@ -162,6 +167,24 @@ ilo_power_on_these_hosts () {
       ilo_power_on $HOST &
       PIDS="$PIDS:$!"
       echo "Started Power On for $HOST: $!"
+    fi
+  done
+}
+
+ilo_power_cycle_these_hosts () {
+  local PIDS="" HOST
+  for HOST in $@ now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      ilo_power_cycle $HOST &
+      PIDS="$PIDS:$!"
+      echo "Started Power Cycle for $HOST: $!"
     fi
   done
 }
