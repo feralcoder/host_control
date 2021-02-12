@@ -35,45 +35,7 @@ ilo_boot_target_once_ilo4 () {
   ilo_power_on $HOST
 }
 
-ilo_boot_target_once_ilo2_these_hosts () {
-  local TARGET=$1 HOSTS=$2
 
-  local PIDS="" HOST
-  for HOST in $HOSTS now_wait; do
-    if [[ $HOST == "now_wait" ]]; then
-      PIDS=`echo $PIDS | sed 's/^://g'`
-      local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
-        echo "Return code for PID $PID: $?"
-      done
-    else
-      ilo_boot_target_once_ilo2 $TARGET $HOST &
-      PIDS="$PIDS:$!"
-      echo "Started Targeted DEV=$TARGET boot for $HOST: $!"
-    fi
-  done
-}
-
-ilo_boot_target_once_ilo4_these_hosts () {
-  local TARGET=$1 HOSTS=$2
-
-  local PIDS="" HOST
-  for HOST in $HOSTS now_wait; do
-    if [[ $HOST == "now_wait" ]]; then
-      PIDS=`echo $PIDS | sed 's/^://g'`
-      local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
-        echo "Return code for PID $PID: $?"
-      done
-    else
-      ilo_boot_target_once_ilo4 $TARGET $HOST &
-      PIDS="$PIDS:$!"
-      echo "Started Targeted DEV=$TARGET boot for $HOST: $!"
-    fi
-  done
-}
 
 ilo_boot_target_once_these_hosts () {
   local TARGET=$1 HOSTS=$2
@@ -106,19 +68,4 @@ ilo_boot_target_once_these_hosts () {
       }
     fi
   done
-}
-
-
-ilo_boot_target_once_all_hosts () {
-  local TARGET=$1
-
-  local PID_ILO2 PID_ILO4
-  ilo_boot_target_once_ilo2_these_hosts $TARGET "$ILO2_HOSTS" &
-  PID_ILO2="$!"
-  echo "Started Targeted DEV=$TARGET Boot for ILO2 Servers: $PID_ILO2"
-  ilo_boot_target_once_ilo4_these_hosts $TARGET "$ILO4_HOSTS" &
-  PID_ILO4="$!"
-  echo "Started Targeted DEV=$TARGET Boot for ILO4 Servers: $PID_ILO4"
-  wait $PID_ILO2
-  wait $PID_ILO4
 }
