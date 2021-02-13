@@ -31,7 +31,16 @@ ilo_boot_target_once_ilo4 () {
       ;;
   esac
       
-  OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "onetimeboot $target")
+  local i COUNT=120 INTERVAL=10
+  for i in `seq 1 $COUNT`; do
+    local OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "onetimeboot $target")
+    [[ $? == 0 ]] && {
+      break
+    } || {
+      echo "Problem setting onetimeboot to $target on $HOST" 1>&2
+      [[ $i < $COUNT ]] && { echo "Retrying in $INTERVAL seconds." 1>&2; sleep $INTERVAL; }
+    }
+  done
   ilo_power_on $HOST
 }
 
