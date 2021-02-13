@@ -8,7 +8,6 @@
 . ssh_control.sh
 
 SYSTEM_ILO=2
-DEBUG=true
 
 os_control_graceful_stop () {
   local HOST=$1

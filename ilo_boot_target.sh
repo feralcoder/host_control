@@ -6,11 +6,22 @@ ilo_boot_target_once_ilo2 () {
   STATE=$(ilo_power_get_state $HOST | awk '{print $3}')
   [[ $STATE == "Off" ]] || { echo "Server $HOST is ON, Exiting!"; return 1; }
 
-  local ORIG_BOOTS=`ilo_boot_get_order $HOST `
+  local ORIG_BOOTS=`ilo_boot_get_order $HOST`
+  [[ $DEBUG == "" ]] || echo "IN boot_target_once_ilo2 $TARGET $HOST.  Orig boot order: $ORIG_BOOTS" 1>&2
   ilo_boot_set_first_boot $TARGET $HOST
+  [[ $DEBUG == "" ]] || {
+    echo "DEBUG: Just set first boot to $TARGET, getting order now..." 1>&2
+    local CURRENT_BOOTS=`ilo_boot_get_order $HOST`
+    echo "DEBUG: CURRENT_BOOTS: $CURRENT_BOOTS" 1>&2
+  }
   ilo_power_on $HOST
   sleep 10
   ilo_boot_set_order $ORIG_BOOTS
+  [[ $DEBUG == "" ]] || {
+    echo "DEBUG: Just reset order to $ORIG_BOOTS, getting order now..." 1>&2
+    local CURRENT_BOOTS=`ilo_boot_get_order $HOST`
+    echo "DEBUG: CURRENT_BOOTS: $CURRENT_BOOTS" 1>&2
+  }
 }
 
 
@@ -31,17 +42,12 @@ ilo_boot_target_once_ilo4 () {
       ;;
   esac
       
-  local i COUNT=120 INTERVAL=10
-  for i in `seq 1 $COUNT`; do
-    local OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "onetimeboot $target")
-    [[ $? == 0 ]] && {
-      break
-    } || {
-      echo "Problem setting onetimeboot to $target on $HOST" 1>&2
-      [[ $i < $COUNT ]] && { echo "Retrying in $INTERVAL seconds." 1>&2; sleep $INTERVAL; }
-    }
-  done
+  local ILO_COMMAND="onetimeboot $target"
+  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_boot_target_once_ilo4`
+  [[ $? == 0 ]] || echo "Problem setting onetimeboot to $target on $HOST" 1>&2
+
   ilo_power_on $HOST
+  [[ $? == 0 ]] && echo "$HOST is onetimebooting to $target" 1>&2 || echo "Problem powering on $HOST" 1>&2
 }
 
 

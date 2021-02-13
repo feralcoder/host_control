@@ -2,31 +2,28 @@
 
 DEFAULT_BOOT_ORDER="1:5:2:3:4"
 
+
 ilo_boot_get_order () {
   local HOST=$1
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   local BOOTS BOOTDEV
   BOOTS=$( echo $(for BOOTDEV in `seq 1 5`; do
-    local COUNT=120 INTERVAL=10 # WAIT FOR UP TO 20 MINUTES!  POST Can Take a While on BIGMEM Machines...
-    local i
-    for i in `seq 1 $COUNT`; do
-      local SSH_CMD="ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack"
-      local ILO_CMD="show /system1/bootconfig1/bootsource$BOOTDEV"
-      local CLEAN_OUTPUT_CMD="grep bootorder | awk -F'=' '{print $2}' | sed  's/.*\([0-9]\).*/\1/g'"
-      local OUTPUT=`$SSH_CMD "$ILO_CMD" | grep bootorder | awk -F'=' '{print $2}' | sed  's/.*\([0-9]\).*/\1/g'`
-      [[ $? == 0 ]] && {
-        echo $OUTPUT
-        break
-      } || {
-        echo "Problem getting bootorder for bootsource$BOOTDEV on $HOST" 1>&2
-        [[ $i < $COUNT ]] && { echo "Retrying in $INTERVAL seconds." 1>&2; sleep $INTERVAL; }
-      }
-    done
+    local ILO_COMMAND="show /system1/bootconfig1/bootsource$BOOTDEV"
+    local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_boot_get_order`
+    ILO_COMMAND_STATUS=$?
+    
+    if [[ $ILO_COMMAND_STATUS == 0 ]]; then
+      [[ $DEBUG == "" ]] || echo "$OUTPUT" 1>&2
+      local ORDER=$(echo "$OUTPUT" | grep bootorder | awk -F'=' '{print $2}' | sed  's/.*\([0-9]\).*/\1/g')
+      echo $ORDER
+      continue
+    else
+      echo "Problem getting bootorder for bootsource$BOOTDEV on $HOST" 1>&2
+    fi
   done) | sed 's/ /:/g' )
   echo $HOST:$BOOTS
 }
-
 
 ilo_boot_set_order () {
   local HOST ILO_IP BOOT_ORDER
@@ -35,35 +32,25 @@ ilo_boot_set_order () {
 
   local -a BOOTS=()
   BOOTS=(${BOOT_ORDER//:/ })
+  [[ $DEBUG == "" ]] || {
+    echo "DEBUG: in ilo_boot_set_order: BOOTS SPLIT FROM $BOOT_ORDER:" 1>&2
+    echo "DEBUG: in ilo_boot_set_order: ${BOOTS[1]} ${BOOTS[2]} ${BOOTS[3]} ${BOOTS[4]} ${BOOTS[5]}" 1>&2
+  }
 
-  local BOOTPOSITION DEVICE OUTPUT IN_POST COMPLETED STATUS_TAG
+
+  local BOOTPOSITION DEVICE OUTPUT IN_POST COMPLETED STATUS_TAG ERROR_TAG
   for BOOTPOSITION in `seq 1 5`; do for DEVICE in `seq 1 5`; do
-    COMPLETED=""
     if [[ ${BOOTS[$DEVICE]} == $BOOTPOSITION ]]; then
-      while [[ $COMPLETED == "" ]]; do
-        OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "set /system1/bootconfig1/bootsource$DEVICE bootorder=$BOOTPOSITION" | tr '\r' '\n')
-        COMPLETED=$(echo "$OUTPUT" | grep "status_tag=COMMAND COMPLETED")
-        STATUS_TAG=$(echo "$OUTPUT" | grep "status_tag")
-        IN_POST=$(echo "$OUTPUT" | grep "unable to set boot orders until system completes POST.")
-        if [[ $COMPLETED == "" ]] ; then
-          if [[ $IN_POST == "" ]] ; then
-            if [[ $STATUS_TAG == "" ]] ; then
-              # this is possibly an SSH glitch, not positive unidentified error...
-              echo "$HOST Nonpositive error?  Retrying..."
-              echo "$OUTPUT"
-            else
-              echo "$HOST UNKNOWN ERROR: STATUS_TAG=$STATUS_TAG, EXITING!!!"
-              echo "$OUTPUT"
-              return
-            fi
-          else
-            echo "Server $HOST is in POST, retrying in 10 seconds..."
-            sleep 10
-          fi
-        else
-          echo "Set $HOST BootDev:$DEVICE=$BOOTPOSITION"
-        fi
-      done
+
+      local ILO_COMMAND="set /system1/bootconfig1/bootsource$DEVICE bootorder=$BOOTPOSITION"
+      local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_boot_set_order`
+      ILO_COMMAND_STATUS=$?
+      
+      if [[ $ILO_COMMAND_STATUS == 0 ]]; then
+        echo "Done setting $HOST BootDev:$DEVICE=$BOOTPOSITION"
+      else
+        echo "ERROR Condition encountered setting bootsource$BOOTPOSITION on $HOST!!!"
+      fi
     fi
   done; done
 }
@@ -73,34 +60,46 @@ ilo_boot_set_first_boot () {
   local BOOTDEV=$1 HOST=$2
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
-  COMPLETED=""
-  while [[ $COMPLETED == "" ]]; do
-    OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "set /system1/bootconfig1/bootsource$BOOTDEV bootorder=1" | tr '\r' '\n')
-    COMPLETED=$(echo "$OUTPUT" | grep "status_tag=COMMAND COMPLETED")
-    STATUS_TAG=$(echo "$OUTPUT" | grep "status_tag")
-    IN_POST=$(echo $OUTPUT | grep "unable to set boot orders until system completes POST.")
-    if [[ $COMPLETED == "" ]] ; then
-      if [[ $IN_POST == "" ]] ; then
-        if [[ $STATUS_TAG == "" ]] ; then
-          # this is possibly an SSH glitch, not positive unidentified error...
-          echo "$HOST Nonpositive error?  Retrying..."
-          echo "$OUTPUT"
-        else
-          echo "$HOST UNKNOWN ERROR: STATUS_TAG=$STATUS_TAG, EXITING!!!"
-          echo "$OUTPUT"
-          return
-        fi
-      else
-        echo "Server $HOST is in POST, retrying in 10 seconds..."
-        sleep 10
-      fi
-    else
-      echo "Set $HOST BootDev:$BOOTDEV=1"
-    fi
-  done
+  local ILO_COMMAND="set /system1/bootconfig1/bootsource$BOOTDEV bootorder=1"
+  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_boot_set_first_boot`
+  ILO_COMMAND_STATUS=$?
+  
+  if [[ $ILO_COMMAND_STATUS == 0 ]]; then
+    echo "Set $HOST BootDev:$BOOTDEV=1"
+  else
+    echo "Problem setting bootsource$BOOTDEV=1 on $HOST!!!"
+  fi
 }
 
+ilo_boot_set_onetimeboot () {
+  local TARGET=$1 HOST=$2
+  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
+  local GENERATION=`ilo_control_get_hw_gen $HOST`
+  local ILO_COMMAND_STATUS ILO_COMMAND OUTPUT
+  [[ $? == 0 ]] && {
+    if [[ "$GENERATION" == "6" ]]; then
+      echo "Cannot set onetimeboot for Gen 6 (ILO2) Servers!  Boot $HOST to $TARGET manually. :("
+      return 1
+    elif [[ "$GENERATION" == "8" ]]; then
+      echo "Setting Onetime Boot to $TARGET for $HOST."
+      ILO_COMMAND="onetimeboot $TARGET"
+      OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_boot_set_onetimeboot`
+      ILO_COMMAND_STATUS=$?
+    else
+      echo "Unknown HW Gen $GENERATION for $HOST!"
+      return 1
+    fi
+
+    if [[ $ILO_COMMAND_STATUS == 0 ]]; then
+      echo "Done setting onetimeboot $TARGET on $HOST"
+    else
+      echo "Problem setting onetimeboot $TARGET on $HOST"
+    fi
+  } || {
+    echo "Could not get HW Gen for $HOST!"
+  }
+}
 
 
 ilo_boot_set_order_these_hosts () {
@@ -148,38 +147,6 @@ ilo_boot_set_defaults_these_hosts () {
 ilo_boot_set_defaults () {
   local HOST=$1
   ilo_boot_set_defaults_these_hosts $HOST
-}
-
-ilo_boot_set_onetimeboot () {
-  local TARGET=$1 HOST=$2
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
-
-  local GENERATION=`ilo_control_get_hw_gen $HOST`
-  [[ $? == 0 ]] && {
-    if [[ "$GENERATION" == "6" ]]; then
-      echo "Cannot set onetimeboot for Gen 6 (ILO2) Servers!  Boot $HOST to $TARGET manually. :("
-      return 1
-    elif [[ "$GENERATION" == "8" ]]; then
-      local COUNT=120 INTERVAL=10 # WAIT FOR UP TO 20 MINUTES!  POST Can Take a While on BIGMEM Machines...
-      local i
-      for i in `seq 1 $COUNT`; do
-        echo "Setting Onetime Boot to $TARGET for $HOST."
-        ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "onetimeboot $TARGET"
-        [[ $? == 0 ]] && {
-          break
-        } || {
-          echo "Problem setting onetimeboot $TARGET on $HOST" 1>&2
-          [[ $i < $COUNT ]] && { echo "Retrying in $INTERVAL seconds." 1>&2; sleep $INTERVAL; }
-        }
-      done
-    else
-      echo "Unknown HW Gen $GENERATION for $HOST!"
-      return 1
-    fi
-  } || {
-    echo "Could not get HW Gen for $HOST!"
-  }
-
 }
 
 ilo_boot_set_onetimeboot_these_hosts () {

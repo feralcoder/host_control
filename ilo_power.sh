@@ -6,17 +6,16 @@ ilo_power_get_state () {
   local HOST=$1
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
-  local i STATE COUNT=12 INTERVAL=10
-  for i in `seq 1 $COUNT`; do
-    STATE=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power" | grep -i "server power is currently" | awk -F':' '{print $3}' | tr '\r' ' ' | sed -r 's/[^a-zA-Z]*([a-zA-Z]+)[^a-zA-Z]*/\1/g' )
-    [[ $? == 0 ]] && {
-      echo "$HOST is $STATE"
-      break
-    } || {
-      echo "Problem getting power state of $HOST!" 1>&2
-      [[ $i < $COUNT ]] && { echo "Retrying in $INTERVAL seconds." 1>&2; sleep $INTERVAL; }
-    }
-  done
+  local ILO_COMMAND="power"
+  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_get_state`
+  ILO_COMMAND_STATUS=$?
+  local STATE=`echo "$OUTPUT" | grep -i "server power is currently" | awk -F':' '{print $3}' | tr '\r' ' ' | sed -r 's/[^a-zA-Z]*([a-zA-Z]+)[^a-zA-Z]*/\1/g' )
+
+  if [[ $ILO_COMMAND_STATUS == 0 ]]; then
+    echo "$HOST is $STATE"
+  else
+    echo "Problem getting power state of $HOST!" 1>&2
+  fi
 }
 
 ilo_power_wait_for_off () {
@@ -65,39 +64,32 @@ ilo_power_off () {
   [[ "$2" != "" ]] && COUNT=$2 || COUNT=12
   [[ "$3" != "" ]] && INTERVAL=$3 || INTERVAL=10
 
-  local i OUTPUT
   echo "Powering off $HOST (soft)..."
-  local IPMI_TRY IPMI_TRIES=2
-  for i in `seq 1 $COUNT`; do
-    OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power off")
-    if ( OUTPUT=`echo $OUTPUT | grep -i 'power off\|powering off\|already off'` ) ; then
-      break # ILO COMMAND WAS DELIVERED - BREAK AND CONTINUE WITH WAITS BELOW
-    else
-      echo "Failed to send ILO power off command to $HOST." 1>&2
-      if [[ $TRY != $TRIES ]] ; then
-        echo "Trying again in $INTERVAL seconds." 1>&2
-        sleep $INTERVAL
-      else # ILO COMMANDS FAILED - USE IPMI AND RETURN FROM HERE
-        echo "Out of tries, ILO not responsive." 1>&2
-        echo "Going straight for IPMI chassis control." 1>&2
-        for IPMI_TRY in `seq 1 $IPMI_TRIES`; do
-          OUTPUT=$(ipmitool -I lanplus -H $ILO_IP -U stack -f ilo_pass chassis power off)
-          if [[ $(echo "$OUTPUT" | grep -i 'Down.Off') == "" ]]; then
-            echo "Try #$IPMI_TRY to power off $HOST failed to send!" 1>&2
-            [[ $IPMI_TRY < $IPMI_TRIES ]] && {
-              echo "Trying again in $INTERVAL seconds." 1>&2
-              sleep $INTERVAL
-            }
-          else
-            echo "$HOST is powered off via chassis control."
-            return 0
-          fi
-        done
-        echo "FAILED to power off $HOST!"
-        return 1
+  local ILO_COMMAND="power off"
+  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_off`
+  ILO_COMMAND_STATUS=$?
+
+  if ( OUTPUT=`echo $OUTPUT | grep -i 'power off\|powering off\|already off'` ) ; then
+    echo "ILO power off delivered to $HOST." 1>&2
+  else
+    echo "Failed to send ILO power off command to $HOST." 1>&2
+    echo "Going straight for IPMI chassis control." 1>&2
+    for IPMI_TRY in `seq 1 $IPMI_TRIES`; do
+      OUTPUT=$(ipmitool -I lanplus -H $ILO_IP -U stack -f ilo_pass chassis power off)
+      if [[ $(echo "$OUTPUT" | grep -i 'Down.Off') == "" ]]; then
+        echo "Try #$IPMI_TRY to power off $HOST failed to send!" 1>&2
+        [[ $IPMI_TRY < $IPMI_TRIES ]] && {
+          echo "Trying again in $INTERVAL seconds." 1>&2
+          sleep $INTERVAL
+        }
+      else
+        echo "$HOST is powered off via chassis control."
+        return 0
       fi
-    fi
-  done
+    done
+    echo "FAILED to power off $HOST!"
+    return 1
+  fi
 
 
   # ILO COMMAND DELIVERED - WAIT, THEN GET MORE AGGRESSIVE IF NEEDED
@@ -105,15 +97,11 @@ ilo_power_off () {
     echo "$HOST is powered off."
   else
     echo "$HOST did not power off.  Time to hard reset!" 1<&2
-    for i in `seq 1 $COUNT`; do
-      OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power off hard")
-      [[ $? == 0 ]] && {
-        break
-      } || {
-        echo "Problem sending hard power off to $HOST" 1>&2
-        [[ $i < $COUNT ]] && { echo "Retrying in $INTERVAL seconds." 1>&2; sleep $INTERVAL; }
-      }
-    done
+    ILO_COMMAND="power off hard"
+    OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_off`
+    [[ $? == 0 ]] && {
+      echo "ILO hard power off delivered to $HOST." 1>&2
+    }
 
     if ( ilo_power_wait_for_off $HOST $COUNT $INTERVAL ) ; then
       echo "$HOST is powered off hard."
@@ -141,16 +129,13 @@ ilo_power_on () {
   [[ "$2" != "" ]] && COUNT=$2 || COUNT=12
   [[ "$3" != "" ]] && INTERVAL=$3 || INTERVAL=10
 
-  local i
-  for i in `seq 1 $COUNT`; do
-    local OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "power on")
-    [[ $? == 0 ]] && {
-      break
-    } || {
-      echo "Problem sending power on to $HOST" 1>&2
-      [[ $i < $COUNT ]] && { echo "Retrying in $INTERVAL seconds." 1>&2; sleep $INTERVAL; }
-    }
-  done
+  local ILO_COMMAND="power on"
+  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_on`
+  [[ $? == 0 ]] && {
+    echo "ILO power on delivered to $HOST." 1>&2
+  } || {
+    echo "Problem sending power on to $HOST" 1>&2
+  }
 
   if ( ilo_power_wait_for_on $HOST $COUNT $INTERVAL ) ; then
     echo "$HOST is powered on".
