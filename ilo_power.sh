@@ -7,9 +7,10 @@ ilo_power_get_state () {
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   local ILO_COMMAND="power"
-  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_get_state`
+  local SUCCESS_GREP="server power is currently: \(On\|Off\)"
+  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_get_state "$SUCCESS_GREP"`
   ILO_COMMAND_STATUS=$?
-  local STATE=`echo "$OUTPUT" | grep -i "server power is currently" | awk -F':' '{print $3}' | tr '\r' ' ' | sed -r 's/[^a-zA-Z]*([a-zA-Z]+)[^a-zA-Z]*/\1/g' )
+  local STATE=`echo "$OUTPUT" | grep -i "server power is currently" | awk -F':' '{print $3}' | tr '\r' ' ' | sed -r 's/[^a-zA-Z]*([a-zA-Z]+)[^a-zA-Z]*/\1/g'`
 
   if [[ $ILO_COMMAND_STATUS == 0 ]]; then
     echo "$HOST is $STATE"
@@ -66,10 +67,10 @@ ilo_power_off () {
 
   echo "Powering off $HOST (soft)..."
   local ILO_COMMAND="power off"
-  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_off`
-  ILO_COMMAND_STATUS=$?
+  local SUCCESS_GREP="\(power off\|Server power already \(off.\|Off\)\)"
+  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_off "$SUCCESS_GREP"`
 
-  if ( OUTPUT=`echo $OUTPUT | grep -i 'power off\|powering off\|already off'` ) ; then
+  if [[ $? == 0 ]]; then
     echo "ILO power off delivered to $HOST." 1>&2
   else
     echo "Failed to send ILO power off command to $HOST." 1>&2
@@ -130,7 +131,8 @@ ilo_power_on () {
   [[ "$3" != "" ]] && INTERVAL=$3 || INTERVAL=10
 
   local ILO_COMMAND="power on"
-  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_on`
+  local SUCCESS_GREP="\(power on\|Server power already \(on\|On\)\)"
+  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_on "$SUCCESS_GREP"`
   [[ $? == 0 ]] && {
     echo "ILO power on delivered to $HOST." 1>&2
   } || {

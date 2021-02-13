@@ -3,7 +3,7 @@
 
 _ilo_control_check_return_tags () {
   # SUCCESS:0    RETRY:1    EXIT:2
-  local OUTPUT=$1
+  local OUTPUT=$1 SUCCESS_GREP=$2
 
   local STATUS_TAG ERROR_TAG COMPLETED IN_POST
 
@@ -62,14 +62,14 @@ _ilo_control_check_return_tags () {
 
 
 _ilo_control_run_command () {
-  local HOST=$1 ILO_COMMAND=$2 CALLING_FUNC=$3
+  local HOST=$1 ILO_COMMAND=$2 CALLING_FUNC=$3 SUCCESS_GREP=$4
   local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
+  local INTERVAL=10
 
   [[ $DEBUG == "" ]] || {
     echo "___________________" 1>&2
     echo "In $CALLING_FUNC, about to send ILO command: $ILO_COMMAND" 1>&2
   }
-  local INTERVAL=10
   while true; do
     local OUTPUT=$(ssh -i ~/.ssh/id_rsa_ilo2 $ILO_IP -l stack "$ILO_COMMAND" | tr '\r' '\n' | sed 's/\n\n/\n/g')
 
@@ -80,6 +80,16 @@ _ilo_control_run_command () {
     ILO_COMMAND_STATUS=$?
     [[ $DEBUG == "" ]] || {
       echo "_ilo_control_check_return_tags returned STATUS=$ILO_COMMAND_STATUS" 1>&2
+    }
+
+    [[ $SUCCESS_GREP != "" ]] && {
+      [[ $DEBUG == "" ]] || echo "Grepping output for '$SUCCESS_GREP', short-circuit to success." 1>&2
+      local SUCCESS=`echo "$OUTPUT" | grep -e "$SUCCESS_GREP"`
+      if [[ $SUCCESS != "" ]]; then
+        ILO_COMMAND_STATUS=0
+        [[ $DEBUG == "" ]] || echo "SUCCESS GREPPED: $SUCCESS!" 1>&2
+        [[ $DEBUG == "" ]] || echo "Found '$SUCCESS_GREP' in output! Returning STATUS=0" 1>&2
+      fi
     }
 
     if [[ $ILO_COMMAND_STATUS == 1 ]]; then

@@ -14,7 +14,6 @@ ilo_boot_get_order () {
     ILO_COMMAND_STATUS=$?
     
     if [[ $ILO_COMMAND_STATUS == 0 ]]; then
-      [[ $DEBUG == "" ]] || echo "$OUTPUT" 1>&2
       local ORDER=$(echo "$OUTPUT" | grep bootorder | awk -F'=' '{print $2}' | sed  's/.*\([0-9]\).*/\1/g')
       echo $ORDER
       continue
