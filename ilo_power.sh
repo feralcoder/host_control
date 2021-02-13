@@ -99,6 +99,7 @@ ilo_power_off () {
   else
     echo "$HOST did not power off.  Time to hard reset!" 1<&2
     ILO_COMMAND="power off hard"
+    local SUCCESS_GREP="\(power off\|Server power already \(off\|Off\)\)"
     OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_off`
     [[ $? == 0 ]] && {
       echo "ILO hard power off delivered to $HOST." 1>&2
