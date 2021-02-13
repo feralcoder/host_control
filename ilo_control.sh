@@ -77,7 +77,7 @@ _ilo_control_run_command () {
       echo "Calling _ilo_control_check_return_tags from $CALLING_FUNC..." 1>&2
     }
     _ilo_control_check_return_tags "$OUTPUT"
-    ILO_COMMAND_STATUS=$?
+    local ILO_COMMAND_STATUS=$?
     [[ $DEBUG == "" ]] || {
       echo "_ilo_control_check_return_tags returned STATUS=$ILO_COMMAND_STATUS" 1>&2
     }
