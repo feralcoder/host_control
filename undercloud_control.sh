@@ -158,7 +158,7 @@ undercloud_control_backup_dumbledore () {
 undercloud_control_restore_dumbledore () {
   local BACKUPLINK=$1
   # BACKUPLINK=dumbledore_02_Ussuri_Undercloud
-  undercloud_control_restore dmb /backups/undercloud_dumps/$BACKUPLINK admb default
+  undercloud_control_restore dmb /backups/undercloud_dumps/$BACKUPLINK bdmb default
 }
 
 undercloud_control_build_the_whole_fucking_thing () {
