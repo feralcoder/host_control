@@ -28,10 +28,10 @@ done
 SOURCE_PATH=$SRC/${HOST}
 DEST_PATH=/mnt/$DEST
 
-rsync -avxHAX \${SOURCE_PATH}/${HOST}_root/ \${DEST_PATH}_root/ --exclude='/etc/fstab*' --exclude='/etc/default/grub*' --delete
-rsync -avxHAX \${SOURCE_PATH}/${HOST}_home/ \${DEST_PATH}_home/ --delete
-rsync -avxHAX \${SOURCE_PATH}/${HOST}_var/ \${DEST_PATH}_var/ --delete
-rsync -avxHAX \${SOURCE_PATH}/${HOST}_boot/  \${DEST_PATH}_boot/ --exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*' --delete
+rsync -avxHAX \${SOURCE_PATH}_root/ \${DEST_PATH}_root/ --exclude='/etc/fstab*' --exclude='/etc/default/grub*' --delete
+rsync -avxHAX \${SOURCE_PATH}_home/ \${DEST_PATH}_home/ --delete
+rsync -avxHAX \${SOURCE_PATH}_var/ \${DEST_PATH}_var/ --delete
+rsync -avxHAX \${SOURCE_PATH}_boot/  \${DEST_PATH}_boot/ --exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*' --delete
 
 EOF
 
@@ -158,7 +158,7 @@ undercloud_control_backup_dumbledore () {
 undercloud_control_restore_dumbledore () {
   local BACKUPLINK=$1
   # BACKUPLINK=dumbledore_02_Ussuri_Undercloud
-  undercloud_control_restore dmb /backups/undercloud_dumps/$BACKUPLINK bdmb default
+  undercloud_control_restore dmb /backups/undercloud_dumps/$BACKUPLINK bdmb
 }
 
 undercloud_control_build_the_whole_fucking_thing () {
