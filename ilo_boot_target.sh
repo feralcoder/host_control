@@ -86,6 +86,6 @@ ilo_boot_target_once_these_hosts () {
 }
 
 ilo_boot_target_once () {
-  local HOST=$1
-  ilo_boot_target_once_these_hosts $HOST
+  local TARGET=$1 HOST=$2
+  ilo_boot_target_once_these_hosts $TARGET $HOST
 }
