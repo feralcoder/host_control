@@ -103,9 +103,9 @@ ilo_boot_set_onetimeboot () {
 
 ilo_boot_set_order_these_hosts () {
   local PIDS="" HOST
-  local ORDER=$1
+  local ORDER=$1 HOSTS=$2
 
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if ( echo $HOST | grep '[0-9]:[0-9]:[0-9]' ); then
       echo ORDER is $HOST
     elif [[ $HOST == "now_wait" ]]; then
@@ -125,9 +125,10 @@ ilo_boot_set_order_these_hosts () {
 
 
 ilo_boot_set_defaults_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST
 
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
@@ -197,8 +198,10 @@ ilo_boot_set_onetimeboot_ipmi_these_hosts () {
 
 
 ilo_boot_get_order_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST PID
-  for HOST in $@ now_wait; do
+  
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
@@ -211,17 +214,4 @@ ilo_boot_get_order_these_hosts () {
       echo "Getting boot order for $HOST: $!"
     fi
   done
-}
-
-
-ilo_boot_get_order_all_hosts () {
-  local PID_ILO2 PID_ILO4
-  ilo_boot_get_order_these_hosts $ILO2_HOSTS &
-  PID_ILO2="$!"
-  echo "Getting boot order for ILO2 Servers: $PID_ILO2"
-  ilo_boot_get_order_these_hosts $ILO4_HOSTS &
-  PID_ILO4="$!"
-  echo "Getting boot order for ILO4 Servers: $PID_ILO4"
-  wait $PID_ILO2
-  wait $PID_ILO4
 }

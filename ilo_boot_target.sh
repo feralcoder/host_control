@@ -84,3 +84,8 @@ ilo_boot_target_once_these_hosts () {
     fi
   done
 }
+
+ilo_boot_target_once () {
+  local HOST=$1
+  ilo_boot_target_once_these_hosts $HOST
+}

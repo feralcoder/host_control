@@ -178,11 +178,13 @@ ilo_control_get_ilo_hostkey () {
 
 
 ilo_control_refetch_ilo_hostkey_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST ILO_IP
-  for HOST in $@; do
+
+  for HOST in $HOSTS; do
     ilo_control_remove_ilo_hostkey $HOST
   done
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID

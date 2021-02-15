@@ -20,9 +20,10 @@ os_control_graceful_stop () {
 }
 
 os_control_graceful_stop_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST
 
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
@@ -93,9 +94,10 @@ os_control_boot_info () {
 }
 
 os_control_boot_info_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST
 
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID

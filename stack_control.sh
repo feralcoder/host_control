@@ -29,13 +29,14 @@ stack_control_get_instance_ip () {
 }
 
 stack_control_get_node_ip_these_hosts () {
+  local HOSTS=$1
   local HOST LONG_HOST NODE_OUTPUT INSTANCE_ID INSTANCE_IPS INSTANCE_IP
   local HOST_LIST=""
 
   NODE_OUTPUT="`ssh_control_run_as_user root "su - stack -c '. stackrc && openstack baremetal node list'" $UNDERCLOUD_HOST $UNDERCLOUD_IP`"
   [[ $? == 0 ]] || { echo "Error fetching node list, check your stack!  Exiting!"; return 1; }
 
-  HOST_LIST="$(for HOST in $@; do
+  HOST_LIST="$(for HOST in $HOSTS; do
     LONG_HOST=`getent hosts $HOST | awk '{print $2}' | awk -F'\.' '{print $1}' | tail -n 1`
     INSTANCE_ID=$(echo "$NODE_OUTPUT" | grep $LONG_HOST | awk '{print $6}')
     echo "$HOST:$INSTANCE_ID"
@@ -43,7 +44,7 @@ stack_control_get_node_ip_these_hosts () {
 
   INSTANCE_IPS="$(stack_control_get_instance_ips_all)"
 
-  for HOST in $@; do
+  for HOST in $HOSTS; do
     INSTANCE_ID=$(echo "$HOST_LIST" | grep "$HOST:" | awk -F':' '{print $2}')
     if [[ $(echo $INSTANCE_ID | grep  -E '[^ -]{3,}-[^ -]{3,}') == "" ]] ; then
       # This host has no instance
@@ -71,11 +72,12 @@ stack_control_graceful_stop_node () {
 }
 
 stack_control_graceful_stop_node_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST INSTANCE_IP
 
-  local INSTANCE_IPS="$(stack_control_get_node_ip_these_hosts $@)"
+  local INSTANCE_IPS="$(stack_control_get_node_ip_these_hosts $HOSTS)"
 
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID

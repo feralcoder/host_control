@@ -167,9 +167,10 @@ ilo_power_cycle () {
 }
 
 ilo_power_off_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST 
 
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
@@ -186,8 +187,9 @@ ilo_power_off_these_hosts () {
 }
 
 ilo_power_on_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
@@ -204,8 +206,9 @@ ilo_power_on_these_hosts () {
 }
 
 ilo_power_cycle_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
@@ -222,8 +225,9 @@ ilo_power_cycle_these_hosts () {
 }
 
 ilo_power_get_state_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID

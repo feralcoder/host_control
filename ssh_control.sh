@@ -64,6 +64,7 @@ ssh_control_push_key () {
 
 
 ssh_control_distribute_admin_key_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST
 
   [[ -f ~/.ssh/pubkeys/id_rsa.pub ]] && {
@@ -75,14 +76,14 @@ ssh_control_distribute_admin_key_these_hosts () {
 
   # This part is serialized, because it requires IO from user
   local PASSFILE=`ssh_control_get_password`
-  for HOST in $@; do
+  for HOST in $HOSTS; do
     echo "Started Key Push for $HOST: $!"
     ssh_control_push_key $HOST $PASSFILE
   done
   rm $PASSFILE
 
   # This can be done in parallel
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
@@ -140,11 +141,12 @@ ssh_control_get_hostkey () {
 }
 
 ssh_control_refetch_hostkey_these_hosts () {
+  local HOSTS=$1
   local PIDS="" HOST HOST_IP
-  for HOST in $@ ; do
+  for HOST in $HOSTS ; do
     ssh_control_remove_hostkey $HOST
   done
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
@@ -201,10 +203,11 @@ ssh_control_wait_for_host_up () {
 }
 
 ssh_control_wait_for_host_down_these_hosts () {
+  local HOSTS=$1
   local HOST
 
   local PIDS=""
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
@@ -221,10 +224,11 @@ ssh_control_wait_for_host_down_these_hosts () {
 }
 
 ssh_control_wait_for_host_up_these_hosts () {
+  local HOSTS=$1
   local HOST
 
   local PIDS=""
-  for HOST in $@ now_wait; do
+  for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
