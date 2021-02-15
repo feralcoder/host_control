@@ -1,0 +1,12 @@
+
+#!/bin/bash
+THIS_SOURCE="$(dirname ${BASH_SOURCE[0]})"
+echo Running scripts from: $THIS_SOURCE
+
+. $THIS_SOURCE/../control_scripts.sh
+
+# first run fix_and_freshen_repos_everywhere, then do the work needed to update around conflicts
+#    Once clean, go to all the hosts needing admin and run:
+# rm ~/.local_settings; cd CODE/feralcoder/bootstrap-scripts/; ./admin.sh
+# ssh_control_run_as_user_these_hosts cliff "cd CODE/feralcoder/host_control; . control_scripts.sh ; ilo_control_refetch_ilo_hostkey_these_hosts $ALL_HOSTS" "$ALL_HOSTS"
+# ssh_control_run_as_user_these_hosts cliff "cd CODE/feralcoder/host_control; . control_scripts.sh ; ssh_control_refetch_hostkey_these_hosts $ALL_HOSTS" "$ALL_HOSTS"
