@@ -1,11 +1,5 @@
 #!/bin/bash
 
-. ilo_common.sh
-. ilo_power.sh
-. ilo_boot.sh
-. ilo_boot_target.sh
-
-
 
 ssh_control_get_password () {
   local PASSWORD

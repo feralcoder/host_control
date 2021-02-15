@@ -1,15 +1,5 @@
 #!/bin/bash
 
-. ilo_common.sh
-. ilo_power.sh
-. ilo_boot.sh
-. ilo_boot_target.sh
-
-. ssh_control.sh
-. os_control.sh
-
-
-
 
 undercloud_control_make_restore_script () {
   # SRC=/backups/undercloud_dumps/dumbledore_02_Ussuri_Undercloud

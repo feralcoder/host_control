@@ -1,17 +1,18 @@
 #!/bin/bash -x
 CONTROL_SOURCE="${BASH_SOURCE[0]}"
+CONTROL_DIR=$( dirname $CONTROL_SOURCE )
 
 # Run only this file to include the others:
-. ilo_common.sh
-. ilo_control.sh
-. ilo_power.sh
-. ilo_boot.sh
-. ilo_boot_target.sh
+. $CONTROL_DIR/ilo_common.sh
+. $CONTROL_DIR/ilo_control.sh
+. $CONTROL_DIR/ilo_power.sh
+. $CONTROL_DIR/ilo_boot.sh
+. $CONTROL_DIR/ilo_boot_target.sh
 
-. ssh_control.sh  
-. os_control.sh  
-. undercloud_control.sh
-. stack_control.sh  
+. $CONTROL_DIR/ssh_control.sh  
+. $CONTROL_DIR/os_control.sh  
+. $CONTROL_DIR/undercloud_control.sh
+. $CONTROL_DIR/stack_control.sh  
 
 ILO2_HOSTS="mrl gnd yda dmb"
 ILO4_HOSTS="mtn lmn bmn neo str kgn"

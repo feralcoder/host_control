@@ -1,15 +1,5 @@
 #!/bin/bash
 
-. ilo_common.sh
-. ilo_power.sh
-. ilo_boot.sh
-. ilo_boot_target.sh
-
-. ssh_control.sh
-. os_control.sh
-. undercloud_control.sh
-
-
 UNDERCLOUD_HOST=dmb
 UNDERCLOUD_IP=`getent hosts $UNDERCLOUD_HOST | awk '{print $1}' | tail -n 1`
 
