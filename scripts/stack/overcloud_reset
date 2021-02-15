@@ -18,6 +18,6 @@ done
 ilo_power_off_these_hosts "$OVERCLOUD_HOSTS"
 os_control_boot_to_target_installation admin "$OVERCLOUD_HOSTS"
 
-# ssh_control_run_as_user root "rm /root/undercloud_install*; tmux new-session -d -s undercloud 'DEFOPTS=true /home/cliff/CODE/feralcoder/train8/setup_undercloud.sh > undercloud_install_\$\$.log'; tmux split-window -t undercloud -h 'tail -f /root/undercloud_install_\$\$'" dmb
+ssh_control_run_as_user root "blkid" "$OVERCLOUD_HOSTS"
 
 echo "We're done here!"
