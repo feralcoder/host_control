@@ -23,8 +23,8 @@ CONTROL_HOSTS="$PRIMARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $TERNARY_CONTROL_
 COMPUTE_HOSTS="mtn lmn bmn neo"
 
 ALL_HOSTS="mtn lmn bmn kgn neo str mrl gnd yda dmb"
-UNDERCLOUD_HOSTS="kgn dmb"
-OVERCLOUD_HOSTS="mtn lmn bmn neo mrl gnd str"
+UNDERCLOUD_HOSTS="dmb"
+OVERCLOUD_HOSTS="mtn lmn bmn neo mrl gnd str kgn"
 ADMIN_HOSTS="yda"
 ALL_HOSTS_MINUS_ADMIN="mtn lmn bmn kgn neo str mrl gnd dmb"
 
