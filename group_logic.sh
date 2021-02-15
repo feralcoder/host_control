@@ -45,3 +45,16 @@ group_logic_get_all_names () {
   echo $HOST_NAMES
 }
 
+group_logic_remove_self () {
+  local HOSTS=$1
+  if [[ $( group_logic_intersection "`group_logic_get_all_names $(hostname)`" "$HOSTS" ) != "" ]] ; then
+    echo "SELF DETECTED in $HOSTS!" 1>&2
+    echo "Not running in UNSAFE mode, removing self." 1>&2
+    HOSTS=$(group_logic_exclusion "$ALL_HOSTS"  "`group_logic_get_all_names $(hostname)`")
+    echo "New hosts list: $HOSTS" 1>&2
+    echo "$HOSTS"
+    return
+  fi
+  echo "$HOSTS"
+}
+
