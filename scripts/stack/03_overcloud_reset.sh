@@ -4,20 +4,24 @@ echo Running scripts from: $THIS_SOURCE
 
 . $THIS_SOURCE/../../control_scripts.sh
 
-ilo_power_off_these_hosts "$OVERCLOUD_HOSTS"
-# Toggle boot drives to stack, if necessary
-ilo_boot_set_onetimeboot_these_hosts ip "$(group_logic_intersection "$ILO4_HOSTS" "$OVERCLOUD_HOSTS")"
-ilo_power_on_these_hosts "$(group_logic_intersection "$ILO4_HOSTS" "$OVERCLOUD_HOSTS")"
-# Replace drives in Gen6 hosts manually
-
-PROCEED=""
-while [[ $PROCEED != "yes" ]]; do
-  read -p "Ready?  Type 'yes' (in lowercase) to proceed:" PROCEED
-done
+SKIP_IP=true
 
 ilo_power_off_these_hosts "$OVERCLOUD_HOSTS"
+
+[[ $SKIP_IP == "" ]] && {
+  # Toggle boot drives to stack, if necessary
+  ilo_boot_set_onetimeboot_these_hosts ip "$(group_logic_intersection "$ILO4_HOSTS" "$OVERCLOUD_HOSTS")"
+  ilo_power_on_these_hosts "$(group_logic_intersection "$ILO4_HOSTS" "$OVERCLOUD_HOSTS")"
+  # Replace drives in Gen6 hosts manually
+
+  PROCEED=""
+  while [[ $PROCEED != "yes" ]]; do
+    read -p "Ready?  Type 'yes' (in lowercase) to proceed:" PROCEED
+  done
+  ilo_power_off_these_hosts "$OVERCLOUD_HOSTS"
+}
+
 os_control_boot_to_target_installation_these_hosts admin "$OVERCLOUD_HOSTS"
-
 
 PRE_CMD="rm /tmp/stack_drive_hosed*; echo ''>/tmp/stack_drive_hosed_$$"
 FIND_DRIVE_CMD="STACK_DRIVE=\`blkid | grep img-rootfs | awk '{print \$1}' | sed -e 's/.://g'\`"
