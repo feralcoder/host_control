@@ -3,6 +3,7 @@ CONTROL_SOURCE="${BASH_SOURCE[0]}"
 CONTROL_DIR=$( dirname $CONTROL_SOURCE )
 
 # Run only this file to include the others:
+. $CONTROL_DIR/group_logic.sh
 . $CONTROL_DIR/ilo_common.sh
 . $CONTROL_DIR/ilo_control.sh
 . $CONTROL_DIR/ilo_power.sh
