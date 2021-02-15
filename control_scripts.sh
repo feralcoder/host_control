@@ -24,7 +24,7 @@ COMPUTE_HOSTS="mtn lmn bmn neo"
 ALL_HOSTS="mtn lmn bmn kgn neo str mrl gnd yda dmb"
 UNDERCLOUD_HOSTS="kgn dmb"
 OVERCLOUD_HOSTS="mtn lmn bmn neo mrl gnd str"
-
+ADMIN_HOSTS="yda"
 ALL_HOSTS_MINUS_ADMIN="mtn lmn bmn kgn neo str mrl gnd dmb"
 
 ALL_HOSTS_LONGNAMES="manhattan lawnmowerman bowman kerrigan neo strange merlin gandalf yoda dumbledore"
