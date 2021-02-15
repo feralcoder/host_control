@@ -75,7 +75,7 @@ stack_control_graceful_stop_node_these_hosts () {
   local HOSTS=$1
   local PIDS="" HOST INSTANCE_IP
 
-  local INSTANCE_IPS="$(stack_control_get_node_ip_these_hosts $HOSTS)"
+  local INSTANCE_IPS="$(stack_control_get_node_ip_these_hosts '$HOSTS')"
 
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -100,7 +100,7 @@ stack_control_shutdown_stack () {
   local CONTROL_WAIT=300
 
   echo "Bringing down Compute Nodes: $COMPUTE_HOSTS"
-  stack_control_graceful_stop_node_these_hosts $COMPUTE_HOSTS
+  stack_control_graceful_stop_node_these_hosts "$COMPUTE_HOSTS"
   echo "Bringing down Control Nodes: $TERNARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $PRIMARY_CONTROL_HOSTS"
 
   local HOST
@@ -132,6 +132,6 @@ stack_control_startup_stack () {
   done
 
   echo "Bringing up Compute Nodes: $COMPUTE_HOSTS"
-  ilo_power_on_these_hosts $COMPUTE_HOSTS
+  ilo_power_on_these_hosts "$COMPUTE_HOSTS"
   echo "Cannot verify, exiting now.  Wait a while..."
 }
