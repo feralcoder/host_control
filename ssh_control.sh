@@ -96,7 +96,7 @@ ssh_control_distribute_admin_key_these_hosts () {
 
 ssh_control_remove_hostkey () {
   local HOST=$1
-  local HOST_IP=`getent hosts $HOST | awk '{print $1}' | tail -n 1`
+  local HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
   local ALL_NAMES=`group_control_get_all_names $HOST`
   local NAME
   touch ~/.ssh/known_hosts
@@ -108,7 +108,7 @@ ssh_control_remove_hostkey () {
 
 ssh_control_get_hostkey () {
   local HOST=$1
-  local HOST_IP=`getent hosts $HOST | awk '{print $1}' | tail -n 1`
+  local HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
   ssh-keyscan -T 30 $HOST_IP >> ~/.ssh/known_hosts
   local OUTPUT
   ( OUTPUT=`grep "$HOST_IP" ~/.ssh/known_hosts` ) || {
@@ -142,7 +142,7 @@ ssh_control_refetch_hostkey_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      HOST_IP=`getent hosts $HOST | awk '{print $1}' | tail -n 1`
+      HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
       ssh_control_get_hostkey $HOST &
       PIDS="$PIDS:$!"
       echo "Getting host key for $HOST: $!"
@@ -170,7 +170,7 @@ ssh_control_wait_for_host_down () {
 
 ssh_control_wait_for_host_up () {
   local HOST=$1
-  local HOST_IP=`getent hosts $HOST | awk '{print $1}' | tail -n 1`
+  local HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
 
   local ATTEMPTS=60 INTERVAL=10
 
@@ -233,7 +233,7 @@ ssh_control_wait_for_host_up_these_hosts () {
 
 ssh_control_run_as_user () {
   local USER=$1 COMMAND=$2 HOST=$3
-  local HOST_IP=`getent hosts $HOST | awk '{print $1}' | tail -n 1`
+  local HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
 
   local OUTPUT CODE
   OUTPUT=$(ssh -o ConnectTimeout=10 -l $USER $HOST_IP "$COMMAND")
@@ -266,7 +266,7 @@ ssh_control_run_as_user_these_hosts () {
 
 ssh_control_sync_as_user () {
   local USER=$1 SOURCE=$2 DEST=$3 HOST=$4
-  local HOST_IP=`getent hosts $HOST | awk '{print $1}' | tail -n 1`
+  local HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
 
   OUTPUT=$(rsync -avH $SOURCE $USER@$HOST_IP:$DEST)
   echo $SOURCE synced to $HOST:

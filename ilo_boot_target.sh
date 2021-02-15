@@ -28,7 +28,7 @@ ilo_boot_target_once_ilo2 () {
 ilo_boot_target_once_ilo4 () {
   local TARGET=$1 HOST=$2
   local SHORT_HOSTNAME=`echo $HOST | awk -F'.' '{print $1}'`
-  local ILO_IP=`getent hosts $SHORT_HOSTNAME-ipmi | awk '{print $1}' | tail -n 1`
+  local ILO_IP=`getent ahosts $SHORT_HOSTNAME-ipmi | awk '{print $1}' | tail -n 1`
 
   STATE=$(ilo_power_get_state $HOST | awk '{print $3}')
   [[ $STATE == "Off" ]] || { echo "Server $HOST is ON, Exiting!"; return 1; }

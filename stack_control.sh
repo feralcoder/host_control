@@ -1,7 +1,7 @@
 #!/bin/bash
 
 UNDERCLOUD_HOST=dmb
-UNDERCLOUD_IP=`getent hosts $UNDERCLOUD_HOST | awk '{print $1}' | tail -n 1`
+UNDERCLOUD_IP=`getent ahosts $UNDERCLOUD_HOST | awk '{print $1}' | tail -n 1`
 
 
 stack_control_get_instance_ips_all () {
@@ -27,7 +27,7 @@ stack_control_get_node_ip_these_hosts () {
   [[ $? == 0 ]] || { echo "Error fetching node list, check your stack!  Exiting!"; return 1; }
 
   HOST_LIST="$(for HOST in $HOSTS; do
-    LONG_HOST=`getent hosts $HOST | awk '{print $2}' | awk -F'\.' '{print $1}' | tail -n 1`
+    LONG_HOST=`getent ahosts $HOST | awk '{print $2}' | awk -F'\.' '{print $1}' | tail -n 1`
     INSTANCE_ID=$(echo "$NODE_OUTPUT" | grep $LONG_HOST | awk '{print $6}')
     echo "$HOST:$INSTANCE_ID"
   done)"

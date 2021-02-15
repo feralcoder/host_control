@@ -4,7 +4,7 @@
 
 ilo_power_get_state () {
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
+  local ILO_IP=`getent ahosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   local ILO_COMMAND="power"
   local SUCCESS_GREP="server power is currently: \(On\|Off\)"
@@ -59,7 +59,7 @@ ilo_power_wait_for_on () {
 
 ilo_power_off () {
   local HOST=$1
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
+  local ILO_IP=`getent ahosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   local COUNT INTERVAL
   [[ "$2" != "" ]] && COUNT=$2 || COUNT=12
@@ -125,7 +125,7 @@ ilo_power_off () {
 
 ilo_power_on () {
   local HOST=$1 COUNT
-  local ILO_IP=`getent hosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
+  local ILO_IP=`getent ahosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
 
   local COUNT INTERVAL
   [[ "$2" != "" ]] && COUNT=$2 || COUNT=12
