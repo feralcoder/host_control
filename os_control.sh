@@ -108,22 +108,25 @@ os_control_boot_to_target_installation () {
   # $TARGET==[admin|default]
   local TARGET=$1 HOST=$2
   
-  local OUTPUT
-  local OS_BOOT_INFO=`os_control_boot_info $HOST`
-  local RETVAL=$?
+  local OUTPUT OS_BOOT_INFO RETVAL
+  [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, getting boot_info for $HOST" 2>&1
+  OS_BOOT_INFO=`os_control_boot_info $HOST`
+  RETVAL=$?
+  [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, boot_info: $OS_BOOT_INFO" 2>&1
+  [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, return value: $RETVAL" 2>&1
 
   # IF IN_BETWEEN OFF and BOOTED, GET TO A DETERMINATE STATE
   if [[ $RETVAL == 1 ]]; then
+    [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, $HOST may be booting, about to wait..." 2>&1
     # host may be booting...
     OUTPUT=`ssh_control_wait_for_host_up $HOST`
-    # Wait a long time for an OS before kicking over
+    RETVAL=$?
+    [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, $HOST is up..." 2>&1
     if [[ $RETVAL != 0 ]]; then
-      OUTPUT=`ssh_control_wait_for_host_up $HOST`
-      if [[ $? != 0 ]]; then
-        OUTPUT=$(ilo_power_off $HOST)
-        OUTPUT=`ssh_control_wait_for_host_down $HOST`
-        [[ $? == 0 ]] || { echo ERROR shutting down $HOST!; return 1; }
-      fi
+      [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, $HOST never booted, kicking over" 2>&1
+      OUTPUT=$(ilo_power_off $HOST)
+      OUTPUT=`ssh_control_wait_for_host_down $HOST`
+      [[ $? == 0 ]] || { echo ERROR shutting down $HOST!; return 1; }
     fi
     OS_BOOT_INFO=`os_control_boot_info $HOST`
     RETVAL=$?
@@ -131,16 +134,19 @@ os_control_boot_to_target_installation () {
 
   # HOST SHOULD BE OFF OR BOOTED AT THIS POINT
   if [[ $RETVAL == 0 ]]; then
+    [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, $HOST is booted" 2>&1
     # host is booted
     if [[ $(echo $OS_BOOT_INFO | awk -F':' '{print $2}') == "$TARGET" ]]; then
       # WE'RE DONE!
       echo "$HOST is booted to $TARGET"
       return
     else
+      [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, $HOST is booted to wrong $TARGET" 2>&1
       # POWER OFF HOST
       OUTPUT=$(ssh_control_run_as_user root poweroff $HOST)
       OUTPUT=`ssh_control_wait_for_host_down $HOST`
       if [[ $? != 0 ]]; then
+        [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, powering off $HOST" 2>&1
         OUTPUT=$(ilo_power_off $HOST)
         OUTPUT=`ssh_control_wait_for_host_down $HOST`
         [[ $? == 0 ]] || { echo ERROR shutting down $HOST!; return 1; }
@@ -152,25 +158,35 @@ os_control_boot_to_target_installation () {
     return 1
   fi
 
+  [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, getting os_control_boot_info $HOST" 2>&1
   OS_BOOT_INFO=`os_control_boot_info $HOST`
   RETVAL=$?
+  [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, got os_control_boot_info $HOST" 2>&1
 
 
+  local HW_GEN
   # HOST SHOULD BE OFF AT THIS POINT
   if [[ $RETVAL == 2 ]]; then
-    # HERE WE GO
-    SYSTEM_ILO=ilo_control_get_hw_gen $HOST
+    [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, now booting $HOST to $TARGET" 2>&1
+    HW_GEN=`ilo_control_get_hw_gen $HOST`
     if [[ $TARGET == "admin" ]]; then
-      if [[ $SYSTEM_ILO == "2" ]]; then
+      if [[ $HW_GEN == "6" ]]; then
+        [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, now booting ILO2 $HOST to $TARGET" 2>&1
         OUTPUT=$(ilo_boot_target_once_ilo2 $DEV_USB $HOST)
-      elif [[ $SYSTEM_ILO == "4" ]]; then
+      elif [[ $HW_GEN == "8" ]]; then
+        [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, now booting ILO4 $HOST to $TARGET" 2>&1
         OUTPUT=$(ilo_boot_target_once_ilo4 $DEV_USB $HOST)
+      else
+        [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, $HOST isn't ILO2 or ILO4, check your wreck" 2>&1
       fi
     else
+      [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, powering on $HOST" 2>&1
       OUTPUT=$(ilo_power_on $HOST)
     fi
+    [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, waiting for $HOST to come up" 2>&1
     OUTPUT=`ssh_control_wait_for_host_up $HOST`
     if [[ $? != 0 ]]; then
+      OUTPUT=$(ilo_power_on $HOST)
       OUTPUT=`ssh_control_wait_for_host_up $HOST`
       [[ $? == 0 ]] || { echo "ERROR BOOTING $HOST!"; return 1; }
     fi
@@ -179,11 +195,13 @@ os_control_boot_to_target_installation () {
     return 1
   fi
 
+  [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, checking $HOST boot OS..." 2>&1
   OS_BOOT_INFO=`os_control_boot_info $HOST`
   RETVAL=$?
 
   # HOST SHOULD BE BOOTED TO $TARGET AT THIS POINT
   if [[ $RETVAL == 0 ]]; then
+    [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, $HOST boot_info: $OS_BOOT_INFO..." 2>&1
     if [[ $(echo $OS_BOOT_INFO | awk -F':' '{print $2}') == "$TARGET" ]]; then
       # WE'RE DONE!
       echo "$HOST is booted to $TARGET"
