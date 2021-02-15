@@ -1,14 +1,5 @@
 #!/bin/bash
 
-. ilo_common.sh
-. ilo_power.sh
-. ilo_boot.sh
-. ilo_boot_target.sh
-
-. ssh_control.sh
-
-SYSTEM_ILO=2
-
 os_control_graceful_stop () {
   local HOST=$1
 
@@ -164,9 +155,11 @@ os_control_boot_to_target_installation () {
   OS_BOOT_INFO=`os_control_boot_info $HOST`
   RETVAL=$?
 
+
   # HOST SHOULD BE OFF AT THIS POINT
   if [[ $RETVAL == 2 ]]; then
     # HERE WE GO
+    SYSTEM_ILO=ilo_control_get_hw_gen $HOST
     if [[ $TARGET == "admin" ]]; then
       if [[ $SYSTEM_ILO == "2" ]]; then
         OUTPUT=$(ilo_boot_target_once_ilo2 $DEV_USB $HOST)
