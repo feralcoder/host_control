@@ -301,13 +301,6 @@ ssh_control_sync_as_user_these_hosts () {
   done
 }
 
-ssh_control_wait_for_host_up_all_hosts () {
-  ssh_control_wait_for_host_up_these_hosts $ALL_HOSTS
-}
-ssh_control_wait_for_host_down_all_hosts () {
-  ssh_control_wait_for_host_down_these_hosts $ALL_HOSTS
-}
-
 ssh_control_sync_as_user_to_all_hosts () {
   local USER=$1 SOURCE=$2 DEST=$3
   ssh_control_sync_as_user_these_hosts $USER $SOURCE $DEST "$ALL_HOSTS"
