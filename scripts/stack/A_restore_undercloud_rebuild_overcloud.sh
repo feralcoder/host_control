@@ -4,9 +4,9 @@ echo Running scripts from: $THIS_SOURCE
 
 . $THIS_SOURCE/../../control_scripts.sh
 
-BUILD_OPTIONS=$1
-[[ $BUILD_OPTIONS == "" ]] && {
-  BUILD_OPTIONS="DEFOPTS=true"
+OVERCLOUD_BUILD_OPTIONS=$1
+[[ $OVERCLOUD_BUILD_OPTIONS == "" ]] && {
+  OVERCLOUD_BUILD_OPTIONS="DEFOPTS=true"
 }
 
 BUILT_UNDERCLOUD_LINK=$2
@@ -15,8 +15,8 @@ BUILT_UNDERCLOUD_LINK=$2
 }
 
 
-RESTORE_UNDERCLOUD=". $THIS_SOURCE/02a_undercloud_restore_undercloud.sh $BUILT_UNDERCLOUD_LINK"
-WIPE_OVERCLOUD=". $THIS_SOURCE/03_overcloud_reset.sh"
+RESTORE_UNDERCLOUD=". $THIS_SOURCE/01d_restore_undercloud.sh $BUILT_UNDERCLOUD_LINK"
+WIPE_OVERCLOUD=". $THIS_SOURCE/03a_wipe_overcloud.sh"
 
 declare -A OUTPUT TASKS_BY_PID FD_BY_TASK
 declare PID PIDS="" HOST
@@ -51,4 +51,4 @@ for TASK in "$RESTORE_UNDERCLOUD" "$WIPE_OVERCLOUD" now_wait; do
   echo "$PIDS"
 done
 
-. $THIS_SOURCE/04_undercloud_build_overcloud.sh $BUILD_OPTIONS
+. $THIS_SOURCE/03b_build_overcloud.sh $OVERCLOUD_BUILD_OPTIONS

@@ -5,11 +5,14 @@ echo Running scripts from: $THIS_SOURCE
 . $THIS_SOURCE/../../control_scripts.sh
 
 
-SKIP_IP=true
+[[ $SKIP_IP == "" ]] && {
+  echo "Defaulting SKIP_IP=true"
+  SKIP_IP="true"
+}
 
 ilo_power_off_these_hosts "$OVERCLOUD_HOSTS"
 
-[[ $SKIP_IP == "" ]] && {
+[[ $SKIP_IP == "true" ]] || {
   # Toggle boot drives to stack, if necessary
   ilo_boot_set_onetimeboot_these_hosts ip "$(group_logic_intersection "$ILO4_HOSTS" "$OVERCLOUD_HOSTS")"
   ilo_power_on_these_hosts "$(group_logic_intersection "$ILO4_HOSTS" "$OVERCLOUD_HOSTS")"

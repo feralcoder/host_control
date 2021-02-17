@@ -11,4 +11,3 @@ BUILT_UNDERCLOUD_LINK=$1
 
 os_control_boot_to_target_installation admin dmb
 undercloud_control_restore_dumbledore $BUILT_UNDERCLOUD_LINK
-os_control_boot_to_target_installation default dmb
