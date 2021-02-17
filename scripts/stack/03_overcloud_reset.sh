@@ -4,6 +4,7 @@ echo Running scripts from: $THIS_SOURCE
 
 . $THIS_SOURCE/../../control_scripts.sh
 
+
 SKIP_IP=true
 
 ilo_power_off_these_hosts "$OVERCLOUD_HOSTS"

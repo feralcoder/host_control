@@ -4,9 +4,18 @@ echo Running scripts from: $THIS_SOURCE
 
 . $THIS_SOURCE/../../control_scripts.sh
 
+BUILD_OPTIONS=$1
+[[ $BUILD_OPTIONS == "" ]] && {
+  BUILD_OPTIONS="DEFOPTS=true"
+}
+
+BUILT_UNDERCLOUD_LINK=$2
+[[ $BUILT_UNDERCLOUD_LINK == "" ]] && {
+  BUILT_UNDERCLOUD_LINK=dumbledoreB_02_Ussuri_Undercloud_HA_NoVlans
+}
 
 
-RESTORE_UNDERCLOUD=". $THIS_SOURCE/02a_undercloud_restore_undercloud.sh"
+RESTORE_UNDERCLOUD=". $THIS_SOURCE/02a_undercloud_restore_undercloud.sh $BUILT_UNDERCLOUD_LINK"
 WIPE_OVERCLOUD=". $THIS_SOURCE/03_overcloud_reset.sh"
 
 declare -A OUTPUT TASKS_BY_PID FD_BY_TASK
@@ -42,4 +51,4 @@ for TASK in "$RESTORE_UNDERCLOUD" "$WIPE_OVERCLOUD" now_wait; do
   echo "$PIDS"
 done
 
-. $THIS_SOURCE/04_undercloud_build_overcloud.sh
+. $THIS_SOURCE/04_undercloud_build_overcloud.sh $BUILD_OPTIONS
