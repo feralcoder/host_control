@@ -4,11 +4,10 @@ echo Running scripts from: $THIS_SOURCE
 
 . $THIS_SOURCE/../../control_scripts.sh
 
-UPDATED_OS_LINK=$1
-
-[[ $UPDATED_OS_LINK == "" ]] && {
-  UPDATED_OS_LINK=dumbledoreB_01_CentOS_8_2_Updated
+BUILT_KOLLA_LINK=$1
+[[ $BUILT_KOLLA_LINK == "" ]] && {
+  BUILT_KOLLA_LINK=dumbledoreB_02_Kolla_Ansible
 }
 
 os_control_boot_to_target_installation admin dmb
-undercloud_control_backup_dumbledore $UPDATED_OS_LINK
+stack_control_backup_dumbledore $BUILT_KOLLA_LINK

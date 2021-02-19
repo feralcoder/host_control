@@ -10,4 +10,4 @@ BUILT_UNDERCLOUD_LINK=$1
 }
 
 os_control_boot_to_target_installation admin dmb
-undercloud_control_backup_dumbledore $BUILT_UNDERCLOUD_LINK
+stack_control_restore_dumbledore $BUILT_UNDERCLOUD_LINK

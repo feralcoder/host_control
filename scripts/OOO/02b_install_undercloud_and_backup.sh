@@ -20,5 +20,5 @@ ssh_control_run_as_user cliff "cd ~cliff/CODE/feralcoder/train8 ; git pull" dmb
 ssh_control_run_as_user root "rm /root/undercloud_install*; tmux new-session -d -s undercloud '$UNDERCLOUD_BUILD_OPTIONS /home/cliff/CODE/feralcoder/train8/setup_undercloud.sh > undercloud_install_\$\$.log'; tmux split-window -t undercloud -h 'tail -f /root/undercloud_install_\$\$'" dmb
 
 os_control_boot_to_target_installation admin dmb
-undercloud_control_backup $BUILT_UNDERCLOUD_LINK
+stack_control_backup_dumbledore $BUILT_UNDERCLOUD_LINK
 
