@@ -10,6 +10,6 @@ UPDATED_OS_LINK=$1
   UPDATED_OS_LINK=dumbledoreB_01_CentOS_8_2_Updated
 }
 
-01a_restore_base_OS.sh $UPDATED_OS_LINK
-01b_update_base_OS.sh
-01c_backup_base_OS.sh $UPDATED_OS_LINK
+. $THIS_SOURCE/01a_restore_base_OS.sh $UPDATED_OS_LINK
+. $THIS_SOURCE/01b_update_base_OS.sh
+. $THIS_SOURCE/01c_backup_base_OS.sh $UPDATED_OS_LINK
