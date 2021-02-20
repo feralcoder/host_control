@@ -14,6 +14,7 @@ CONTROL_DIR=$( dirname $CONTROL_SOURCE )
 . $CONTROL_DIR/ssh_control.sh  
 . $CONTROL_DIR/os_control.sh  
 . $CONTROL_DIR/stack_control.sh  
+. $CONTROL_DIR/admin_control.sh  
 
 ILO2_HOSTS="mrl gnd yda dmb"
 ILO4_HOSTS="mtn lmn bmn neo str kgn"
