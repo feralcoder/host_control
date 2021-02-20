@@ -97,7 +97,7 @@ ssh_control_distribute_admin_key_these_hosts () {
 ssh_control_remove_hostkey () {
   local HOST=$1
   local HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
-  local ALL_NAMES=`group_control_get_all_names $HOST`
+  local ALL_NAMES=`group_logic_get_all_names $HOST`
   local NAME
   touch ~/.ssh/known_hosts
   for NAME in $ALL_NAMES; do
@@ -116,7 +116,7 @@ ssh_control_get_hostkey () {
     return 1
   }
 
-  local ALL_NAMES=`group_control_get_all_names $HOST`
+  local ALL_NAMES=`group_logic_get_all_names $HOST`
   local NAME
   for NAME in $ALL_NAMES; do
     ssh-keyscan -T 30 $NAME >> ~/.ssh/known_hosts

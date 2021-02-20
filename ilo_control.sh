@@ -140,7 +140,7 @@ ilo_control_remove_ilo_hostkey () {
   local HOST=$1
   local SHORT_HOSTNAME=`echo $HOST | awk -F'.' '{print $1}'`
   local ILO_IP=`getent ahosts $SHORT_HOSTNAME-ipmi | awk '{print $1}' | tail -n 1`
-  local ALL_NAMES=`group_control_get_all_ilo_names $HOST`
+  local ALL_NAMES=`group_logic_get_all_ilo_names $HOST`
   local NAME
   touch ~/.ssh/known_hosts
   for NAME in $ALL_NAMES; do
@@ -162,7 +162,7 @@ ilo_control_get_ilo_hostkey () {
     return 1
   }
 
-  local ALL_ILO_NAMES=`group_control_get_all_ilo_names $HOST`
+  local ALL_ILO_NAMES=`group_logic_get_all_ilo_names $HOST`
   local NAME
   for NAME in $ALL_ILO_NAMES; do
     ssh-keyscan -T 30 $NAME >> ~/.ssh/known_hosts
