@@ -1,5 +1,13 @@
 #!/bin/bash -x
 
+group_logic_get_short_name () {
+  HOST=$1
+
+  local NAMES=`group_logic_get_all_names $HOST`
+  local SHORT_NAME=`echo $NAMES | tr ' '  '\n' | grep -E '^[a-z]{3,3}$' | tail -n 1`
+  echo $SHORT_NAME
+}
+
 group_logic_intersection () {
   local GROUP_A=$1 GROUP_B=$2
   
