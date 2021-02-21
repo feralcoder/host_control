@@ -175,3 +175,10 @@ admin_control_clone () {
   ssh_control_sync_as_user root  $CONTROL_DIR/scripts/dynamic_clone.sh /root/dynamic_clone.sh $HOST
   ssh_control_run_as_user root "/root/dynamic_clone.sh $SRC_DEV $DEST_DEV" $HOST
 }
+
+admin_control_fix_labels () {
+  local DEVICE=$1 PREFIX=$2 HOST=$3
+  local SHORT_NAME=`group_logic_get_short_name $HOST`
+  ssh_control_sync_as_user root  $CONTROL_DIR/scripts/fix_labels.sh /root/fix_labels.sh $HOST
+  ssh_control_run_as_user root "/root/fix_labels.sh $DEVICE ${PREFIX}${SHORT_NAME}" $HOST
+}
