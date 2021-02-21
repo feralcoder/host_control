@@ -8,35 +8,15 @@ HOSTNAME=$3
 
 unalias cp &>/dev/null
 
-BOOT_DEV=`blkid | grep "$DEVICE" | grep boot | awk -F':' '{print $1}'`
-HOME_DEV=`blkid | grep "$DEVICE" | grep home | awk -F':' '{print $1}'`
-SWAP_DEV=`blkid | grep "$DEVICE" | grep swap | awk -F':' '{print $1}'`
-ROOT_DEV=`blkid | grep "$DEVICE" | grep root | awk -F':' '{print $1}'`
-
 HOSTNAME_ADMIN=${HOSTNAME}-admin
 LABEL_PREFIX=${DRIVE_PREFIX}${HOSTNAME_ABBREV}
 
-sfdisk -d $DEVICE | grep -v 'label-id' | sfdisk $DEVICE
-
-xfs_admin -U generate -L ${LABEL_PREFIX}_home $HOME_DEV
-xfs_admin -U generate -L ${LABEL_PREFIX}_root $ROOT_DEV
-xfs_admin -U generate -L ${LABEL_PREFIX}_boot $BOOT_DEV
-mkswap $SWAP_DEV -L ${LABEL_PREFIX}_swap
-e2fsck -f $BOOT_DEV
-#echo y | tune2fs $BOOT_DEV -U random -L ${LABEL_PREFIX}_boot
-
-BOOT_UUID=`blkid | grep -v osprober | grep $BOOT_DEV | sed 's/ /\n/g' | grep '^UUID' | awk -F'=' '{print $2}' | sed 's/"//g'`
-ROOT_UUID=`blkid | grep -v osprober | grep $ROOT_DEV | sed 's/ /\n/g' | grep '^UUID' | awk -F'=' '{print $2}' | sed 's/"//g'`
-HOME_UUID=`blkid | grep -v osprober | grep $HOME_DEV | sed 's/ /\n/g' | grep '^UUID' | awk -F'=' '{print $2}' | sed 's/"//g'`
-SWAP_UUID=`blkid | grep -v osprober | grep $SWAP_DEV | sed 's/ /\n/g' | grep '^UUID' | awk -F'=' '{print $2}' | sed 's/"//g'`
-
 # MOUNT USB ROOT
-mkdir /mnt/${HOSTNAME_ADMIN}_root
-mount $ROOT_DEV /mnt/${HOSTNAME_ADMIN}_root
+mkdir /mnt/${LABEL_PREFIX}_root
+mount LABEL=${LABEL_PREFIX}_root /mnt/${LABEL_PREFIX}_root
 
 # UPDATE ADMIN STICK'S IP, FSTAB, HOSTNAME, HOST_KEYS
-cd /mnt/${HOSTNAME_ADMIN}_root/etc
-
+cd /mnt/${LABEL_PREFIX}_root/etc
 
 fix_networking () {
   # UPDATE IP, ACTIVATE ENO2 - THIS WON'T BE UNDONE BY GENERIC STICK SETUP COMMMANDS - SED WON'T MATCH...
@@ -72,12 +52,12 @@ cp /etc/ssh/ssh_host_* ssh/
 chmod 600 ssh/ssh_host_*
 
 # DONE!  (done?)
-cd / && umount /mnt/${HOSTNAME_ADMIN}_root
+cd / && umount /mnt/${LABEL_PREFIX}_root
 
 
 # MOUNT USB BOOT
 mkdir /mnt/${LABEL_PREFIX}_boot
-mount $BOOT_DEV /mnt/${LABEL_PREFIX}_boot
+mount LABEL=${LABEL_PREFIX}_boot /mnt/${LABEL_PREFIX}_boot
 cd /mnt/${LABEL_PREFIX}_boot
 
 echo "(hd0) $DEVICE" > grub2/device.map
