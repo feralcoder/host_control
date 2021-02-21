@@ -39,6 +39,15 @@ admin_control_mount_everything_these_hosts () {
   done
 }
 
+admin_control_sync_keys_from_xax () {
+  local HOST=$1
+
+  local SHORT_NAME=`group_logic_get_short_name $HOST`
+  admin_control_mount_xax $HOST
+  ssh_control_run_as_user root "HOST_ABBREV=$SHORT_NAME; rsync -avH /mnt/xax_home/cliff/.ssh/ ~cliff/.ssh/; \
+                                rsync -avH /mnt/xax_root/root/.ssh/ ~/.ssh/; \
+                                rsync -avH /mnt/xax_root/etc/ssh/ssh_host_* /etc/ssh/" $HOST
+}
 admin_control_sync_keys_from_admin () {
   local HOST=$1
 
