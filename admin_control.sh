@@ -182,3 +182,31 @@ admin_control_fix_labels () {
   ssh_control_sync_as_user root  $CONTROL_DIR/scripts/fix_labels.sh /root/fix_labels.sh $HOST
   ssh_control_run_as_user root "/root/fix_labels.sh $DEVICE ${PREFIX}${SHORT_NAME}" $HOST
 }
+
+admin_control_fix_admin_key () {
+  local DEVICE=$1 HOST=$2
+  local SHORT_NAME=`group_logic_get_short_name $HOST`
+  ssh_control_sync_as_user root  $CONTROL_DIR/scripts/fix_admin_key.sh /root/fix_admin_key.sh $HOST
+  ssh_control_run_as_user root "/root/fix_admin_key.sh $DEVICE ${SHORT_NAME} $HOST" $HOST
+}
+
+admin_control_fix_grub_these_hosts () {
+  local HOSTS=$1
+
+  local HOST
+  local PIDS=""
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      admin_control_fix_grub $HOST -1 &
+      PIDS="$PIDS:$!"
+      echo "Fixing grub on $HOST..."
+    fi
+  done
+}
