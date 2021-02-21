@@ -160,3 +160,9 @@ admin_control_fix_grub () {
   ssh_control_sync_as_user root $CONTROL_DIR/scripts/fix_grub /root/fix_grub $HOST
   ssh_control_run_as_user root "echo $SHORT_NAME > /root/abbrev_hostname; chmod 755 /root/fix_grub; /root/fix_grub" $HOST
 }
+
+admin_control_clone () {
+  local SRC_DEV=$1 DEST_DEV=$2 HOST=$3
+  ssh_control_sync_as_user root  $CONTROL_DIR/scripts/dynamic_clone.sh /root/dynamic_clone.sh $HOST
+  ssh_control_run_as_user root "/root/dynamic_clone.sh $SRC_DEV $DEST_DEV" $HOST
+}
