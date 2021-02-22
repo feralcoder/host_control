@@ -13,6 +13,7 @@ CONTROL_DIR=$( dirname $CONTROL_SOURCE )
 
 . $CONTROL_DIR/ssh_control.sh  
 . $CONTROL_DIR/os_control.sh  
+. $CONTROL_DIR/backup_control.sh  
 . $CONTROL_DIR/stack_control.sh  
 . $CONTROL_DIR/admin_control.sh  
 
