@@ -91,10 +91,6 @@ os_control_boot_info () {
 os_control_boot_info_these_hosts () {
   local HOSTS=$1
 
-  if [[ $UNSAFE == "" ]]; then
-    HOSTS=$(group_logic_remove_self "$HOSTS")
-  fi
-
   local PIDS="" HOST
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
