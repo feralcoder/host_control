@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HOSTNAME_ABBREV=`cat /root/abbrev_hostname`
-[[ $TIMEOUT != "" ]] || TIMEOUT=-1
+[[ $TIMEOUT != "" ]] || TIMEOUT=30
 
 unalias cp &>/dev/null
 unalias rm &>/dev/null

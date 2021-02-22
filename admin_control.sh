@@ -167,7 +167,7 @@ admin_control_fix_grub () {
   admin_control_make_no_crossboot $HOST
   local SHORT_NAME=`group_logic_get_short_name $HOST`
   ssh_control_sync_as_user root $CONTROL_DIR/scripts/fix_grub.sh /root/fix_grub.sh $HOST
-  ssh_control_run_as_user root "echo $SHORT_NAME > /root/abbrev_hostname; chmod 755 /root/fix_grub.sh; /root/fix_grub.sh" $HOST
+  ssh_control_run_as_user root "echo $SHORT_NAME > /root/abbrev_hostname; chmod 755 /root/fix_grub.sh; TIMEOUT=$TIMEOUT /root/fix_grub.sh" $HOST
 }
 
 admin_control_clone () {
