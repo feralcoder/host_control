@@ -204,7 +204,7 @@ admin_control_fix_grub_these_hosts () {
         echo "Return code for PID $PID: $?"
       done
     else
-      admin_control_fix_grub $HOST -1 &
+      admin_control_fix_grub $HOST &
       PIDS="$PIDS:$!"
       echo "Fixing grub on $HOST..."
     fi
