@@ -20,12 +20,15 @@ fix_labels () {
   xfs_admin  -U generate -L ${LABEL_PREFIX}_home $HOME_DEV
   xfs_admin  -U generate -L ${LABEL_PREFIX}_var $VAR_DEV
   mkswap $SWAP_DEV -L ${LABEL_PREFIX}_swap
+  SWAP_UUID=`blkid | grep $SWAP_DEV | sed 's/ /\n/g' | grep '^UUID' | awk -F'=' '{print $2}' | sed 's/"//g'`
+
   mkdir /mnt/${LABEL_PREFIX}_root > /dev/null 2>&1
   mount -L ${LABEL_PREFIX}_root /mnt/${LABEL_PREFIX}_root
   sed -i "s/^.* \/boot /LABEL=${LABEL_PREFIX}_boot \/boot /g" /mnt/${LABEL_PREFIX}_root/etc/fstab
-  sed -i "s/^.* \/root /LABEL=${LABEL_PREFIX}_root \/root /g" /mnt/${LABEL_PREFIX}_root/etc/fstab
+  sed -i "s/^.* \/ /LABEL=${LABEL_PREFIX}_root \/ /g" /mnt/${LABEL_PREFIX}_root/etc/fstab
   sed -i "s/^.* \/home /LABEL=${LABEL_PREFIX}_home \/home /g" /mnt/${LABEL_PREFIX}_root/etc/fstab
   sed -i "s/^.* \/var /LABEL=${LABEL_PREFIX}_var \/var /g" /mnt/${LABEL_PREFIX}_root/etc/fstab
+  sed -i "s/^.* swap /LABEL=${LABEL_PREFIX}_swap none swap /g" /mnt/${LABEL_PREFIX}_root/etc/fstab
   umount /mnt/${LABEL_PREFIX}_root
 }
 
