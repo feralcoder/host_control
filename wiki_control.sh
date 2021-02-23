@@ -1,7 +1,7 @@
 #!/bin/bash
 
 [[ $CHECK_IMAGES == "" ]] && {
-  echo "wiki_control: Defaulting CHECK_IMAGES to 'false'"
+  [[ $DEBUG == "" ]] || echo "wiki_control: Defaulting CHECK_IMAGES to 'false'"
   CHECK_IMAGES=false
 }
 
