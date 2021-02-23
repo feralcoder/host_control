@@ -149,7 +149,7 @@ backup_control_backup () {
   # DEST=/backups/stack_dumps/
   # FINAL_TARGET=[admin|default]
   # BACKUPLINK=dumbledore_02_Ussuri_Undercloud
-  local HOST=$1 SRC=$2 DEST=$3 BACKUPLINK=$5
+  local HOST=$1 SRC=$2 DEST=$3 BACKUPLINK=$4
 
   local NOW=`date +%Y%m%d-%H%M`
 
@@ -163,6 +163,44 @@ backup_control_backup () {
   ssh_control_sync_as_user root /tmp/backup_output_$$.log /root/backup_output_$NOW.log $HOST
 }
 
+backup_control_backup_all () {
+  local BACKUPLINK=$1 DRIVESET=$2 MOUNTS=$3 BACKUPSERV=$4
+  # ALL ARGS ARE OPTIONAL
+  [[ $DRIVESET == "" ]] && DRIVESET=a
+  [[ $BACKUPSERV == "" ]] && BACKUPSERV=dumbledore
+  if [[ $MOUNTS == "" ]] ; then
+    if [[ "${DRIVESET,,}" =~ ^(a|b|c|d|e)$ ]]; then
+      MOUNTS="boot,root,home,var"
+    elif [[ "${DRIVESET,,}" == x ]]; then
+      MOUNTS="boot,root,home"
+    else
+      MOUNTS="boot,root,home,var"
+    fi
+  fi
+
+  local HOST HOST_BACKUPLINK PIDS
+  for HOST in mtn lmn bmn kgn neo str mrl gnd yda dmb     now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        echo "Return code for PID $PID: $?"
+      done
+    else
+      if [[ $BACKUPLINK != "" ]] ; then HOST_BACKUPLINK=${HOST}_$BACKUPLINK; fi
+      if [[ "${HOST,,}" =~ ^(kgn|neo|bmn|lmn|mtn|dmb)$ ]]; then
+        echo Starting: backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS local $HOST_BACKUPLINK
+        backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS local $HOST_BACKUPLINK &
+      elif [[ "${HOST,,}" =~ ^(str|dmb|yda|gnd)$ ]]; then
+        echo Starting: backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS $BACKUPSERV $HOST_BACKUPLINK
+        backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS $BACKUPSERV $HOST_BACKUPLINK &
+      fi
+      PIDS="$PIDS:$!"
+      echo "Started Backup for $HOST..."
+    fi
+  done
+}
 
 
 backup_control_backup_dumbledore () {
@@ -176,4 +214,3 @@ backup_control_restore_dumbledore () {
   # BACKUPLINK=dumbledore_02_Ussuri_Undercloud
   backup_control_restore dmb /backups/undercloud_dumps/$BACKUPLINK bdmb
 }
-
