@@ -81,13 +81,17 @@ stack_control_graceful_stop_node_these_hosts () {
 
   local INSTANCE_IPS="$(stack_control_get_node_ip_these_hosts '$HOSTS')"
 
+  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       INSTANCE_IP=$(echo "$INSTANCE_IPS" | grep $HOST | awk -F':' '{print $2}')

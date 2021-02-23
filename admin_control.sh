@@ -21,7 +21,7 @@ admin_control_mount_everything () {
 admin_control_mount_everything_these_hosts () {
   local HOSTS=$1
 
-  local HOST
+  local HOST RETURN_CODE
   local PIDS="" SHORT_NAME
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -29,7 +29,10 @@ admin_control_mount_everything_these_hosts () {
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       admin_control_mount_everything $HOST &
@@ -61,7 +64,7 @@ admin_control_sync_keys_from_admin () {
 admin_control_sync_keys_from_admin_these_hosts () {
   local HOSTS=$1
 
-  local HOST
+  local HOST RETURN_CODE
   local PIDS="" SHORT_NAME
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -69,7 +72,10 @@ admin_control_sync_keys_from_admin_these_hosts () {
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       admin_control_sync_keys_from_admin $HOST &
@@ -95,7 +101,7 @@ admin_control_sync_keys_to_admin () {
 admin_control_sync_keys_to_admin_these_hosts () {
   local HOSTS=$1
 
-  local HOST
+  local HOST RETURN_CODE
   local PIDS="" SHORT_NAME
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -103,7 +109,10 @@ admin_control_sync_keys_to_admin_these_hosts () {
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       admin_control_sync_keys_to_admin $HOST &
@@ -128,7 +137,7 @@ admin_control_sync_keys_to_xax () {
 admin_control_sync_keys_to_xax_these_hosts () {
   local HOSTS=$1
 
-  local HOST
+  local HOST RETURN_CODE
   local PIDS="" SHORT_NAME
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -136,7 +145,10 @@ admin_control_sync_keys_to_xax_these_hosts () {
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       admin_control_sync_keys_to_admin $HOST &
@@ -193,7 +205,7 @@ admin_control_fix_admin_key () {
 admin_control_fix_grub_these_hosts () {
   local HOSTS=$1
 
-  local HOST
+  local HOST RETURN_CODE
   local PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
@@ -201,7 +213,10 @@ admin_control_fix_grub_these_hosts () {
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       admin_control_fix_grub $HOST &

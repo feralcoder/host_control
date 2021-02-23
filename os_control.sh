@@ -17,14 +17,17 @@ os_control_graceful_stop_these_hosts () {
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local PIDS="" HOST
+  local PIDS="" HOST RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       os_control_graceful_stop $HOST &
@@ -91,14 +94,17 @@ os_control_boot_info () {
 os_control_boot_info_these_hosts () {
   local HOSTS=$1
 
-  local PIDS="" HOST
+  local PIDS="" HOST RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       echo "$HOST is booted to: $(os_control_boot_info $HOST)" &
@@ -227,14 +233,17 @@ os_control_boot_to_target_installation_these_hosts () {
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local PIDS="" HOST
+  local PIDS="" HOST RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       os_control_boot_to_target_installation $TARGET $HOST &

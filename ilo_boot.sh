@@ -109,6 +109,7 @@ ilo_boot_set_order_these_hosts () {
   local PIDS="" HOST
   local ORDER=$1 HOSTS=$2
 
+  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if ( echo $HOST | grep '[0-9]:[0-9]:[0-9]' ); then
       echo ORDER is $HOST
@@ -117,7 +118,10 @@ ilo_boot_set_order_these_hosts () {
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ilo_boot_set_order "$HOST:$ORDER" &
@@ -132,13 +136,17 @@ ilo_boot_set_defaults_these_hosts () {
   local HOSTS=$1
   local PIDS="" HOST
 
+  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ilo_boot_set_order "$HOST:$DEFAULT_BOOT_ORDER" &
@@ -157,13 +165,17 @@ ilo_boot_set_onetimeboot_these_hosts () {
   local TARGET=$1 HOSTS=$2
   local HOST PIDS=""
 
+  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ilo_boot_set_onetimeboot $TARGET $HOST &
@@ -185,13 +197,17 @@ ilo_boot_set_onetimeboot_ipmi () {
 ilo_boot_set_onetimeboot_ipmi_these_hosts () {
   local PIDS="" HOST TARGET=$1 HOSTS=$2
 
+  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ilo_boot_set_onetimeboot_ipmi $TARGET $HOST &
@@ -206,12 +222,16 @@ ilo_boot_get_order_these_hosts () {
   local HOSTS=$1
   local PIDS="" HOST PID
   
+  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ilo_boot_get_order $HOST &

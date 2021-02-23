@@ -77,13 +77,17 @@ ssh_control_distribute_admin_key_these_hosts () {
   rm $PASSFILE
 
   # This can be done in parallel
+  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ssh_control_uniqify_keys $HOST &
@@ -133,13 +137,18 @@ ssh_control_refetch_hostkey_these_hosts () {
   for HOST in $HOSTS ; do
     ssh_control_remove_hostkey $HOST
   done
+
+  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
@@ -193,14 +202,17 @@ ssh_control_wait_for_host_down_these_hosts () {
   local HOSTS=$1
   local HOST
 
-  local PIDS=""
+  local PIDS="" RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ssh_control_wait_for_host_down $HOST &
@@ -214,14 +226,17 @@ ssh_control_wait_for_host_up_these_hosts () {
   local HOSTS=$1
   local HOST
 
-  local PIDS=""
+  local PIDS="" RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ssh_control_wait_for_host_up $HOST &
@@ -247,19 +262,22 @@ ssh_control_run_as_user_these_hosts () {
   local USER=$1 COMMAND=$2 HOSTS=$3
   local HOST
 
-  local PIDS=""
+  local PIDS="" RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ssh_control_run_as_user $USER "$COMMAND" $HOST &
       PIDS="$PIDS:$!"
-      echo "Running \"$COMMAND\" as $USER on $HOST"
+      [[ $DEBUG == "" ]] || echo "Running \"$COMMAND\" as $USER on $HOST"
     fi
   done
 }
@@ -269,27 +287,30 @@ ssh_control_sync_as_user () {
   local HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
 
   OUTPUT=$(rsync -avH $SOURCE $USER@$HOST_IP:$DEST)
-  echo $SOURCE synced to $HOST:
-  echo "$OUTPUT"
+  [[ $DEBUG == "" ]] ||  echo $SOURCE synced to $HOST:
+  [[ $DEBUG == "" ]] || echo "$OUTPUT"
 }
 
 ssh_control_sync_as_user_these_hosts () {
   local USER=$1 SOURCE=$2 DEST=$3 HOSTS=$4
   local HOST
 
-  local PIDS=""
+  local PIDS="" RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ssh_control_sync_as_user $USER $SOURCE $DEST $HOST &
       PIDS="$PIDS:$!"
-      echo "Syncing $SOURCE to $HOST"
+      [[ $DEBUG == "" ]] || echo "Syncing $SOURCE to $HOST"
     fi
   done
 }

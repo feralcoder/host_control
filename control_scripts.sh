@@ -11,6 +11,7 @@ CONTROL_DIR=$( dirname $CONTROL_SOURCE )
 . $CONTROL_DIR/ilo_boot.sh
 . $CONTROL_DIR/ilo_boot_target.sh
 
+. $CONTROL_DIR/git_control.sh  
 . $CONTROL_DIR/ssh_control.sh  
 . $CONTROL_DIR/os_control.sh  
 . $CONTROL_DIR/backup_control.sh  

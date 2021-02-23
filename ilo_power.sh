@@ -174,13 +174,17 @@ ilo_power_off_these_hosts () {
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
+  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ilo_power_off $HOST &
@@ -192,14 +196,17 @@ ilo_power_off_these_hosts () {
 
 ilo_power_on_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST
+  local PIDS="" HOST RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ilo_power_on $HOST &
@@ -216,14 +223,17 @@ ilo_power_cycle_these_hosts () {
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local PIDS="" HOST
+  local PIDS="" HOST RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ilo_power_cycle $HOST &
@@ -235,14 +245,17 @@ ilo_power_cycle_these_hosts () {
 
 ilo_power_get_state_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST
+  local PIDS="" HOST RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       ilo_power_get_state $HOST &

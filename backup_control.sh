@@ -178,14 +178,17 @@ backup_control_backup_all () {
     fi
   fi
 
-  local HOST HOST_BACKUPLINK PIDS
+  local HOST HOST_BACKUPLINK PIDS RETURN_CODE
   for HOST in mtn lmn bmn kgn neo str mrl gnd yda dmb     now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       if [[ $BACKUPLINK != "" ]] ; then HOST_BACKUPLINK=${HOST}_$BACKUPLINK; fi

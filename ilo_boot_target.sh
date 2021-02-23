@@ -60,14 +60,17 @@ ilo_boot_target_once_these_hosts () {
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local PIDS="" HOST
+  local PIDS="" HOST RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       GENERATION=`ilo_control_get_hw_gen $HOST`

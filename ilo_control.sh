@@ -181,13 +181,18 @@ ilo_control_refetch_ilo_hostkey_these_hosts () {
   for HOST in $HOSTS; do
     ilo_control_remove_ilo_hostkey $HOST
   done
+
+  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID}
-        echo "Return code for PID $PID: $?"
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
       done
     else
       local SHORT_HOSTNAME=`echo $HOST | awk -F'.' '{print $1}'`
