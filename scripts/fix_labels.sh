@@ -9,12 +9,14 @@ fix_labels () {
   for MOUNT in $MOUNTS; do umount $MOUNT; done
 
   sfdisk -d $DEVICE | grep -v 'label-id' | sfdisk $DEVICE
+  sleep 1
   BOOT_DEV=`blkid | grep "$DEVICE" | grep boot | awk -F':' '{print $1}'`
   ROOT_DEV=`blkid | grep "$DEVICE" | grep root | awk -F':' '{print $1}'`
   HOME_DEV=`blkid | grep "$DEVICE" | grep home | awk -F':' '{print $1}'`
   SWAP_DEV=`blkid | grep "$DEVICE" | grep swap | awk -F':' '{print $1}'`
   VAR_DEV=`blkid | grep "$DEVICE" | grep var | awk -F':' '{print $1}'`
 
+  sleep 1
   xfs_admin  -U generate -L ${LABEL_PREFIX}_boot $BOOT_DEV
   xfs_admin  -U generate -L ${LABEL_PREFIX}_root $ROOT_DEV
   xfs_admin  -U generate -L ${LABEL_PREFIX}_home $HOME_DEV
