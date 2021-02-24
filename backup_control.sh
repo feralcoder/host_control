@@ -87,13 +87,17 @@ EOF
     OUTPUT=`ssh_control_run_as_user root "mkdir -p $DEST_PATH_ON_TARGET; chmod 775 $DEST_PATH_ON_TARGET" $BACKUPSERV`
   fi
 
+  local ROOT_EXCLUDE BOOT_EXCLUDE
+  if [[ "${OVERWRITE_IDENTITY,,}" != "true" ]]; then
+    local ROOT_EXCLUDE="--exclude='/etc/fstab*' --exclude='/etc/default/grub*'"
+    local BOOT_EXCLUDE="--exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*'"
+  fi
 
 cat << EOF >> $SCRIPT
-rsync -avxHAX ${SOURCE_PATH}_root/ ${DEST_PATH}/${HOST}_root/ --exclude='/etc/fstab*' --exclude='/etc/default/grub*' --delete
+rsync -avxHAX ${SOURCE_PATH}_root/ ${DEST_PATH}/${HOST}_root/ --delete $ROOT_EXCLUDE
 rsync -avxHAX ${SOURCE_PATH}_home/ ${DEST_PATH}/${HOST}_home/ --delete
 rsync -avxHAX ${SOURCE_PATH}_var/ ${DEST_PATH}/${HOST}_var/ --delete
-rsync -avxHAX ${SOURCE_PATH}_boot/  ${DEST_PATH}/${HOST}_boot/ --exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*' --delete
-
+rsync -avxHAX ${SOURCE_PATH}_boot/  ${DEST_PATH}/${HOST}_boot/ --delete $BOOT_EXCLUDE
 EOF
 
   if [[ $BACKUPLINK != "" ]]; then
@@ -144,18 +148,23 @@ backup_control_restore () {
 
 
 backup_control_backup () {
-  # SRC=[admb|bkgn|etc]
-  # DEST=/backups/stack_dumps/
-  # FINAL_TARGET=[admin|default]
-  # BACKUPLINK=dumbledore_02_Ussuri_Undercloud
-  local HOST=$1 SRC=$2 DEST=$3 MOUNTS=$4 BACKUPSERV=$5 BACKUPLINK=$6
+  # SRC=[admb|bkgn|etc]                          (REQUIRED)
+  # DEST=/backups/stack_dumps/                   ("" --> /backups/stack_dumps/)
+  # MOUNTS=boot,root,home,var                    ("" --> boot,root,home,var)
+  # BACKUPSERV=local|hostname                    ("" --> dumbledore)
+  # BACKUPLINK=dumbledore_02_Ussuri_Undercloud   (OPTIONAL)
+  # OVERWRITE_IDENTITY=true|false                ("" --> false)
+  local HOST=$1 SRC=$2 DEST=$3 MOUNTS=$4 BACKUPSERV=$5 BACKUPLINK=$6 OVERWRITE_IDENTITY=$7
   [[ $DEST == "" ]] && DEST=/backups/stack_dumps/
   [[ $MOUNTS == "" ]] && MOUNTS=boot,root,home,var
   [[ $BACKUPSERV == "" ]] && BACKUPSERV=dumbledore
+  [[ $BACKUPLINK == "" ]] && BACKUPLINK=""
+  [[ $OVERWRITE_IDENTITY == "" ]] && OVERWRITE_IDENTITY=false
 
   local NOW=`date +%Y%m%d-%H%M%S`
 
-  local SCRIPT=`backup_control_make_backup_script $HOST $SRC $DEST boot,root,home,var $BACKUPSERV $BACKUPLINK`
+  local SCRIPT=`backup_control_make_backup_script $HOST $SRC $DEST $MOUNTS $BACKUPSERV "$BACKUPLINK" $OVERWRITE_IDENTITY`
+  echo $NOW $SCRIPT
   ssh_control_sync_as_user root $SCRIPT /root/backup_script_${HOST}_${NOW}.sh $HOST
   ssh_control_run_as_user root "chmod 755 /root/backup_script_${HOST}_${NOW}.sh" $HOST
   SYNC_OUTPUT=$(ssh_control_run_as_user root "/root/backup_script_${HOST}_${NOW}.sh" $HOST)
@@ -164,11 +173,18 @@ backup_control_backup () {
   ssh_control_sync_as_user root /tmp/backup_output_$$.log /root/backup_output_$NOW.log $HOST
 }
 
+
 backup_control_backup_all () {
-  local BACKUPLINK=$1 DRIVESET=$2 MOUNTS=$3 BACKUPSERV=$4
-  # ALL ARGS ARE OPTIONAL
+  local BACKUPLINK=$1 DRIVESET=$2 MOUNTS=$3 BACKUPSERV=$4 OVERWRITE_IDENTITY=$5
+  # ALL ARGS ARE OPTIONAL:
+  # BACKUPLINK="" | ie 02_Ussuri_Undercloud - will be prepended with $HOST unless NULL
+  # DRIVESET=a|b|...|x                     ("" --> "a")
+  # MOUNTS=boot,root,home,var              (or boot,root,home if driveset=x)
+  # BACKUPSERV=hostname|local              ("" --> "dumbledore")
+  # OVERWRITE_IDENTITY=true|false          ("" --> true)
   [[ $DRIVESET == "" ]] && DRIVESET=a
   [[ $BACKUPSERV == "" ]] && BACKUPSERV=dumbledore
+  [[ $OVERWRITE_IDENTITY == "" ]] && OVERWRITE_IDENTITY=true
   if [[ $MOUNTS == "" ]] ; then
     if [[ "${DRIVESET,,}" =~ ^(a|b|c|d|e)$ ]]; then
       MOUNTS="boot,root,home,var"
@@ -194,27 +210,14 @@ backup_control_backup_all () {
     else
       if [[ $BACKUPLINK != "" ]] ; then HOST_BACKUPLINK=${HOST}_$BACKUPLINK; fi
       if [[ "${HOST,,}" =~ ^(kgn|neo|bmn|lmn|mtn|dmb)$ ]]; then
-        echo Starting: backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS local $HOST_BACKUPLINK
-        backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS local $HOST_BACKUPLINK &
+        echo Starting: backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS local "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY
+        backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS local "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY &
       elif [[ "${HOST,,}" =~ ^(str|dmb|yda|gnd)$ ]]; then
-        echo Starting: backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS $BACKUPSERV $HOST_BACKUPLINK
-        backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS $BACKUPSERV $HOST_BACKUPLINK &
+        echo Starting: backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS $BACKUPSERV "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY
+        backup_control_backup $HOST ${DRIVESET}$HOST /backups/stack_dumps/ $MOUNTS $BACKUPSERV "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY &
       fi
       PIDS="$PIDS:$!"
       echo "Started Backup for $HOST..."
     fi
   done
-}
-
-
-backup_control_backup_dumbledore () {
-  local BACKUPLINK=$1
-  # BACKUPLINK=dumbledore_02_Ussuri_Undercloud
-  backup_control_backup dmb bdmb /backups/undercloud_dumps default $BACKUPLINK
-}
-
-backup_control_restore_dumbledore () {
-  local BACKUPLINK=$1
-  # BACKUPLINK=dumbledore_02_Ussuri_Undercloud
-  backup_control_restore dmb /backups/undercloud_dumps/$BACKUPLINK bdmb
 }
