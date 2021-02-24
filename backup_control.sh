@@ -51,6 +51,7 @@ backup_control_make_backup_script () {
   # BACKUPSERV=[hostname|local]
   # BACKUPLINK=dumbledore_02_Ussuri_Undercloud
   local HOST=$1 SRCVOL=$2 DESTDIR=$3 MOUNTS=$4 BACKUPSERV=$5 BACKUPLINK=$6
+  [[ $DEBUG == "" ]] || echo IN MAKESCRIPT: HOST:$HOST SRCVOL=$SRCVOL DESTDIR=$DESTDIR MOUNTS=$MOUNTS BACKUPSERV=$BACKUPSERV BACKUPLINK=$BACKUPLINK 1>&2
 
   local BACKUPSERV_PREFIX
   ( [[ "${BACKUPSERV,,}" == "local" ]] || [[ "$BACKUPSERV" == "" ]] ) && {
@@ -58,55 +59,53 @@ backup_control_make_backup_script () {
   } || {
     BACKUPSERV_PREFIX="$BACKUPSERV:"
   }
+  [[ $DEBUG == "" ]] || echo IN MAKESCRIPT: BACKUPSERV=$BACKUPSERV BACKUPSERV_PREFIX=$BACKUPSERV_PREFIX 1>&2
 
-  local NOW=`date +%Y%m%d-%H%M`
+  local NOW=`date +%Y%m%d-%H%M%S`
   MOUNTS=`echo $MOUNTS | sed 's/,/ /g'`
 
-cat << EOF > /tmp/backup_script.sh_$$
+  local SOURCE_PATH=/mnt/$SRCVOL
+  local DEST_PATH_ON_TARGET=$DESTDIR/${HOST}_$NOW
+  local DEST_PATH=${BACKUPSERV_PREFIX}$DEST_PATH_ON_TARGET
+
+  local SCRIPT=/tmp/backup_script_${HOST}_${NOW}_$$.sh
+cat << EOF > $SCRIPT
 #!/bin/bash
 
 for MOUNT in $MOUNTS; do
-  mkdir /mnt/${SRCVOL}_\${MOUNT}
-  mount LABEL=${SRCVOL}_\${MOUNT} /mnt/${SRCVOL}_\${MOUNT}
+  mkdir /mnt/${SRCVOL}_\${MOUNT} > /dev/null 2>&1
+  mount LABEL=${SRCVOL}_\${MOUNT} /mnt/${SRCVOL}_\${MOUNT} > /dev/null 2>&1
   # Clean up after failed mounts...
-  rmdir /mnt/${SRCVOL}_\${MOUNT}
+  rmdir /mnt/${SRCVOL}_\${MOUNT} > /dev/null 2>&1
 done
 
-SOURCE_PATH=/mnt/$SRCVOL
-DEST_PATH=${BACKUPSERV_PREFIX}$DESTDIR/${HOST}_$NOW
 EOF
 
   if [[ $BACKUPSERV_PREFIX == "" ]] ; then
-    echo "mkdir \$DEST_PATH" >> /tmp/backup_script.sh_$$
+    echo "mkdir -p $DEST_PATH_ON_TARGET" >> $SCRIPT
   else
-    OUTPUT=`ssh_control_run_as_user root "mkdir $DEST_PATH; chmod 775 $DEST_PATH" $BACKUPSERV`
+    OUTPUT=`ssh_control_run_as_user root "mkdir -p $DEST_PATH_ON_TARGET; chmod 775 $DEST_PATH_ON_TARGET" $BACKUPSERV`
   fi
 
 
-cat << EOF >> /tmp/backup_script.sh_$$
-rsync -avxHAX \${SOURCE_PATH}_root/ \${DEST_PATH}/${HOST}_root/ --exclude='/etc/fstab*' --exclude='/etc/default/grub*' --delete
-rsync -avxHAX \${SOURCE_PATH}_home/ \${DEST_PATH}/${HOST}_home/ --delete
-rsync -avxHAX \${SOURCE_PATH}_var/ \${DEST_PATH}/${HOST}_var/ --delete
-rsync -avxHAX \${SOURCE_PATH}_boot/  \${DEST_PATH}/${HOST}_boot/ --exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*' --delete
+cat << EOF >> $SCRIPT
+rsync -avxHAX ${SOURCE_PATH}_root/ ${DEST_PATH}/${HOST}_root/ --exclude='/etc/fstab*' --exclude='/etc/default/grub*' --delete
+rsync -avxHAX ${SOURCE_PATH}_home/ ${DEST_PATH}/${HOST}_home/ --delete
+rsync -avxHAX ${SOURCE_PATH}_var/ ${DEST_PATH}/${HOST}_var/ --delete
+rsync -avxHAX ${SOURCE_PATH}_boot/  ${DEST_PATH}/${HOST}_boot/ --exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*' --delete
 
 EOF
-
-  if [[ $BACKUPSERV_PREFIX == "" ]] ; then
-    echo "mkdir \$DEST_PATH" >> /tmp/backup_script.sh_$$
-  else
-    OUTPUT=`ssh_control_run_as_user root "mkdir $DESTDIR/${HOST}_$NOW; chmod 775 $DEST_PATH" $BACKUPSERV`
-  fi
 
   if [[ $BACKUPLINK != "" ]]; then
     if [[ $BACKUPSERV_PREFIX == "" ]] ; then
-      echo "rm $DESTDIR/$BACKUPLINK"
-      echo "ln -s \$DEST_PATH $DESTDIR/$BACKUPLINK"
+      echo "rm $DESTDIR/$BACKUPLINK" >> $SCRIPT
+      echo "ln -s $DEST_PATH $DESTDIR/$BACKUPLINK" >> $SCRIPT
     else
-      OUTPUT=`ssh_control_run_as_user root "rm $DESTDIR/$BACKUPLINK; ln -s $DESTDIR/${HOST}_$NOW $DESTDIR/$BACKUPLINK" $BACKUPSERV`
+      OUTPUT=`ssh_control_run_as_user root "rm $DESTDIR/$BACKUPLINK; ln -s $DEST_PATH_ON_TARGET $DESTDIR/$BACKUPLINK" $BACKUPSERV`
     fi
   fi
 
-echo /tmp/backup_script.sh_$$
+echo $SCRIPT
 }
 
 
@@ -117,7 +116,7 @@ backup_control_restore () {
   # FINAL_TARGET=[admin|default]
   local HOST=$1 SRC=$2 DEST=$3 FINAL_TARGET=$4
 
-  local NOW=`date +%Y%m%d-%H%M`
+  local NOW=`date +%Y%m%d-%H%M%S`
 
   os_control_boot_to_target_installation admin $HOST
   if [[ $? != 0 ]]; then
@@ -149,15 +148,17 @@ backup_control_backup () {
   # DEST=/backups/stack_dumps/
   # FINAL_TARGET=[admin|default]
   # BACKUPLINK=dumbledore_02_Ussuri_Undercloud
-  local HOST=$1 SRC=$2 DEST=$3 BACKUPLINK=$4
+  local HOST=$1 SRC=$2 DEST=$3 MOUNTS=$4 BACKUPSERV=$5 BACKUPLINK=$6
+  [[ $DEST == "" ]] && DEST=/backups/stack_dumps/
+  [[ $MOUNTS == "" ]] && MOUNTS=boot,root,home,var
+  [[ $BACKUPSERV == "" ]] && BACKUPSERV=dumbledore
 
-  local NOW=`date +%Y%m%d-%H%M`
+  local NOW=`date +%Y%m%d-%H%M%S`
 
-  local SCRIPT=`backup_control_make_backup_script $HOST $SRC $DEST boot,root,home,var dumbledore $BACKUPLINK`
-  echo $NOW $SCRIPT
-  ssh_control_sync_as_user root $SCRIPT /root/backup_script_${NOW}.sh $HOST
-  ssh_control_run_as_user root "chmod 755 /root/backup_script_${NOW}.sh" $HOST
-  SYNC_OUTPUT=$(ssh_control_run_as_user root "/root/backup_script_${NOW}.sh" $HOST)
+  local SCRIPT=`backup_control_make_backup_script $HOST $SRC $DEST boot,root,home,var $BACKUPSERV $BACKUPLINK`
+  ssh_control_sync_as_user root $SCRIPT /root/backup_script_${HOST}_${NOW}.sh $HOST
+  ssh_control_run_as_user root "chmod 755 /root/backup_script_${HOST}_${NOW}.sh" $HOST
+  SYNC_OUTPUT=$(ssh_control_run_as_user root "/root/backup_script_${HOST}_${NOW}.sh" $HOST)
 
   echo "$SYNC_OUTPUT" > /tmp/backup_output_$$.log
   ssh_control_sync_as_user root /tmp/backup_output_$$.log /root/backup_output_$NOW.log $HOST
