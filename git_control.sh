@@ -62,7 +62,7 @@ git_control_pull_push () {
 }
 
 git_control_pull_push_these_hosts () {
-  local HOST=$1
+  local HOSTS=$1
 
   local RETURN_CODE
   for HOST in $HOSTS now_wait; do
