@@ -13,7 +13,7 @@ git_control_fix_repos () {
 
   [[ -f ~/.git_password ]] || git_control_set_local_password
   ssh_control_sync_as_user cliff ~/.git_password ~/.git_password $HOST
-  
+
   local REPO
   for REPO in $REPOS; do
     CODE_PATH=/home/cliff/CODE/feralcoder/$REPO

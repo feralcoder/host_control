@@ -42,7 +42,7 @@ ilo_boot_target_once_ilo4 () {
       target="usb"
       ;;
   esac
-      
+
   local ILO_COMMAND="onetimeboot $target"
   local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_boot_target_once_ilo4`
   [[ $? == 0 ]] || echo "Problem setting onetimeboot to $target on $HOST" 1>&2

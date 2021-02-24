@@ -168,7 +168,7 @@ ilo_power_cycle () {
 
 ilo_power_off_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST 
+  local PIDS="" HOST
 
   if [[ $UNSAFE == "" ]]; then
     HOSTS=$(group_logic_remove_self "$HOSTS")

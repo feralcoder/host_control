@@ -15,7 +15,7 @@ wiki_control_page_exists () {
   if [[ ! -d /tmp/$WHICH_WIKI.wiki.$$ ]]; then
     git clone https://feralcoder:`cat ~/.git_password`@github.com/feralcoder/$WHICH_WIKI.wiki.git /tmp/$WHICH_WIKI.wiki.$$
   fi
-  
+
   if [[ -f /tmp/$WHICH_WIKI.wiki.$$/$PAGE ]]; then
     return 0
   else
@@ -83,7 +83,7 @@ wiki_control_find_broken_external_links () {
   sleep 3
 
   declare -A HTTP_CODES
-  TEST=$(for x in "${!EXT_LINK_RESOLVED[@]}"; do 
+  TEST=$(for x in "${!EXT_LINK_RESOLVED[@]}"; do
     echo ${EXT_LINK_RESOLVED[$x]}
   done)
   CODES=`echo "$TEST" | sort | uniq`
@@ -99,7 +99,7 @@ wiki_control_find_broken_external_links () {
     echo "$LINKS"
     echo; echo;
   done
-  
+
 
   rm -rf /tmp/*.wiki.$$
 }

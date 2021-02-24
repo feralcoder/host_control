@@ -13,7 +13,7 @@ ilo_boot_get_order () {
     local ILO_COMMAND="show /system1/bootconfig1/bootsource$BOOTDEV"
     local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_boot_get_order`
     ILO_COMMAND_STATUS=$?
-    
+
     if [[ $ILO_COMMAND_STATUS == 0 ]]; then
       local ORDER=$(echo "$OUTPUT" | grep bootorder | awk -F'=' '{print $2}' | sed  's/.*\([0-9]\).*/\1/g')
       echo $ORDER
@@ -46,7 +46,7 @@ ilo_boot_set_order () {
       local ILO_COMMAND="set /system1/bootconfig1/bootsource$DEVICE bootorder=$BOOTPOSITION"
       local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_boot_set_order`
       ILO_COMMAND_STATUS=$?
-      
+
       if [[ $ILO_COMMAND_STATUS == 0 ]]; then
         echo "Done setting $HOST BootDev:$DEVICE=$BOOTPOSITION"
       else
@@ -65,7 +65,7 @@ ilo_boot_set_first_boot () {
   local ILO_COMMAND="set /system1/bootconfig1/bootsource$BOOTDEV bootorder=1"
   local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_boot_set_first_boot`
   ILO_COMMAND_STATUS=$?
-  
+
   if [[ $ILO_COMMAND_STATUS == 0 ]]; then
     echo "Set $HOST BootDev:$BOOTDEV=1"
   else
@@ -221,7 +221,7 @@ ilo_boot_set_onetimeboot_ipmi_these_hosts () {
 ilo_boot_get_order_these_hosts () {
   local HOSTS=$1
   local PIDS="" HOST PID
-  
+
   local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then

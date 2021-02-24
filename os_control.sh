@@ -117,7 +117,7 @@ os_control_boot_info_these_hosts () {
 os_control_boot_to_target_installation () {
   # $TARGET==[admin|default]
   local TARGET=$1 HOST=$2
-  
+
   local OUTPUT OS_BOOT_INFO RETVAL
   [[ $DEBUG == "" ]] || echo "In os_control_boot_to_target_installation, getting boot_info for $HOST" 2>&1
   OS_BOOT_INFO=`os_control_boot_info $HOST`
