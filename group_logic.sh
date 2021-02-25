@@ -8,6 +8,24 @@ group_logic_get_short_name () {
   echo $SHORT_NAME
 }
 
+group_logic_union () {
+  local INTERSECTION="" UNION="" GROUP
+
+  ARRAY_ARRAY=("$@")
+
+  for i in `seq 0 "${#ARRAY_ARRAY[@]}"` now_done; do
+    if [[ $i == "${#ARRAY_ARRAY[@]}" ]]; then
+      echo $UNION
+    else
+      GROUP=${ARRAY_ARRAY[$i]}
+      INTERSECTION=`group_logic_intersection "$UNION" "$GROUP"`
+      EXCLUSION_1=`group_logic_exclusion "$UNION" "$GROUP"`
+      EXCLUSION_2=`group_logic_exclusion "$GROUP" "$UNION"`
+      UNION="$INTERSECTION $EXCLUSION_1 $EXCLUSION_2"
+    fi
+  done
+}
+
 group_logic_intersection () {
   local GROUP_A=$1 GROUP_B=$2
 
@@ -18,16 +36,6 @@ group_logic_intersection () {
   echo $INTERSECTION
 }
 
-group_logic_in_list () {
-  local ITEM=$1 LIST=$2
-  local EACH_ITEM FOUND
-
-  for EACH_ITEM in $LIST; do
-    [[ $ITEM == $EACH_ITEM ]] && return 0
-  done
-  return 1
-}
-
 group_logic_exclusion () {
   local INGROUP=$1 OUTGROUP=$2
 
@@ -36,6 +44,16 @@ group_logic_exclusion () {
     ( group_logic_in_list $ITEM "$OUTGROUP" ) || echo $ITEM
   done )
   echo $ONLY_INGROUP
+}
+
+group_logic_in_list () {
+  local ITEM=$1 LIST=$2
+  local EACH_ITEM FOUND
+
+  for EACH_ITEM in $LIST; do
+    [[ $ITEM == $EACH_ITEM ]] && return 0
+  done
+  return 1
 }
 
 group_logic_get_all_ilo_names () {
