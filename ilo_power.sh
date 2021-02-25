@@ -57,6 +57,34 @@ ilo_power_wait_for_on () {
   # We should have returned 0 or 1 already, from within loop...
 }
 
+ilo_power_off_hard () {
+  local HOST=$1
+  local ILO_IP=`getent ahosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
+
+  ILO_COMMAND="power off hard"
+  local SUCCESS_GREP="\(power off\|Server power already \(off\|Off\)\)"
+  OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_off_hard`
+  [[ $? == 0 ]] && {
+    echo "ILO hard power off delivered to $HOST." 1>&2
+  }
+
+  if ( ilo_power_wait_for_off $HOST $COUNT $INTERVAL ) ; then
+    echo "$HOST is powered off hard."
+  else
+    echo "$HOST did not hard power off.  Time to use ipmi chassis control!" 1>&2
+    for IPMI_TRY in `seq 1 $IPMI_TRIES`; do
+      OUTPUT=$(ipmitool -I lanplus -H $ILO_IP -U stack -f ilo_pass chassis power off)
+      if [[ $(echo "$OUTPUT" | grep -i 'Down.Off') == "" ]]; then
+        echo "FAILED to power off $HOST!"
+        return 1
+      else
+        echo "$HOST is powered off via chassis control."
+      fi
+    done
+  fi
+}
+
+
 ilo_power_off () {
   local HOST=$1
   local ILO_IP=`getent ahosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
@@ -164,6 +192,34 @@ ilo_power_cycle () {
   local HOST=$1
   ilo_power_off $HOST
   ilo_power_on $HOST
+}
+
+ilo_power_off_hard_these_hosts () {
+  local HOSTS=$1
+  local PIDS="" HOST
+
+  if [[ $UNSAFE == "" ]]; then
+    HOSTS=$(group_logic_remove_self "$HOSTS")
+  fi
+
+  local RETURN_CODE
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
+      done
+    else
+      ilo_power_off_hard $HOST &
+      PIDS="$PIDS:$!"
+      echo "Started Power Off for $HOST: $!"
+    fi
+  done
 }
 
 ilo_power_off_these_hosts () {
