@@ -143,7 +143,7 @@ echo $SCRIPT
 
 
 backup_control_restore () {
-  # SRC=/backups/undercloud_dumps/dumbledore_02_Ussuri_Undercloud  (REQUIRED)
+  # SRC=/backups/stack_dumps/dir_or_link                           (REQUIRED)
   # DEST=[admb|bkgn|etc]                                           (REQUIRED)
   # MOUNTS=boot,root,home,var                                      ("" --> boot,root,home,var)
   # BACKUPSERV=local|hostname                                      ("" --> $BACKUP_HOST)
@@ -195,13 +195,14 @@ backup_control_backup () {
 
 
 backup_control_restore_all () {
-  local SRCDIR=$1 DRIVESET=$2 MOUNTS=$3 BACKUPSERV=$4 OVERWRITE_IDENTITY=$5
-  # ALL ARGS ARE OPTIONAL:
-  # SRCDIR=/backups/undercloud_dumps/dumbledore_02_Ussuri_Undercloud   ("" --> "a")
+  local BACKUPLINK=$1 SRCDIR=$2 DRIVESET=$3 MOUNTS=$4 BACKUPSERV=$5 OVERWRITE_IDENTITY=$6
+  # BACKUPLINK=dumbledore_02_Ussuri_Undercloud - will be prepended with $HOST                         (REQUIRED)
+  # SRCDIR=/backups/stack_dumps/                                       ("" --> $BACKUP_DIR)
   # DRIVESET=a|b|...|x                                                 ("" --> "a")
   # MOUNTS=boot,root,home,var                                          (or boot,root,home if driveset=x)
   # BACKUPSERV=hostname|local                                          ("" --> "$BACKUP_HOST")
   # OVERWRITE_IDENTITY=true|false                                      ("" --> false)
+  [[ $SRCDIR == "" ]] && SRCDIR=$BACKUP_DIR
   [[ $DRIVESET == "" ]] && DRIVESET=a
   [[ $BACKUPSERV == "" ]] && BACKUPSERV=$BACKUP_HOST
   [[ $OVERWRITE_IDENTITY == "" ]] && OVERWRITE_IDENTITY=false
@@ -229,11 +230,12 @@ backup_control_restore_all () {
         fi
       done
     else
+      RESTORE_DIR=$SRCDIR/${SHORT_NAME}_$BACKUPLINK
       if [[ "${SHORT_NAME,,}" =~ ^(kgn|neo|bmn|lmn|mtn|dmb)$ ]]; then
-        echo Starting: backup_control_restore $HOST $SRCDIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY
+        echo Starting: backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY
         backup_control_restore $HOST $BACKUP_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY &
       elif [[ "${SHORT_NAME,,}" =~ ^(str|dmb|yda|gnd)$ ]]; then
-        echo Starting: backup_control_restore $HOST $BACKUP_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY
+        echo Starting: backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY
         backup_control_restore $HOST $BACKUP_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY &
       fi
       PIDS="$PIDS:$!"
