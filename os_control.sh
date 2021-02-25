@@ -253,3 +253,48 @@ os_control_boot_to_target_installation_these_hosts () {
   done
 }
 
+
+os_control_repoint_repos_to_feralcoder () {
+  local HOST=$1
+
+  cd ~/CODE/feralcoder
+  [[ -d repo-fetcher ]] && {
+    ssh_control_sync_as_user root ~/CODE/feralcoder/repo-fetcher/set_client_repos.sh /tmp/ $HOST
+    ssh_control_sync_as_user root ~/CODE/feralcoder/repo-fetcher/feralcoder.repo /tmp/ $HOST
+    ssh_control_run_as_user root "/tmp/set_client_repos.sh" $HOST
+  } || {
+    echo "repo-fetcher checkout not on this host."
+    echo "It's suggested you run this on dumbledore, the repo server."
+    echo "Or run 'os_control_checkout_repofetcher \$TARGET' to check it out."
+  }
+}
+
+os_control_checkout_repofetcher () {
+  local HOST=$1
+
+  ssh_control_run_as_user cliff "cd ~/CODE/feralcoder; [[ -d repo-fetcher ]] && echo repo-fetcher already checked out on \$HOST || git clone https://feralcoder:\`cat ~/.git_password\`@github.com/feralcoder/repo-fetcher.git" $HOST
+}
+
+os_control_repoint_repos_to_feralcoder_these_hosts () {
+  local HOSTS=$1
+
+  local PIDS="" HOST RETURN_CODE
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID}
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $?"
+        fi
+      done
+    else
+      os_control_repoint_repos_to_feralcoder $HOST &
+      PIDS="$PIDS:$!"
+      echo "Repointing $HOST's OS package repos to feralcoder..."
+    fi
+  done
+}
+
