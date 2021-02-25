@@ -141,7 +141,6 @@ echo $SCRIPT
 }
 
 
-
 backup_control_restore () {
   # SRC=/backups/stack_dumps/dir_or_link                           (REQUIRED)
   # DEST=[admb|bkgn|etc]                                           (REQUIRED)
@@ -216,7 +215,7 @@ backup_control_restore_all () {
     fi
   fi
 
-  local HOST HOST_BACKUPLINK PIDS RETURN_CODE SHORT_NAME
+  local HOST HOST_BACKUPLINK PIDS RETURN_CODE SHORT_NAME RESTORE_DIR
   for HOST in mtn lmn bmn kgn neo str mrl gnd yda dmb     now_wait; do
     SHORT_NAME=`group_logic_get_short_name $HOST`
     if [[ $HOST == "now_wait" ]]; then
@@ -233,10 +232,10 @@ backup_control_restore_all () {
       RESTORE_DIR=$SRCDIR/${SHORT_NAME}_$BACKUPLINK
       if [[ "${SHORT_NAME,,}" =~ ^(kgn|neo|bmn|lmn|mtn|dmb)$ ]]; then
         echo Starting: backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY
-        backup_control_restore $HOST $BACKUP_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY &
+        backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY &
       elif [[ "${SHORT_NAME,,}" =~ ^(str|dmb|yda|gnd)$ ]]; then
         echo Starting: backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY
-        backup_control_restore $HOST $BACKUP_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY &
+        backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY &
       fi
       PIDS="$PIDS:$!"
       echo "Started Restore for $HOST..."
