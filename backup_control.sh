@@ -216,7 +216,7 @@ backup_control_restore_all () {
   fi
 
   local HOST HOST_BACKUPLINK PIDS RETURN_CODE SHORT_NAME RESTORE_DIR
-  for HOST in mtn lmn bmn kgn neo str mrl gnd yda dmb     now_wait; do
+  for HOST in $STACK_HOSTS     now_wait; do
     SHORT_NAME=`group_logic_get_short_name $HOST`
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -266,7 +266,7 @@ backup_control_backup_all () {
   fi
 
   local HOST HOST_BACKUPLINK PIDS RETURN_CODE SHORT_NAME
-  for HOST in mtn lmn bmn kgn neo str mrl gnd yda dmb     now_wait; do
+  for HOST in $STACK_HOSTS     now_wait; do
     SHORT_NAME=`group_logic_get_short_name $HOST`
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
