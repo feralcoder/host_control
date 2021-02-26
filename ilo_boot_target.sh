@@ -66,7 +66,7 @@ ilo_boot_target_once_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -77,10 +77,10 @@ ilo_boot_target_once_these_hosts () {
       GENERATION=`ilo_control_get_hw_gen $HOST`
       [[ $? == 0 ]] && {
         if [[ "$GENERATION" == "6" ]]; then
-          ilo_boot_target_once_ilo2 $TARGET $HOST &
+          ilo_boot_target_once_ilo2 $TARGET $HOST & 2>/dev/null
           PIDS="$PIDS:$!"
         elif [[ "$GENERATION" == "8" ]]; then
-          ilo_boot_target_once_ilo4 $TARGET $HOST &
+          ilo_boot_target_once_ilo4 $TARGET $HOST & 2>/dev/null
           PIDS="$PIDS:$!"
         else
           echo "Unknown HW Gen $GENERATION for $HOST!"

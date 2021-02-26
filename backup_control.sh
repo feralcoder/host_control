@@ -222,7 +222,7 @@ backup_control_restore_all () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -233,10 +233,10 @@ backup_control_restore_all () {
       RESTORE_DIR=$SRCDIR/${SHORT_NAME}_$BACKUPLINK
       if [[ "${SHORT_NAME,,}" =~ ^(kgn|neo|bmn|lmn|mtn|dmb)$ ]]; then
         echo Starting: backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY
-        backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY &
+        backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY & 2>/dev/null
       elif [[ "${SHORT_NAME,,}" =~ ^(str|dmb|yda|gnd)$ ]]; then
         echo Starting: backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY
-        backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY &
+        backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY & 2>/dev/null
       fi
       PIDS="$PIDS:$!"
       echo "Started Restore for $HOST..."
@@ -273,7 +273,7 @@ backup_control_backup_all () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -284,10 +284,10 @@ backup_control_backup_all () {
       if [[ $BACKUPLINK != "" ]] ; then HOST_BACKUPLINK=${SHORT_NAME}_$BACKUPLINK; fi
       if [[ "${SHORT_NAME,,}" =~ ^(kgn|neo|bmn|lmn|mtn|dmb)$ ]]; then
         echo Starting: backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS local "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY
-        backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS local "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY &
+        backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS local "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY & 2>/dev/null
       elif [[ "${SHORT_NAME,,}" =~ ^(str|dmb|yda|gnd)$ ]]; then
         echo Starting: backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS $BACKUPSERV "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY
-        backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS $BACKUPSERV "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY &
+        backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS $BACKUPSERV "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY & 2>/dev/null
       fi
       PIDS="$PIDS:$!"
       echo "Started Backup for $HOST..."

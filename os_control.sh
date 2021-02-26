@@ -23,7 +23,7 @@ os_control_graceful_stop_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -31,7 +31,7 @@ os_control_graceful_stop_these_hosts () {
         fi
       done
     else
-      os_control_graceful_stop $HOST &
+      os_control_graceful_stop $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Stopping $HOST..."
     fi
@@ -101,7 +101,7 @@ os_control_boot_info_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -109,7 +109,7 @@ os_control_boot_info_these_hosts () {
         fi
       done
     else
-      echo "$HOST is booted to: $(os_control_boot_info $HOST)" &
+      echo "$HOST is booted to: $(os_control_boot_info $HOST)" & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Getting OS Boot Info For $HOST..."
     fi
@@ -241,7 +241,7 @@ os_control_boot_to_target_installation_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -249,7 +249,7 @@ os_control_boot_to_target_installation_these_hosts () {
         fi
       done
     else
-      os_control_boot_to_target_installation $TARGET $HOST &
+      os_control_boot_to_target_installation $TARGET $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Booting $HOST to $TARGET.  This may take a while..."
     fi
@@ -287,7 +287,7 @@ os_control_repoint_repos_to_feralcoder_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -295,7 +295,7 @@ os_control_repoint_repos_to_feralcoder_these_hosts () {
         fi
       done
     else
-      os_control_repoint_repos_to_feralcoder $HOST &
+      os_control_repoint_repos_to_feralcoder $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Repointing $HOST's OS package repos to feralcoder..."
     fi

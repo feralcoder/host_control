@@ -36,7 +36,7 @@ git_control_fix_repos_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -44,7 +44,7 @@ git_control_fix_repos_these_hosts () {
         fi
       done
     else
-      git_control_fix_repos $HOST &
+      git_control_fix_repos $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Fixing repos on $HOST..."
     fi
@@ -71,7 +71,7 @@ git_control_pull_push_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -79,7 +79,7 @@ git_control_pull_push_these_hosts () {
         fi
       done
     else
-      git_control_pull_push $HOST &
+      git_control_pull_push $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Fetch-Push-ing repos on $HOST..."
     fi

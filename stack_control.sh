@@ -87,7 +87,7 @@ stack_control_graceful_stop_node_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -97,7 +97,7 @@ stack_control_graceful_stop_node_these_hosts () {
     else
       INSTANCE_IP=$(echo "$INSTANCE_IPS" | grep $HOST | awk -F':' '{print $2}')
 
-      stack_control_graceful_stop_node $HOST $INSTANCE_IP &
+      stack_control_graceful_stop_node $HOST $INSTANCE_IP & 2>/dev/null
 
       PIDS="$PIDS:$!"
       echo "Stopping $HOST..."

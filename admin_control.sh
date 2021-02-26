@@ -28,7 +28,7 @@ admin_control_mount_everything_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -36,7 +36,7 @@ admin_control_mount_everything_these_hosts () {
         fi
       done
     else
-      admin_control_mount_everything $HOST &
+      admin_control_mount_everything $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Mounting all volumes on $HOST..."
     fi
@@ -72,7 +72,7 @@ admin_control_sync_keys_from_admin_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -80,7 +80,7 @@ admin_control_sync_keys_from_admin_these_hosts () {
         fi
       done
     else
-      admin_control_sync_keys_from_admin $HOST &
+      admin_control_sync_keys_from_admin $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Syncing keys on $HOST..."
     fi
@@ -110,7 +110,7 @@ admin_control_sync_keys_to_admin_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -118,7 +118,7 @@ admin_control_sync_keys_to_admin_these_hosts () {
         fi
       done
     else
-      admin_control_sync_keys_to_admin $HOST &
+      admin_control_sync_keys_to_admin $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Syncing keys on $HOST..."
     fi
@@ -147,7 +147,7 @@ admin_control_sync_keys_to_xax_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -155,7 +155,7 @@ admin_control_sync_keys_to_xax_these_hosts () {
         fi
       done
     else
-      admin_control_sync_keys_to_admin $HOST &
+      admin_control_sync_keys_to_admin $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Syncing keys on $HOST..."
     fi
@@ -216,7 +216,7 @@ admin_control_fix_grub_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -224,7 +224,7 @@ admin_control_fix_grub_these_hosts () {
         fi
       done
     else
-      admin_control_fix_grub $HOST &
+      admin_control_fix_grub $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Fixing grub on $HOST..."
     fi

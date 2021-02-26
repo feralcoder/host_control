@@ -208,7 +208,7 @@ ilo_power_off_hard_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -216,7 +216,7 @@ ilo_power_off_hard_these_hosts () {
         fi
       done
     else
-      ilo_power_off_hard $HOST &
+      ilo_power_off_hard $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Started Power Off for $HOST: $!"
     fi
@@ -237,7 +237,7 @@ ilo_power_off_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -245,7 +245,7 @@ ilo_power_off_these_hosts () {
         fi
       done
     else
-      ilo_power_off $HOST &
+      ilo_power_off $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Started Power Off for $HOST: $!"
     fi
@@ -260,7 +260,7 @@ ilo_power_on_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -268,7 +268,7 @@ ilo_power_on_these_hosts () {
         fi
       done
     else
-      ilo_power_on $HOST &
+      ilo_power_on $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Started Power On for $HOST: $!"
     fi
@@ -288,7 +288,7 @@ ilo_power_cycle_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -296,7 +296,7 @@ ilo_power_cycle_these_hosts () {
         fi
       done
     else
-      ilo_power_cycle $HOST &
+      ilo_power_cycle $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Started Power Cycle for $HOST: $!"
     fi
@@ -311,7 +311,7 @@ ilo_power_get_state_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -319,7 +319,7 @@ ilo_power_get_state_these_hosts () {
         fi
       done
     else
-      ilo_power_get_state $HOST &
+      ilo_power_get_state $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Getting power state for $HOST: $!"
     fi

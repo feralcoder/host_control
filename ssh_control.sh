@@ -83,7 +83,7 @@ ssh_control_distribute_admin_key_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -91,7 +91,7 @@ ssh_control_distribute_admin_key_these_hosts () {
         fi
       done
     else
-      ssh_control_uniqify_keys $HOST &
+      ssh_control_uniqify_keys $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Started Key Cleanup for $HOST: $!"
     fi
@@ -145,7 +145,7 @@ ssh_control_refetch_hostkey_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -154,7 +154,7 @@ ssh_control_refetch_hostkey_these_hosts () {
       done
     else
       HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
-      ssh_control_get_hostkey $HOST &
+      ssh_control_get_hostkey $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Getting host key for $HOST: $!"
     fi
@@ -210,7 +210,7 @@ ssh_control_wait_for_host_down_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -218,7 +218,7 @@ ssh_control_wait_for_host_down_these_hosts () {
         fi
       done
     else
-      ssh_control_wait_for_host_down $HOST &
+      ssh_control_wait_for_host_down $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Waiting for $HOST to come down."
     fi
@@ -235,7 +235,7 @@ ssh_control_wait_for_host_up_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -243,7 +243,7 @@ ssh_control_wait_for_host_up_these_hosts () {
         fi
       done
     else
-      ssh_control_wait_for_host_up $HOST &
+      ssh_control_wait_for_host_up $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Waiting for $HOST to come up."
     fi
