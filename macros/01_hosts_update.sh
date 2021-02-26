@@ -5,6 +5,12 @@ KOLLA_SETUP_DIR=$( dirname $KOLLA_SETUP_SOURCE )
 . ~/CODE/feralcoder/host_control/control_scripts.sh
 
 
+setup_yum_repos () {
+  os_control_checkout_repofetcher dmb
+  ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/setup.sh" dmb
+}
+
+
 
 get_sudo_password () {
   local PASSWORD
@@ -66,6 +72,7 @@ host_updates () {
 SUDO_PASS_FILE=`get_sudo_password`
 [[ -f ~/.password ]] || { mv $SUDO_PASS_FILE ~/.password && SUDO_PASS_FILE=~/.password ; }
 host_control_updates
+setup_yum_repos
 host_updates
 
 [[ $SUDO_PASS_FILE != ~/.password ]] && rm $SUDO_PASS_FILE
