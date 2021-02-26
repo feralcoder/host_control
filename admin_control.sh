@@ -185,6 +185,9 @@ admin_control_fix_grub () {
 
 admin_control_clone () {
   local SRC_DEV=$1 DEST_DEV=$2 HOST=$3
+  echo CLONING $SRC_DEV to $DEST_DEV on $HOST
+  admin_control_umount_all_parts $SRC_DEV $HOST
+  admin_control_umount_all_parts $DEST_DEV $HOST
   ssh_control_sync_as_user root  $CONTROL_DIR/scripts/dynamic_clone.sh /root/dynamic_clone.sh $HOST
   ssh_control_run_as_user root "/root/dynamic_clone.sh $SRC_DEV $DEST_DEV" $HOST
 }
@@ -223,6 +226,74 @@ admin_control_fix_grub_these_hosts () {
       admin_control_fix_grub $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Fixing grub on $HOST..."
+    fi
+  done
+}
+
+admin_control_umount_all_parts () {
+  local DEV=$1 HOST=$2
+
+  local MOUNTS=`ssh_control_run_as_user root "mount | grep '^$DEV'" $HOST | grep $DEV | awk '{print $3}' | tr '\n' ' '`
+  [[ $MOUNTS != "" ]] && ssh_control_run_as_user root "umount $MOUNTS" $HOST
+}
+
+admin_control_find_labeled_drive_by_prefix () {
+  local PREFIX=$1 HOST=$2
+
+  local SHORTNAME=`group_logic_get_short_name $HOST`
+  local LABEL=${PREFIX}$SHORTNAME
+  local PARTS=`ssh_control_run_as_user root "blkid | grep $LABEL" $HOST | sed 's/: LABEL=\"/:/g' | awk -F'\"' '{print $1}'`
+  local PART
+  for PART in $PARTS; do
+    DEV=`echo $PART | awk -F':' '{print $1}'`
+    LABEL=`echo $PART | awk -F':' '{print $2}'`
+    echo $DEV $LABEL
+  done
+}
+
+
+admin_control_clone_and_fix_labels () {
+  local SRC_PREFIX=$1 DEST_PREFIX=$2 HOST=$3
+
+  local SHORT_NAME SRC_DISK DEST_DISK SRC_DEV DEST_DEV
+  SHORT_NAME=`group_logic_get_short_name $HOST`
+  SRC_DISK=${SRC_PREFIX}$SHORT_NAME
+  DEST_DISK=${DEST_PREFIX}$SHORT_NAME
+  SRC_DEV=`ssh_control_run_as_user root "blkid | grep $SRC_DISK" $HOST | grep ${SRC_DISK}_boot | awk '{print $1}' | tr '\n' ' ' | sed 's/[0-9]:.*//g'`
+  DEST_DEV=`ssh_control_run_as_user root "blkid | grep $DEST_DISK" $HOST | grep ${DEST_DISK}_boot | awk '{print $1}' | tr '\n' ' ' | sed 's/[0-9]:.*//g'`
+  ( admin_control_clone $SRC_DEV $DEST_DEV $HOST && 
+    admin_control_fix_labels $DEST_DEV $DEST_PREFIX $HOST ) > \
+    "/tmp/mass_clone_${HOST}_${SRC_DISK}_${DEST_DISK}_$$.log"
+
+  PIDS="$PIDS:$!"
+  echo "Cloning $SRC_DEV to $DEST_DEV on $HOST."
+}
+
+
+
+admin_control_clone_and_fix_labels_these_hosts () {
+  local SRC_PREFIX=$1 DEST_PREFIX=$2 HOSTS=$3
+
+  local RETURN_CODE HOST PID SHORT_NAME SRC_DISK DEST_DISK SRC_DEV DEST_DEV PIDS LOGFILE
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID} 2>/dev/null
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Mass clone, SRC_PREFIX:$SRC_PREFIX DEST_PREFIX:$DEST_PREFIX"
+        fi
+      done
+    else
+      LOGFILE=/tmp/mass_clone_${HOST}_${SRC_PREFIX}_${DEST_PREFIX}_$$.log
+      echo "Logging to $LOGFILE."
+      admin_control_clone_and_fix_labels $SRC_PREFIX $DEST_PREFIX $HOST > $LOGFILE &
+
+      PIDS="$PIDS:$!"
+      echo "Cloning $SRC_PREFIX to $DEST_PREFIX on $HOST."
     fi
   done
 }
