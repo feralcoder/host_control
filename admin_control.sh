@@ -200,10 +200,11 @@ admin_control_fix_labels () {
 }
 
 admin_control_fix_admin_key () {
-  local DEVICE=$1 HOST=$2
-  local SHORT_NAME=`group_logic_get_short_name $HOST`
-  ssh_control_sync_as_user root  $CONTROL_DIR/scripts/fix_admin_key.sh /root/fix_admin_key.sh $HOST
-  ssh_control_run_as_user root "/root/fix_admin_key.sh $DEVICE ${SHORT_NAME} $HOST" $HOST
+  ###### SECOND ARGEMUNT IS LONG NAME FOR FUCKS SAKE
+  local DEVICE=$1 LONG_HOSTNAME=$2
+  local SHORT_NAME=`group_logic_get_short_name $LONG_HOSTNAME`
+  ssh_control_sync_as_user root  $CONTROL_DIR/scripts/fix_admin_key.sh /root/fix_admin_key.sh $LONG_HOSTNAME
+  ssh_control_run_as_user root "/root/fix_admin_key.sh $DEVICE ${SHORT_NAME} $LONG_HOSTNAME" $LONG_HOSTNAME
 }
 
 admin_control_fix_grub_these_hosts () {
