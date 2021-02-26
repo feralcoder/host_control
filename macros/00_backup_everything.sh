@@ -11,8 +11,15 @@ BACKUPLINK=$1
 #   by default to Updated Centos8 Admin images
 # Run from admin box (yoda)
 
-os_control_boot_to_target_installation_these_hosts admin "$STACK_HOSTS" # Will skip localhost
+SELFNAME_SHORT=`hostname | awk -F'.' '{print $1}'`
+NAME_SUFFIX=`echo $SELFNAME_SHORT | awk -F'-' '{print $2}'`
+[[ $NAME_SUFFIX == "admin" ]] || {
+  echo "RUN THIS SCRIPT FROM AN ADMIN OS!"
+  echo "This host will back itself up without reboots."
+  return 1
+}
+os_control_boot_to_target_installation_these_hosts admin "$ALL_HOSTS" # Will skip localhost
 backup_control_backup_all 01_CentOS_8_3_Admin_Install
-os_control_boot_to_target_installation_these_hosts default "$STACK_HOSTS" # Will skip localhost
+os_control_boot_to_target_installation_these_hosts default "$ALL_HOSTS" # Will skip localhost
 
 admin_control_fix_grub_these_hosts "$ALL_HOSTS"
