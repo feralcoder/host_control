@@ -6,6 +6,15 @@ DEVICE=$1
 HOSTNAME_ABBREV=$2
 HOSTNAME=$3
 
+#### SO MANY FUCKING PROBLEMS
+# From passing only short name.
+# If only 2 args, figure out from existing hostname.
+[[ $HOSTNAME != "" ]] || {
+  UNQUALIFIED_NAME=`hostname | awk -F'.' '{print $1}'`
+  SIMPLE_NAME=`echo $UNQUALIFIED_NAME | awk -F'-' '{print $1}'`
+  HOSTNAME=$SIMPLE_NAME
+}
+
 unalias cp &>/dev/null
 
 HOSTNAME_ADMIN=${HOSTNAME}-admin
