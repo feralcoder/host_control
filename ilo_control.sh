@@ -144,9 +144,9 @@ ilo_control_remove_ilo_hostkey () {
   local NAME
   touch ~/.ssh/known_hosts
   for NAME in $ALL_NAMES; do
-    ssh-keygen -R $NAME
+    ssh-keygen -R $NAME 2>&1
   done
-  ssh-keygen -R $ILO_IP
+  ssh-keygen -R $ILO_IP 2>&1
 }
 
 ilo_control_get_ilo_hostkey () {
@@ -155,7 +155,7 @@ ilo_control_get_ilo_hostkey () {
   local HOST=$1
   local SHORT_HOSTNAME=`echo $HOST | awk -F'.' '{print $1}'`
   local ILO_IP=`getent ahosts $SHORT_HOSTNAME-ipmi | awk '{print $1}' | tail -n 1`
-  ssh-keyscan -T 30 $ILO_IP >> ~/.ssh/known_hosts
+  ssh-keyscan -T 30 $ILO_IP >> ~/.ssh/known_hosts 2>/dev/null
   local OUTPUT
   ( OUTPUT=`grep "$ILO_IP" ~/.ssh/known_hosts` ) || {
     echo "Failed to retrieve ipmi host key for $HOST!"
@@ -165,7 +165,7 @@ ilo_control_get_ilo_hostkey () {
   local ALL_ILO_NAMES=`group_logic_get_all_ilo_names $HOST`
   local NAME
   for NAME in $ALL_ILO_NAMES; do
-    ssh-keyscan -T 30 $NAME >> ~/.ssh/known_hosts
+    ssh-keyscan -T 30 $NAME >> ~/.ssh/known_hosts 2>/dev/null
     ( OUTPUT=`grep "$NAME" ~/.ssh/known_hosts` ) || {
       echo "Failed to retrieve host key for $NAME!"
       return 1
@@ -188,7 +188,7 @@ ilo_control_refetch_ilo_hostkey_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} >/dev/null 2>&1
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
           echo "Return code for PID $PID: $RETURN_CODE"
@@ -198,7 +198,7 @@ ilo_control_refetch_ilo_hostkey_these_hosts () {
     else
       local SHORT_HOSTNAME=`echo $HOST | awk -F'.' '{print $1}'`
       ILO_IP=`getent ahosts $SHORT_HOSTNAME-ipmi | awk '{print $1}' | tail -n 1`
-      ilo_control_get_ilo_hostkey $HOST &
+      ilo_control_get_ilo_hostkey $HOST & >/dev/null 2>&1
       PIDS="$PIDS:$!"
       echo "Getting host key for $HOST: $!"
     fi
