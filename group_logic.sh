@@ -9,7 +9,7 @@ group_logic_get_short_name () {
 }
 
 group_logic_union () {
-  local INTERSECTION="" UNION="" GROUP
+  local GROUP INTERSECTION="" UNION=""
 
   ARRAY_ARRAY=("$@")
 
@@ -48,8 +48,8 @@ group_logic_exclusion () {
 
 group_logic_in_list () {
   local ITEM=$1 LIST=$2
-  local EACH_ITEM FOUND
 
+  local EACH_ITEM FOUND
   for EACH_ITEM in $LIST; do
     [[ $ITEM == $EACH_ITEM ]] && return 0
   done

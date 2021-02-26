@@ -60,7 +60,7 @@ ilo_boot_target_once_these_hosts () {
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local PIDS="" HOST RETURN_CODE
+  local HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`

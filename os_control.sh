@@ -17,7 +17,7 @@ os_control_graceful_stop_these_hosts () {
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local PIDS="" HOST RETURN_CODE
+  local HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -95,7 +95,7 @@ os_control_boot_info () {
 os_control_boot_info_these_hosts () {
   local HOSTS=$1
 
-  local PIDS="" HOST RETURN_CODE
+  local HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -235,7 +235,7 @@ os_control_boot_to_target_installation_these_hosts () {
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local PIDS="" HOST RETURN_CODE
+  local HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -281,7 +281,7 @@ os_control_checkout_repofetcher () {
 os_control_repoint_repos_to_feralcoder_these_hosts () {
   local HOSTS=$1
 
-  local PIDS="" HOST RETURN_CODE
+  local HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`

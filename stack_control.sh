@@ -27,7 +27,7 @@ stack_control_get_instance_ips_all () {
 }
 
 stack_control_get_instance_ip () {
-  local INSTANCE=$1 INSTANCE_IP
+  local INSTANCE_IP INSTANCE=$1
 
   INSTANCE_IP=$(stack_control_get_instance_ips | grep $INSTANCE | awk -F':' '{print $2}')
 }
@@ -77,7 +77,7 @@ stack_control_graceful_stop_node () {
 
 stack_control_graceful_stop_node_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST INSTANCE_IP
+  local HOST INSTANCE_IP PIDS=""
 
   local INSTANCE_IPS="$(stack_control_get_node_ip_these_hosts '$HOSTS')"
 

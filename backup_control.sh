@@ -50,8 +50,8 @@ EOF
 
   local ROOT_EXCLUDE BOOT_EXCLUDE
   if [[ "${OVERWRITE_IDENTITY,,}" != "true" ]]; then
-    local ROOT_EXCLUDE="--exclude='/etc/fstab*' --exclude='/etc/default/grub*'"
-    local BOOT_EXCLUDE="--exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*'"
+    ROOT_EXCLUDE="--exclude='/etc/fstab*' --exclude='/etc/default/grub*'"
+    BOOT_EXCLUDE="--exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*'"
   fi
 
 
@@ -116,8 +116,8 @@ EOF
 
   local ROOT_EXCLUDE BOOT_EXCLUDE
   if [[ "${OVERWRITE_IDENTITY,,}" != "true" ]]; then
-    local ROOT_EXCLUDE="--exclude='/etc/fstab*' --exclude='/etc/default/grub*'"
-    local BOOT_EXCLUDE="--exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*'"
+    ROOT_EXCLUDE="--exclude='/etc/fstab*' --exclude='/etc/default/grub*'"
+    BOOT_EXCLUDE="--exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*'"
   fi
 
 cat << EOF >> $SCRIPT

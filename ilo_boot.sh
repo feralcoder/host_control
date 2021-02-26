@@ -106,10 +106,9 @@ ilo_boot_set_onetimeboot () {
 
 
 ilo_boot_set_order_these_hosts () {
-  local PIDS="" HOST
   local ORDER=$1 HOSTS=$2
+  local RETURN_CODE HOST PIDS=""
 
-  local RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if ( echo $HOST | grep '[0-9]:[0-9]:[0-9]' ); then
       echo ORDER is $HOST
@@ -135,13 +134,11 @@ ilo_boot_set_order_these_hosts () {
 
 ilo_boot_set_defaults_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST
 
-  local RETURN_CODE
+  local PID RETURN_CODE HOST PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
-      local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID} 2>/dev/null
         RETURN_CODE=$?
@@ -165,13 +162,11 @@ ilo_boot_set_defaults () {
 
 ilo_boot_set_onetimeboot_these_hosts () {
   local TARGET=$1 HOSTS=$2
-  local HOST PIDS=""
 
-  local RETURN_CODE
+  local PID RETURN_CODE HOST PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
-      local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID} 2>/dev/null
         RETURN_CODE=$?
@@ -198,13 +193,12 @@ ilo_boot_set_onetimeboot_ipmi () {
 }
 
 ilo_boot_set_onetimeboot_ipmi_these_hosts () {
-  local PIDS="" HOST TARGET=$1 HOSTS=$2
+  local HOST PIDS="" TARGET=$1 HOSTS=$2
 
-  local RETURN_CODE
+  local RETURN_CODE PID
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
-      local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID} 2>/dev/null
         RETURN_CODE=$?
@@ -224,9 +218,8 @@ ilo_boot_set_onetimeboot_ipmi_these_hosts () {
 
 ilo_boot_get_order_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST PID
 
-  local RETURN_CODE
+  local RETURN_CODE HOST PID PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`

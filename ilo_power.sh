@@ -196,7 +196,7 @@ ilo_power_cycle () {
 
 ilo_power_off_hard_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST
+  local HOST PIDS=""
 
   if [[ $UNSAFE == "" ]]; then
     HOSTS=$(group_logic_remove_self "$HOSTS")
@@ -225,7 +225,7 @@ ilo_power_off_hard_these_hosts () {
 
 ilo_power_off_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST
+  local HOST PIDS=""
 
   if [[ $UNSAFE == "" ]]; then
     HOSTS=$(group_logic_remove_self "$HOSTS")
@@ -254,7 +254,7 @@ ilo_power_off_these_hosts () {
 
 ilo_power_on_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST RETURN_CODE
+  local HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -282,7 +282,7 @@ ilo_power_cycle_these_hosts () {
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local PIDS="" HOST RETURN_CODE
+  local HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -305,7 +305,7 @@ ilo_power_cycle_these_hosts () {
 
 ilo_power_get_state_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST RETURN_CODE
+  local HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`

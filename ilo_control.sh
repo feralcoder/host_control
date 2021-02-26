@@ -5,11 +5,11 @@ _ilo_control_check_return_tags () {
   # SUCCESS:0    RETRY:1    EXIT:2
   local OUTPUT=$1 SUCCESS_GREP=$2
 
-  local STATUS_TAG ERROR_TAG COMPLETED IN_POST
+  local STATUS_TAG ERROR_TAG IN_POST
 
-  local STATUS_TAG=$(echo "$OUTPUT" | grep "status_tag" | awk -F'=' '{print $2}')
-  local ERROR_TAG=$(echo "$OUTPUT" | grep "error_tag" | awk -F'=' '{print $2}')
-  local IN_POST=$(echo "$OUTPUT" | grep "unable to set boot orders until system completes POST.")
+  STATUS_TAG=$(echo "$OUTPUT" | grep "status_tag" | awk -F'=' '{print $2}')
+  ERROR_TAG=$(echo "$OUTPUT" | grep "error_tag" | awk -F'=' '{print $2}')
+  IN_POST=$(echo "$OUTPUT" | grep "unable to set boot orders until system completes POST.")
 
   [[ $DEBUG == "" ]] || {
     echo "CHECKING RETURN TAGS:" 1>&2
@@ -176,18 +176,16 @@ ilo_control_get_ilo_hostkey () {
 
 ilo_control_refetch_ilo_hostkey_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST ILO_IP
-  local HOST ILO_IP
 
+  local HOST
   for HOST in $HOSTS; do
     ilo_control_remove_ilo_hostkey $HOST
   done
 
-  local RETURN_CODE
+  local RETURN_CODE PID ILO_IP PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
-      local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID} >/dev/null 2>&1
         RETURN_CODE=$?

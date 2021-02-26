@@ -65,11 +65,10 @@ git_control_pull_push () {
 git_control_pull_push_these_hosts () {
   local HOSTS=$1
 
-  local RETURN_CODE
+  local RETURN_CODE PID
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
-      local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
         wait ${PID} 2>/dev/null
         RETURN_CODE=$?

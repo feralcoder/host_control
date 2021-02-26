@@ -21,8 +21,7 @@ admin_control_mount_everything () {
 admin_control_mount_everything_these_hosts () {
   local HOSTS=$1
 
-  local HOST RETURN_CODE
-  local PIDS="" SHORT_NAME
+  local SHORT_NAME HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -65,8 +64,7 @@ admin_control_sync_keys_from_admin () {
 admin_control_sync_keys_from_admin_these_hosts () {
   local HOSTS=$1
 
-  local HOST RETURN_CODE
-  local PIDS="" SHORT_NAME
+  local HOST RETURN_CODE SHORT_NAME PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -103,8 +101,7 @@ admin_control_sync_keys_to_admin () {
 admin_control_sync_keys_to_admin_these_hosts () {
   local HOSTS=$1
 
-  local HOST RETURN_CODE
-  local PIDS="" SHORT_NAME
+  local HOST RETURN_CODE SHORT_NAME PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -140,8 +137,7 @@ admin_control_sync_keys_to_xax () {
 admin_control_sync_keys_to_xax_these_hosts () {
   local HOSTS=$1
 
-  local HOST RETURN_CODE
-  local PIDS="" SHORT_NAME
+  local HOST RETURN_CODE SHORT_NAME PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -178,7 +174,8 @@ admin_control_make_no_crossboot () {
 }
 
 admin_control_fix_grub () {
-  local HOST=$1 TIMEOUT=$2
+  local HOST=$1
+  local TIMEOUT=$2
   [[ $TIMEOUT != "" ]] || TIMEOUT=30
   admin_control_make_no_crossboot $HOST
   local SHORT_NAME=`group_logic_get_short_name $HOST`
@@ -209,8 +206,7 @@ admin_control_fix_admin_key () {
 admin_control_fix_grub_these_hosts () {
   local HOSTS=$1
 
-  local HOST RETURN_CODE
-  local PIDS=""
+  local HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`

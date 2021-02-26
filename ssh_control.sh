@@ -59,7 +59,7 @@ ssh_control_push_key () {
 
 ssh_control_distribute_admin_key_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST
+  local HOST PIDS=""
 
   [[ -f ~/.ssh/pubkeys/id_rsa.pub ]] && {
     local KEY=`cat ~/.ssh/pubkeys/id_rsa.pub`
@@ -134,7 +134,7 @@ ssh_control_get_hostkey () {
 
 ssh_control_refetch_hostkey_these_hosts () {
   local HOSTS=$1
-  local PIDS="" HOST HOST_IP
+  local HOST HOST_IP PIDS=""
   for HOST in $HOSTS ; do
     ssh_control_remove_hostkey $HOST
   done
@@ -204,7 +204,7 @@ ssh_control_wait_for_host_down_these_hosts () {
   local HOSTS=$1
   local HOST
 
-  local PIDS="" RETURN_CODE
+  local RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -229,7 +229,7 @@ ssh_control_wait_for_host_up_these_hosts () {
   local HOSTS=$1
   local HOST
 
-  local PIDS="" RETURN_CODE
+  local RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -266,7 +266,7 @@ ssh_control_run_as_user_these_hosts () {
   local USER=$1 COMMAND=$2 HOSTS=$3
   local HOST
 
-  local PIDS="" RETURN_CODE
+  local RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -300,7 +300,7 @@ ssh_control_sync_as_user_these_hosts () {
   local USER=$1 SOURCE=$2 DEST=$3 HOSTS=$4
   local HOST
 
-  local PIDS="" RETURN_CODE
+  local RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
