@@ -1,6 +1,6 @@
 #!/bin/bash
-KOLLA_SETUP_SOURCE="${BASH_SOURCE[0]}"
-KOLLA_SETUP_DIR=$( dirname $KOLLA_SETUP_SOURCE )
+MACRO_SOURCE="${BASH_SOURCE[0]}"
+MACRO_DIR=$( dirname $MACRO_SOURCE )
 
 . ~/CODE/feralcoder/host_control/control_scripts.sh
 
