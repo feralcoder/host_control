@@ -7,15 +7,15 @@ UNDERCLOUD_IP=`getent ahosts $UNDERCLOUD_HOST | awk '{print $1}' | tail -n 1`
 stack_control_build_the_whole_fucking_thing () {
   local HOST=$1
 
-  backup_control_restore dmb admb /backups/undercloud_dumps/dumbledore_01_CentOS_8 default
+  backup_control_restore dmb admb /backups/stack_dumps/dumbledore_01_CentOS_8 default
   ssh_control_run_as_user root "DEFOPTS=true ~cliff/CODE/feralcoder/train8/setup_undercloud.sh" dmb
   # OUTPUT=$(run_as_user root "~cliff/CODE/feralcoder/train8/verify_undercloud.sh" dmb)
   # [[ $OUTPUT == "UNDERCLOUD OK" ]] || { echo "Undercloud installation incomplete, check it out!"; return 1; }
-  backup_control_backup dmb admb /backups/undercloud_dumps default new-dumbledore_02_Ussuri_Undercloud
+  backup_control_backup dmb admb /backups/stack_dumps default new-dumbledore_02_Ussuri_Undercloud
   ssh_control_run_as_user root "DEFOPTS=true ~cliff/CODE/feralcoder/train8/setup_overcloud.sh" dmb
   # OUTPUT=$(run_as_user root "~cliff/CODE/feralcoder/train8/verify_overcloud.sh" dmb)
   # [[ $OUTPUT == "OVERCLOUD OK" ]] || { echo "Overcloud installation incomplete, check it out!"; return 1; }
-  backup_control_backup dmb admb /backups/undercloud_dumps default new-dumbledore_03_Ussuri_Overcloud
+  backup_control_backup dmb admb /backups/stack_dumps default new-dumbledore_03_Ussuri_Overcloud
 }
 
 stack_control_get_instance_ips_all () {
