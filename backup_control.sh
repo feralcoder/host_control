@@ -4,9 +4,9 @@ BACKUP_HOST=dumbledore
 BACKUP_DIR=/backups/stack_dumps/
 
 backup_control_make_restore_script () {
-  # SRCDIR=/backups/stack_dumps/dumbledore_02_Ussuri_Undercloud   (xxx)
-  # DESTVOL=[akgn|bdmb|etc]                                       (xxx)
-  # MOUNTS="boot,root,home,var"                                   (xxx)
+  # SRCDIR=/backups/stack_dumps/link_or_dir                       (REQUIRED)
+  # DESTVOL=[akgn|bdmb|etc]                                       (REQUIRED)
+  # MOUNTS="boot,root,home,var"                                   (REQUIRED)
   # BACKUPSERV=[hostname|local]                                   ("" --> local)
   # OVERWRITE_IDENTITY=true|false                                 ("" --> false)
   local HOST=$1 SRCDIR=$2 DESTVOL=$3 MOUNTS=$4 BACKUPSERV=$5 OVERWRITE_IDENTITY=$6
@@ -225,7 +225,8 @@ backup_control_restore_all () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Restore all: BACKUPLINK:$BACKUPLINK SRCDIR:$SRCDIR DRIVESET:$DRIVESET MOUNTS:$MOUNTS BACKUPSERV:$BACKUPSERV OVERWRITE_IDENTITY:$OVERWRITE_IDENTITY"
         fi
       done
     else
@@ -275,7 +276,8 @@ backup_control_backup_all () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Backup all: BACKUPLINK:$BACKUPLINK DRIVESET:$DRIVESET MOUNTS:$MOUNTS BACKUPSERV:$BACKUPSERV OVERWRITE_IDENTITY:$OVERWRITE_IDENTITY"
         fi
       done
     else

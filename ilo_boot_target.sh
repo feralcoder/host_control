@@ -69,7 +69,8 @@ ilo_boot_target_once_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Boot target once: TARGET:$TARGET"
         fi
       done
     else

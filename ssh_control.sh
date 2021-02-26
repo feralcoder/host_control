@@ -86,7 +86,8 @@ ssh_control_distribute_admin_key_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "UNIQIFY, no more info available"
         fi
       done
     else
@@ -147,7 +148,8 @@ ssh_control_refetch_hostkey_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "refetch host key, no more info available."
         fi
       done
     else
@@ -211,7 +213,8 @@ ssh_control_wait_for_host_down_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "wait for down, no more info available"
         fi
       done
     else
@@ -235,7 +238,8 @@ ssh_control_wait_for_host_up_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "wait for up, no more info available"
         fi
       done
     else
@@ -268,16 +272,17 @@ ssh_control_run_as_user_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} >/dev/null 2>&1
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Run as user: COMMAND:$COMMAND"
         fi
       done
     else
-      ssh_control_run_as_user $USER "$COMMAND" $HOST &
+      ssh_control_run_as_user $USER "$COMMAND" $HOST & >/dev/null 2>&1
       PIDS="$PIDS:$!"
-      [[ $DEBUG == "" ]] || echo "Running \"$COMMAND\" as $USER on $HOST"
+      [[ $DEBUG == "" ]] || echo "Running \"$COMMAND\" as $USER on $HOST, PID: $!"
     fi
   done
 }
@@ -287,7 +292,7 @@ ssh_control_sync_as_user () {
   local HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
 
   OUTPUT=$(rsync -avH $SOURCE $USER@$HOST_IP:$DEST)
-  [[ $DEBUG == "" ]] ||  echo $SOURCE synced to $HOST:
+  [[ $DEBUG == "" ]] || echo $SOURCE synced to $HOST:
   [[ $DEBUG == "" ]] || echo "$OUTPUT"
 }
 
@@ -301,16 +306,17 @@ ssh_control_sync_as_user_these_hosts () {
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
       for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID}
+        wait ${PID} >/dev/null 2>&1
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "syncing USER:$USER SOURCE:$SOURCE DEST:$DEST"
         fi
       done
     else
-      ssh_control_sync_as_user $USER $SOURCE $DEST $HOST &
+      ssh_control_sync_as_user $USER $SOURCE $DEST $HOST & >/dev/null 2>&1
       PIDS="$PIDS:$!"
-      [[ $DEBUG == "" ]] || echo "Syncing $SOURCE to $HOST"
+      [[ $DEBUG == "" ]] || echo "Syncing $SOURCE to $HOST, PID: $!"
     fi
   done
 }

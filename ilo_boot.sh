@@ -120,7 +120,8 @@ ilo_boot_set_order_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Set boot order: ORDER:$ORDER"
         fi
       done
     else
@@ -145,7 +146,8 @@ ilo_boot_set_defaults_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Set boot defaults, no more info available"
         fi
       done
     else
@@ -174,7 +176,8 @@ ilo_boot_set_onetimeboot_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Set onetimeboot: TARGET:$TARGET"
         fi
       done
     else
@@ -206,7 +209,8 @@ ilo_boot_set_onetimeboot_ipmi_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Set onetimeboot via IPMI: TARGET:$TARGET"
         fi
       done
     else
@@ -230,7 +234,8 @@ ilo_boot_get_order_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Get boot order, no more info available"
         fi
       done
     else

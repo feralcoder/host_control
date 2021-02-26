@@ -191,7 +191,8 @@ ilo_control_refetch_ilo_hostkey_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Refetch ilo hostkey, no more info available"
         fi
       done
     else

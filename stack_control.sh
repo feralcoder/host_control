@@ -90,7 +90,8 @@ stack_control_graceful_stop_node_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Graceful node stop, no more info available"
         fi
       done
     else

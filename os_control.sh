@@ -26,7 +26,8 @@ os_control_graceful_stop_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Graceful stop, no more info available"
         fi
       done
     else
@@ -103,7 +104,8 @@ os_control_boot_info_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Boot info, no more info available"
         fi
       done
     else
@@ -242,7 +244,8 @@ os_control_boot_to_target_installation_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Boot to target installation: TARGET:$TARGET"
         fi
       done
     else
@@ -287,7 +290,8 @@ os_control_repoint_repos_to_feralcoder_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Checkout repofetcher, no more info available"
         fi
       done
     else

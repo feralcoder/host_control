@@ -39,7 +39,8 @@ git_control_fix_repos_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Fix repos, no more info available"
         fi
       done
     else
@@ -73,7 +74,8 @@ git_control_pull_push_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Pull push repos, no more info available"
         fi
       done
     else

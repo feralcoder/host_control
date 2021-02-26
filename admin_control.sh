@@ -31,7 +31,8 @@ admin_control_mount_everything_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Mount everything, no more info available"
         fi
       done
     else
@@ -74,7 +75,8 @@ admin_control_sync_keys_from_admin_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Sync keys from admin, no more info available"
         fi
       done
     else
@@ -111,7 +113,8 @@ admin_control_sync_keys_to_admin_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Sync keys to admin, no more info available"
         fi
       done
     else
@@ -147,7 +150,8 @@ admin_control_sync_keys_to_xax_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Sync keys to xax, no more info available"
         fi
       done
     else
@@ -215,7 +219,8 @@ admin_control_fix_grub_these_hosts () {
         wait ${PID}
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $?"
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Fix grub, no more info available"
         fi
       done
     else
