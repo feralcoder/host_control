@@ -275,7 +275,16 @@ os_control_repoint_repos_to_feralcoder () {
 os_control_checkout_repofetcher () {
   local HOST=$1
 
+  echo "Checking out repo-fetcher on $REPO_HOST"
   ssh_control_run_as_user cliff "cd ~/CODE/feralcoder; [[ -d repo-fetcher ]] && echo repo-fetcher already checked out on \$HOST || git clone https://feralcoder:\`cat ~/.git_password\`@github.com/feralcoder/repo-fetcher.git" $HOST
+}
+
+os_control_setup_repo_mirror () {
+  local HOST=$1
+
+  echo "SETTING UP LOCAL YUM MIRROR ON $HOST"
+  os_control_checkout_repofetcher $HOST
+  ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/setup.sh" $HOST
 }
 
 os_control_repoint_repos_to_feralcoder_these_hosts () {
