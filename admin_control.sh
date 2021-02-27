@@ -1,6 +1,26 @@
 #!/bin/bash
 
 
+admin_control_get_sudo_password () {
+  local PASSWORD
+
+  # if ~/.password exists and works, use it
+  [[ -f ~/.password ]] && {
+    cat ~/.password | sudo -k -S ls >/dev/null 2>&1
+    if [[ $? == 0 ]] ; then
+      echo ~/.password
+      return
+    fi
+  }
+
+  # either ~.password doesn't exiist, or it doesn't work
+  read -s -p "Enter Sudo Password: " PASSWORD
+  touch /tmp/password_$$
+  chmod 600 /tmp/password_$$
+  echo $PASSWORD > /tmp/password_$$
+  echo /tmp/password_$$
+}
+
 admin_control_mount_xax () {
   local HOST=$1
   ssh_control_run_as_user root "for mount in boot root home; \
@@ -161,11 +181,20 @@ admin_control_sync_keys_to_xax_these_hosts () {
 admin_control_bootstrap_admin () {
   local HOST=$1
 
-  ssh_control_sync_as_user cliff ~/.git_password /home/cliff/.git_password $HOST
-  ssh_control_run_as_user root "dnf -y install git" $HOST
+  local PASSFILE=`admin_control_get_sudo_password`
+  [[ -f ~/.password ]] || {
+    mv $PASSFILE ~/.password
+  }
 
+  echo "Installing, configuring git."
+  GIT_PASS=`cat ~/.git_password`
+  ssh_control_sync_as_user cliff ~/.git_password /home/cliff/.git_password $HOST
   ssh_control_run_as_user cliff "git config --global user.name 'Cliff McIntire'; git config --global user.email 'feralcoder@gmail.com'; GIT_NAME=feralcoder; GIT_PASS=`cat ~/.git_password`; mkdir -p ~/CODE/feralcoder ; cd ~/CODE/feralcoder; git clone https://feralcoder:${GIT_PASS}@github.com/feralcoder/bootstrap-scripts; cd bootstrap-scripts" $HOST
-  echo "NOW GO TO $HOST and run ~/CODE/feralcoder/bootstrap-scripts/admin.sh"
+  # In case bootstrap-scripts was already cloned there...
+  ssh_control_run_as_user cliff "cd ~/CODE/feralcoder/bootstrap-scripts; sed -i -E 's|(.*feralcoder:)[^@]+(@.*)|\1$GIT_PASS\2|g' .git/config; git pull" $HOST
+
+  ssh_control_sync_as_user cliff ~/.password /home/cliff/.password $HOST
+  ssh_control_run_as_user cliff "rm ~/.local_settings; ~/CODE/feralcoder/bootstrap-scripts/admin.sh" $HOST
 }
 
 admin_control_make_no_crossboot () {
