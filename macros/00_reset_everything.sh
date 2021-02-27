@@ -11,7 +11,6 @@ BACKUPLINK=$1
 #   by default from Updated Centos8 Admin images
 # Run from admin box (yoda)
 
-
 SELFNAME_SHORT=`hostname | awk -F'.' '{print $1}'`
 NAME_SUFFIX=`echo $SELFNAME_SHORT | awk -F'-' '{print $2}'`
 [[ $NAME_SUFFIX == "admin" ]] || {
@@ -20,8 +19,20 @@ NAME_SUFFIX=`echo $SELFNAME_SHORT | awk -F'-' '{print $2}'`
   return 1
 }
 
-os_control_boot_to_target_installation_these_hosts admin "$ALL_HOSTS" # Will skip localhost
+
+REBOOT_HOSTS=`group_logic_remove_self "$ALL_HOSTS"`
+os_control_boot_to_target_installation_these_hosts admin "$REBOOT_HOSTS"
+os_control_assert_hosts_booted_target admin "$REBOOT_HOSTS" || {
+  echo "Not all hosts booted to admin OS, check the environment!"
+  return 1
+}
+
 backup_control_restore_all 01_CentOS_8_3_Admin_Install
-os_control_boot_to_target_installation_these_hosts default "$STACK_HOSTS" # Will skip localhost
+
+os_control_boot_to_target_installation_these_hosts default "$STACK_HOSTS"
+os_control_assert_hosts_booted_target default "$REBOOT_HOSTS" || {
+  echo "Not all hosts booted to default OS, check the environment!"
+  return 1
+}
 
 admin_control_fix_grub_these_hosts "$ALL_HOSTS"
