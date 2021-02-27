@@ -21,11 +21,13 @@ HOSTNAME_ADMIN=${HOSTNAME}-admin
 LABEL_PREFIX=${DRIVE_PREFIX}${HOSTNAME_ABBREV}
 
 # MOUNT USB ROOT
-mkdir /mnt/${LABEL_PREFIX}_root
-mount LABEL=${LABEL_PREFIX}_root /mnt/${LABEL_PREFIX}_root
+ROOT_LABEL=${LABEL_PREFIX}_root
+ROOT_MOUNT=/mnt/$ROOT_LABEL
+mkdir $ROOT_MOUNT >/dev/null 2>&1
+mountpoint $ROOT_MOUNT || /mount LABEL=$ROOT_LABEL $ROOT_MOUNT
 
 # UPDATE ADMIN STICK'S IP, FSTAB, HOSTNAME, HOST_KEYS
-cd /mnt/${LABEL_PREFIX}_root/etc
+cd $ROOT_MOUNT/etc
 
 fix_networking () {
   # UPDATE IP, ACTIVATE ENO2 - THIS WON'T BE UNDONE BY GENERIC STICK SETUP COMMMANDS - SED WON'T MATCH...
@@ -61,13 +63,15 @@ cp /etc/ssh/ssh_host_* ssh/
 chmod 600 ssh/ssh_host_*
 
 # DONE!  (done?)
-cd / && umount /mnt/${LABEL_PREFIX}_root
+cd / && umount $ROOT_MOUNT
 
 
 # MOUNT USB BOOT
-mkdir /mnt/${LABEL_PREFIX}_boot
-mount LABEL=${LABEL_PREFIX}_boot /mnt/${LABEL_PREFIX}_boot
-cd /mnt/${LABEL_PREFIX}_boot
+BOOT_LABEL=${LABEL_PREFIX}_boot
+BOOT_MOUNT=/mnt/$BOOT_LABEL
+mkdir $BOOT_MOUNT >/dev/null 2>&1
+mountpoint $BOOT_MOUNT || mount LABEL=$BOOT_LABEL $BOOT_MOUNT
+cd $BOOT_MOUNT
 
 echo "(hd0) $DEVICE" > grub2/device.map
 echo "(hd1) /dev/sda" >> grub2/device.map
@@ -79,4 +83,4 @@ for i in $LOADER_ENTRIES; do
     cat loader/entries/$i | sed "s/title .*CentOS/title \"${LABEL_PREFIX}_root\" CentOS/g" > /tmp/${i}_$$ && cp /tmp/${i}_$$ loader/entries/$i
 done
 
-cd / && umount /mnt/${LABEL_PREFIX}_boot
+cd / && umount $BOOT_MOUNT
