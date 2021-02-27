@@ -173,6 +173,12 @@ admin_control_make_no_crossboot () {
   ssh_control_run_as_user root "chmod 644 /etc/grub.d/30_os-prober; grub2-mkconfig -o /boot/grub2/grub.cfg.no-crossboot; chmod 755 /etc/grub.d/30_os-prober" $HOST
 }
 
+admin_control_fix_grub_os_prober () {
+  local HOST=$1
+  ssh_control_sync_as_user root $CONTROL_DIR/scripts/30_os-prober /etc/grub.d/ $HOST
+  ssh_control_run_as_user root "chmod 755 /etc/grub.d/30_os-prober; chown root:root /etc/grub.d/30_os-prober" $HOST
+}
+
 admin_control_fix_grub () {
   local HOST=$1
   local TIMEOUT=$2
