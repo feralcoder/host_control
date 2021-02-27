@@ -302,3 +302,16 @@ os_control_repoint_repos_to_feralcoder_these_hosts () {
   done
 }
 
+os_control_assert_hosts_booted_target () {
+  local TARGET=$1 HOSTS=$2
+
+  OUTPUT=`os_control_boot_info_these_hosts "$HOSTS"`
+  local HOST
+  for HOST in $HOSTS; do
+    echo "$OUTPUT" | grep "$HOST is booted to: .*$TARGET" || {
+      echo "Not all hosts are booted to $TARGET OS!"
+      return 1
+    }
+  done
+  echo "Hosts are booted to $TARGET OS!"
+}
