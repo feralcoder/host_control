@@ -254,6 +254,9 @@ admin_control_find_labeled_drive_by_prefix () {
 
 
 admin_control_clone_and_fix_labels () {
+  # SRC_PREFIX=a|b|c|x|z
+  # DEST_PREFIX=a|b|c|x|z
+  # HOST=kerrigan|kgn
   local SRC_PREFIX=$1 DEST_PREFIX=$2 HOST=$3
 
   local SHORT_NAME SRC_DISK DEST_DISK SRC_DEV DEST_DEV
@@ -273,6 +276,9 @@ admin_control_clone_and_fix_labels () {
 
 
 admin_control_clone_and_fix_labels_these_hosts () {
+  # SRC_PREFIX=a|b|c|x|z
+  # DEST_PREFIX=a|b|c|x|z
+  # HOST="kerrigan neo merlin.feralcoder.org"
   local SRC_PREFIX=$1 DEST_PREFIX=$2 HOSTS=$3
 
   local RETURN_CODE HOST PID SHORT_NAME SRC_DISK DEST_DISK SRC_DEV DEST_DEV PIDS LOGFILE
