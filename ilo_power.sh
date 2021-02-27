@@ -84,6 +84,16 @@ ilo_power_off_hard () {
   fi
 }
 
+#ilo_power_warm_reset () {
+#  # Warm reset does not skip memory learning until Gen9
+#  local HOST=$1
+#  local ILO_IP=`getent ahosts $HOST-ipmi | awk '{print $1}' | tail -n 1`
+#
+#  echo "Warm resetting $HOST..."
+#  local ILO_COMMAND="reset /system1 soft"
+#  local SUCCESS_GREP="XXXXX"
+#  local OUTPUT=`_ilo_control_run_command $HOST "$ILO_COMMAND" ilo_power_warm_reset "$SUCCESS_GREP"`
+#}
 
 ilo_power_off () {
   local HOST=$1
