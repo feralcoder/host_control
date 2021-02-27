@@ -4,75 +4,73 @@ MACRO_DIR=$( dirname $MACRO_SOURCE )
 
 . ~/CODE/feralcoder/host_control/control_scripts.sh
 
+# This script is suitable to run after the post-install host scripts
+#   (00a_new_install_no_admin_key.sh  00b_new_admin_key_on_host.sh  00c_new_install_with_existing_admin_key.sh)
 
-setup_yum_repos () {
-  os_control_checkout_repofetcher dmb
-  ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/setup.sh" dmb
+REPO_HOST=dumbledore
+
+
+HOSTS=$1
+[[ $HOSTS == "" ]] && {
+  echo "No hosts provided.  You must provide a list of hosts to update."
+  return 1
 }
 
+host_control_refresh_host_access () {
+  local HOSTS=$1
 
-
-get_sudo_password () {
-  local PASSWORD
-
-  # if ~/.password exists and works, use it
-  [[ -f ~/.password ]] && {
-    cat ~/.password | sudo -k -S ls >/dev/null 2>&1
-    if [[ $? == 0 ]] ; then
-      echo ~/.password
-      return
-    fi
-  }
-
-  # either ~.password doesn't exiist, or it doesn't work
-  read -s -p "Enter Sudo Password: " PASSWORD
-  touch /tmp/password_$$
-  chmod 600 /tmp/password_$$
-  echo $PASSWORD > /tmp/password_$$
-  echo /tmp/password_$$
+  echo; echo "RESETTING HOST / ADMIN KEYS on $HOSTS"
+  # Make sure this host recognizes all others
+  ssh_control_refetch_hostkey_these_hosts "$HOSTS"
+  # Redistribute admin pubkeys to cliff/root users everywhere
+  ssh_control_distribute_admin_key_these_hosts "$HOSTS"
 }
-
-
 
 host_control_updates () {
-  # Make sure this host can reach all others
-  ssh_control_refetch_hostkey_these_hosts "$ALL_HOSTS"
+  local HOSTS=$1
 
   echo; echo "UPDATING cliff ADMIN ENV FROM workstation/update.sh EVERYWHERE"
-  ssh_control_sync_as_user_these_hosts cliff ~/.password ~/.password "$ALL_HOSTS"
-  ssh_control_run_as_user_these_hosts cliff "./CODE/feralcoder/workstation/update.sh" "$ALL_HOSTS"
+  for HOST in $HOSTS; do
+    admin_control_bootstrap_admin $HOST
+    ssh_control_run_as_user_these_hosts cliff "./CODE/feralcoder/workstation/update.sh" "$HOSTS"
+  done
+  ssh_control_sync_as_user_these_hosts cliff ~/.password ~/.password "$HOSTS"
+  ssh_control_run_as_user_these_hosts cliff "./CODE/feralcoder/workstation/update.sh" "$HOSTS"
 
   echo; echo "UPDATING REPOS EVERYWHERE"
-  git_control_pull_push_these_hosts "$ALL_HOSTS" 2>/dev/null
+  git_control_pull_push_these_hosts "$HOSTS" 2>/dev/null
 
 #
 #  echo; echo "REFETCHING ILO KEYS EVERYWHERE"
 #  # Serialize to not hose ILO's
-#  for HOST in $ALL_HOSTS; do
+#  for HOST in $HOSTS; do
 #     echo; echo "Getting ILO hostkeys on $HOST"
-#     ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$ALL_HOSTS\"" $HOST 2>/dev/null
+#     ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
 #  done
 #
 
   echo; echo "REFETCHING HOST KEYS EVERYWHERE"
-  ssh_control_run_as_user_these_hosts cliff "ssh_control_refetch_hostkey_these_hosts \"$ALL_HOSTS\"" "$ALL_HOSTS" 2>/dev/null
+  ssh_control_run_as_user_these_hosts cliff "ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" "$HOSTS" 2>/dev/null
 }
 
 
 host_updates () {
-  os_control_checkout_repofetcher yda
-  os_control_repoint_repos_to_feralcoder_these_hosts "$ALL_HOSTS"
-  ssh_control_run_as_user root "dnf -y upgrade" "$ALL_HOSTS"
+  local HOSTS=$1
+
+  os_control_checkout_repofetcher `hostame`
+  os_control_repoint_repos_to_feralcoder_these_hosts "$HOSTS"
+  ssh_control_run_as_user root "dnf -y upgrade" "$HOSTS"
   
-  admin_control_fix_grub_these_hosts "$ALL_HOSTS"
+  admin_control_fix_grub_these_hosts "$HOSTS"
 }
 
 
 
-SUDO_PASS_FILE=`get_sudo_password`
+SUDO_PASS_FILE=`admin_control_get_sudo_password`
 [[ -f ~/.password ]] || { mv $SUDO_PASS_FILE ~/.password && SUDO_PASS_FILE=~/.password ; }
-host_control_updates
-setup_yum_repos
-host_updates
+host_control_refresh_host_access "$HOSTS"
+host_control_updates "$HOSTS"
+os_control_setup_repo_mirror $REPO_HOST
+host_updates "$HOSTS"
 
 [[ $SUDO_PASS_FILE != ~/.password ]] && rm $SUDO_PASS_FILE
