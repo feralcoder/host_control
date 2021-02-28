@@ -4,6 +4,16 @@
 ssh_control_get_password () {
   local PASSWORD
 
+  # if ~/.password exists and works, use it
+  [[ -f ~/.password ]] && {
+    cat ~/.password | sudo -k -S ls >/dev/null 2>&1
+    if [[ $? == 0 ]] ; then
+      echo ~/.password
+      return
+    fi
+  }
+
+  # either ~.password doesn't exiist, or it doesn't work
   read -s -p "Enter Password: " PASSWORD
   touch /tmp/password_$$
   chmod 600 /tmp/password_$$
@@ -42,7 +52,6 @@ ssh_control_push_key () {
     [[ $PASSFILE == "" ]] && {
       PASSFILE=`ssh_control_get_password`
       # ONLY DELETE it if we created it...
-      DELETE_PASSFILE=true
     }
 
     ssh_control_sync_as_user cliff $PASSFILE $REMOTE_PASSFILE $HOST
@@ -53,7 +62,7 @@ ssh_control_push_key () {
     ssh_control_run_as_user cliff "$SUDO_AUTH_CMD; $SSH_SETUP_CMD; $AUTH_KEY_SETUP_CMD; rm $REMOTE_PASSFILE" $HOST
   }
 
-  [[ $DELETE_PASSFILE == "true" ]] && rm $PASSFILE    # Only delete it if we created it...
+  [[ $PASSFILE == ~/.password ]] || rm $PASSFILE    # Only delete it if we created it...
 }
 
 
@@ -74,7 +83,7 @@ ssh_control_distribute_admin_key_these_hosts () {
     echo "Started Key Push for $HOST: $!"
     ssh_control_push_key $HOST $PASSFILE
   done
-  rm $PASSFILE
+  [[ $PASSFILE == ~/.password ]] || rm $PASSFILE
 
   # This can be done in parallel
   local RETURN_CODE
@@ -134,7 +143,7 @@ ssh_control_get_hostkey () {
 
 ssh_control_refetch_hostkey_these_hosts () {
   local HOSTS=$1
-  local HOST HOST_IP PIDS=""
+  local HOST PIDS=""
   for HOST in $HOSTS ; do
     ssh_control_remove_hostkey $HOST
   done
@@ -153,7 +162,6 @@ ssh_control_refetch_hostkey_these_hosts () {
         fi
       done
     else
-      HOST_IP=`getent ahosts $HOST | awk '{print $1}' | tail -n 1`
       ssh_control_get_hostkey $HOST & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Getting host key for $HOST: $!"
