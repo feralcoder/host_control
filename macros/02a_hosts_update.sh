@@ -9,6 +9,7 @@ MACRO_DIR=$( dirname $MACRO_SOURCE )
 
 REPO_HOST=dumbledore
 
+NOW=`date +%Y%m%d-%H%M%S`
 
 HOSTS=$1
 [[ $HOSTS == "" ]] && {
@@ -16,51 +17,54 @@ HOSTS=$1
   return 1
 }
 
-host_control_refresh_host_access () {
+host_control_setup_host_access () {
   local HOSTS=$1
 
-  echo; echo "RESETTING HOST / ADMIN KEYS on $HOSTS"
+  echo; echo "REFETCHING LOCAL KNOWN HOSTKEYS FOR $HOSTS"
   # Make sure this host recognizes all others
   ssh_control_refetch_hostkey_these_hosts "$HOSTS"
+  echo; echo "RESETTING ADMIN KEYS on $HOSTS"
   # Redistribute admin pubkeys to cliff/root users everywhere
   ssh_control_distribute_admin_key_these_hosts "$HOSTS"
+
+  echo; echo "REFETCHING ILO KEYS LOCALLY"
+  ilo_control_refetch_ilo_hostkey_these_hosts "$HOSTS"
 }
+
 
 host_control_updates () {
   local HOSTS=$1
 
-  echo; echo "UPDATING cliff ADMIN ENV FROM workstation/update.sh EVERYWHERE"
+  echo; echo "REPOINTING YUM TO LOCAL MIRROR ON $HOSTS"
+  os_control_checkout_repofetcher `hostname`
+  os_control_repoint_repos_to_feralcoder_these_hosts "$HOSTS"
+
+  echo; echo "UPDATING ADMIN ENV ON $HOSTS"
   for HOST in $HOSTS; do
     admin_control_bootstrap_admin $HOST
-    ssh_control_run_as_user_these_hosts cliff "./CODE/feralcoder/workstation/update.sh" "$HOSTS"
   done
-  ssh_control_sync_as_user_these_hosts cliff ~/.password ~/.password "$HOSTS"
-  ssh_control_run_as_user_these_hosts cliff "./CODE/feralcoder/workstation/update.sh" "$HOSTS"
 
-  echo; echo "UPDATING REPOS EVERYWHERE"
+  echo; echo "UPDATING GIT REPOS EVERYWHERE"
   git_control_pull_push_these_hosts "$HOSTS" 2>/dev/null
-
-#
-#  echo; echo "REFETCHING ILO KEYS EVERYWHERE"
-#  # Serialize to not hose ILO's
-#  for HOST in $HOSTS; do
-#     echo; echo "Getting ILO hostkeys on $HOST"
-#     ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
-#  done
-#
 
   echo; echo "REFETCHING HOST KEYS EVERYWHERE"
   ssh_control_run_as_user_these_hosts cliff "ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" "$HOSTS" 2>/dev/null
+
+  # Serialize to not hose ILO's
+  for HOST in $HOSTS; do
+     echo; echo "Getting ILO hostkeys on $HOST"
+     ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
+  done
 }
 
 
 host_updates () {
   local HOSTS=$1
 
-  os_control_checkout_repofetcher `hostame`
-  os_control_repoint_repos_to_feralcoder_these_hosts "$HOSTS"
-  ssh_control_run_as_user root "dnf -y upgrade" "$HOSTS"
+  echo; echo "UPDATING YUM ON $HOSTS, see output in logfile /tmp/yum_update_$NOW.log"
+  ssh_control_run_as_user_these_hosts root "dnf -y upgrade | tee /tmp/yum_update_$NOW.log" "$HOSTS"
   
+  echo; echo "UPDATING GRUB ON $HOSTS"
   admin_control_fix_grub_these_hosts "$HOSTS"
 }
 
@@ -68,9 +72,9 @@ host_updates () {
 
 SUDO_PASS_FILE=`admin_control_get_sudo_password`
 [[ -f ~/.password ]] || { mv $SUDO_PASS_FILE ~/.password && SUDO_PASS_FILE=~/.password ; }
-host_control_refresh_host_access "$HOSTS"
-host_control_updates "$HOSTS"
+host_control_setup_host_access "$HOSTS"
 os_control_setup_repo_mirror $REPO_HOST
+host_control_updates "$HOSTS"
 host_updates "$HOSTS"
 
 [[ $SUDO_PASS_FILE != ~/.password ]] && rm $SUDO_PASS_FILE
