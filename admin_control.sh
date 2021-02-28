@@ -244,6 +244,8 @@ admin_control_fix_admin_key () {
 
 admin_control_fix_grub_these_hosts () {
   local HOSTS=$1
+  local TIMEOUT=$2
+  [[ $TIMEOUT != "" ]] || TIMEOUT=30
 
   local HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
@@ -259,7 +261,7 @@ admin_control_fix_grub_these_hosts () {
         fi
       done
     else
-      admin_control_fix_grub $HOST & 2>/dev/null
+      admin_control_fix_grub $HOST $TIMEOUT & 2>/dev/null
       PIDS="$PIDS:$!"
       echo "Fixing grub on $HOST..."
     fi
@@ -303,6 +305,7 @@ admin_control_clone_and_fix_labels () {
   ( admin_control_clone $SRC_DEV $DEST_DEV $HOST && 
     admin_control_fix_labels $DEST_DEV $DEST_PREFIX $HOST ) > \
     "/tmp/mass_clone_${HOST}_${SRC_DISK}_${DEST_DISK}_$$.log"
+  admin_control_fix_grub $HOST
 
   PIDS="$PIDS:$!"
   echo "Cloning $SRC_DEV to $DEST_DEV on $HOST."
