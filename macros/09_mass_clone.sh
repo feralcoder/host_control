@@ -27,9 +27,9 @@ os_control_assert_hosts_booted_target admin "$HOSTS" || {
 }
 echo; echo "ALL HOSTS ARE BOOTED TO ADMIN"
 echo; echo "CLONING DRIVES $SRC_PREFIX TO $DEST_PREFIX on $HOSTS, THEN FIXING LABELS"
-. $MACRO_DIR/../admin_control_clone_and_fix_labels_these_hosts $SRC_PREFIX $DEST_PREFIX "$HOSTS" 
+admin_control_clone_and_fix_labels_these_hosts $SRC_PREFIX $DEST_PREFIX "$HOSTS" 
 echo; echo "FIXING GRUB ON ADMIN STICKS FOR $HOSTS"
-. $MACRO_DIR/../admin_control_fix_grub "$HOSTS" -1
+admin_control_fix_grub "$HOSTS" -1
 
 echo; echo "POWERING OFF BEFORE BOOTING TO NEW DUMPS ON $HOSTS"
 ilo_power_off_these_hosts "$HOSTS"
@@ -68,7 +68,7 @@ fi
 echo; echo "ALL HOSTS ARE UP: $HOSTS"
 
 echo; echo "FIXING GRUB ON NEW DUMPS ON $HOSTS"
-. $MACRO_DIR/../admin_control_fix_grub "$HOSTS"
+admin_control_fix_grub "$HOSTS"
 
 echo; echo "POWERING OFF $HOSTS BEFORE BOOTING TO ADMIN OS"
 ilo_power_off_these_hosts "$HOSTS"
@@ -78,7 +78,8 @@ os_control_assert_hosts_booted_target admin "$HOSTS" || {
   echo "Not all hosts booted to admin OS, check the environment!"
   return 1
 }
+
 echo; echo "ALL HOSTS ARE BOOTED TO ADMIN"
-echo; echo "FIXING GRUB AGAIN TO FIX TIMEOUT (infinite --> 30s)
-. $MACRO_DIR/../admin_control_fix_grub "$HOSTS"
+echo; echo "FIXING GRUB AGAIN TO FIX TIMEOUT (infinite --> 30s)"
+admin_control_fix_grub "$HOSTS"
 echo; echo "ALL UPDATES FINISHED!"
