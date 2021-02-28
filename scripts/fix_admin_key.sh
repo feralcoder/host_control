@@ -15,7 +15,7 @@ HOSTNAME=$3
   HOSTNAME=$SIMPLE_NAME
 }
 
-unalias cp &>/dev/null
+unalias cp >/dev/null 2>&1
 
 HOSTNAME_ADMIN=${HOSTNAME}-admin
 LABEL_PREFIX=${DRIVE_PREFIX}${HOSTNAME_ABBREV}

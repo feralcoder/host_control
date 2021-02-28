@@ -3,8 +3,8 @@
 HOSTNAME_ABBREV=`cat /root/abbrev_hostname`
 [[ $TIMEOUT != "" ]] || TIMEOUT=30
 
-unalias cp &>/dev/null
-unalias rm &>/dev/null
+unalias cp >/dev/null 2>&1
+unalias rm >/dev/null 2>&1
 
 
 mount_all_boots () {
@@ -16,7 +16,7 @@ mount_all_boots () {
 }
 
 set_all_grub_nocrossboot () {
-  unalias cp &>/dev/null
+  unalias cp >/dev/null 2>&1
   BOOTS=`blkid| grep _boot |  sed 's/ /\n/g' | grep "^LABEL=" | awk -F"=" '{print $2}' | sed 's/\"//g'`
   for BOOT in $BOOTS; do
     echo "Displacing $BOOT grub config..."
@@ -80,7 +80,7 @@ $USB_BOOT_DEV
 /dev/sdc
 EOF
 
-  unalias mv &>/dev/null
+  unalias mv >/dev/null 2>&1
   use_next () { local FIRST=`head -n 1 /tmp/drives_$$`; grep -v $FIRST /tmp/drives_$$ > /tmp/x_$$ ; mv -f /tmp/x_$$ /tmp/drives_$$ ; echo $FIRST; }
 
   HD0_DEV=$(use_next)

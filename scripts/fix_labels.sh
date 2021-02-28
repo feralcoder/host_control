@@ -3,7 +3,7 @@
 fix_labels () {
   local DEVICE=$1 LABEL_PREFIX=$2
 
-  unalias cp &>/dev/null
+  unalias cp >/dev/null 2>&1
 
   MOUNTS=`mount | grep "$DEVICE[0-9]" | awk '{print $3}'`
   for MOUNT in $MOUNTS; do umount $MOUNT; done
