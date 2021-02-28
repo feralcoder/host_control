@@ -29,13 +29,13 @@ echo; echo "ALL HOSTS ARE BOOTED TO ADMIN"
 echo; echo "CLONING DRIVES $SRC_PREFIX TO $DEST_PREFIX on $HOSTS, THEN FIXING LABELS"
 admin_control_clone_and_fix_labels_these_hosts $SRC_PREFIX $DEST_PREFIX "$HOSTS" 
 echo; echo "FIXING GRUB ON ADMIN STICKS FOR $HOSTS"
-admin_control_fix_grub "$HOSTS" -1
+admin_control_fix_grub_these_hosts "$HOSTS" -1
 
 echo; echo "POWERING OFF BEFORE BOOTING TO NEW DUMPS ON $HOSTS"
 ilo_power_off_these_hosts "$HOSTS"
 
 echo; echo "WAITING FOR HOSTS TO POWER OFF"
-ssh_control_wait_for_host_down "$HOSTS"
+ssh_control_wait_for_host_down_these_hosts "$HOSTS"
 echo; echo "HOSTS POWERED OFF: $HOSTS"
 
 
@@ -55,11 +55,12 @@ ilo_boot_target_once_these_hosts $DEV_USB "$HOSTS"
 echo; echo "WAITING FOR HOSTS TO COME UP: $HOSTS"
 ssh_control_wait_for_host_up_these_hosts "$HOSTS"
 ERROR_COUNT=$?
-if [[ $? -gt 0 ]]; then
+if [[ $ERROR_COUNT -gt 0 ]]; then
   echo "$ERROR_COUNT hosts did not come up!"
   echo "Waiting some more..."
   ssh_control_wait_for_host_up_these_hosts "$HOSTS"
-  if [[ $? -gt 0 ]]; then
+  ERROR_COUNT=$?
+  if [[ $ERROR_COUNT -gt 0 ]]; then
     echo "$ERROR_COUNT hosts are still not up!"
     echo "EXITING!"
     exit 1
@@ -68,7 +69,7 @@ fi
 echo; echo "ALL HOSTS ARE UP: $HOSTS"
 
 echo; echo "FIXING GRUB ON NEW DUMPS ON $HOSTS"
-admin_control_fix_grub "$HOSTS"
+admin_control_fix_grub_these_hosts "$HOSTS"
 
 echo; echo "POWERING OFF $HOSTS BEFORE BOOTING TO ADMIN OS"
 ilo_power_off_these_hosts "$HOSTS"
@@ -81,5 +82,5 @@ os_control_assert_hosts_booted_target admin "$HOSTS" || {
 
 echo; echo "ALL HOSTS ARE BOOTED TO ADMIN"
 echo; echo "FIXING GRUB AGAIN TO FIX TIMEOUT (infinite --> 30s)"
-admin_control_fix_grub "$HOSTS"
+admin_control_fix_grub_these_hosts "$HOSTS"
 echo; echo "ALL UPDATES FINISHED!"
