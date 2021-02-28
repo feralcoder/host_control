@@ -25,12 +25,12 @@ ssh_control_refetch_hostkey_these_hosts $HOST
 admin_control_sync_keys_from_admin $HOST
 ssh_control_refetch_hostkey_these_hosts $HOST
 
-echo; echo; "FIXING GRUB ON $HOST"
+echo; echo "FIXING GRUB ON $HOST"
 admin_control_make_no_crossboot $HOST
 admin_control_fix_grub_os_prober $HOST
 admin_control_fix_grub $HOST
 
-echo; echo; "BOOTING $HOST TO ADMIN TO RELABEL"
+echo; echo "BOOTING $HOST TO ADMIN TO RELABEL"
 os_control_boot_to_target_installation admin $HOST
 os_control_assert_hosts_booted_target admin $HOST || { echo "Failed to boot to admin!"; return 1; }
 admin_control_fix_labels $DEVICE $PREFIX $HOST

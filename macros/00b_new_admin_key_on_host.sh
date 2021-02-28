@@ -42,16 +42,16 @@ admin_control_fix_admin_key $DEVICE $LONGNAME
 echo; echo "FIXING KEYS ON $HOST ADMIN STICK"
 admin_control_sync_keys_to_admin $HOST
 
-echo; echo; "FIXING GRUB ON $HOST"
+echo; echo "FIXING GRUB ON $HOST"
 admin_control_fix_grub $HOST
 
-echo; echo; "BOOTING $HOST TO ADMIN TO FIX GRUB ON STICK"
+echo; echo "BOOTING $HOST TO ADMIN TO FIX GRUB ON STICK"
 os_control_boot_to_target_installation admin $HOST
 os_control_assert_hosts_booted_target admin $HOST || { echo "Failed to boot to admin!"; return 1; }
 admin_control_make_no_crossboot $HOST
 admin_control_fix_grub_os_prober $HOST
 admin_control_fix_grub $HOST
 
-echo; echo; "BOOTING $HOST BACK TO DEFAULT OS"
+echo; echo "BOOTING $HOST BACK TO DEFAULT OS"
 os_control_boot_to_target_installation default $HOST
 os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default!"; return 1; }

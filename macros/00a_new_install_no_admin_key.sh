@@ -22,7 +22,7 @@ for TARGET in $HOSTS; do
 done
 ssh_control_run_as_user_these_hosts cliff "ssh_control_refetch_ilo_hostkey_these_hosts $HOSTS"
 
-echo; echo; "FIXING GRUB ON $HOST"
+echo; echo "FIXING GRUB ON $HOST"
 admin_control_make_no_crossboot $HOST
 admin_control_fix_grub_os_prober $HOST
 admin_control_fix_grub $HOST
