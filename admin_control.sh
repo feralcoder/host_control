@@ -114,7 +114,7 @@ admin_control_sync_keys_to_admin () {
   admin_control_mount_everything $HOST
   ssh_control_run_as_user root "HOST_ABBREV=$SHORT_NAME; rsync -avH ~cliff/.ssh/ /mnt/x\${HOST_ABBREV}_home/cliff/.ssh/ ; \
                                 rsync -avH ~/.ssh/ /mnt/x\${HOST_ABBREV}_root/root/.ssh/ ; \
-                                rsync -avH /etc/ssh/ /mnt/x\${HOST_ABBREV}_root/etc/ssh/ssh_host_*" $HOST
+                                rsync -avH /etc/ssh/ssh_host_* /mnt/x\${HOST_ABBREV}_root/etc/ssh/" $HOST
 }
 
 
@@ -150,7 +150,7 @@ admin_control_sync_keys_to_xax () {
   admin_control_mount_xax $HOST
   ssh_control_run_as_user root "rsync -avH ~cliff/.ssh/ /mnt/xax_home/cliff/.ssh/ ; \
                                 rsync -avH ~/.ssh/ /mnt/xax_root/root/.ssh/ ; \
-                                rsync -avH /etc/ssh/ /mnt/xax_root/etc/ssh/ssh_host_*" $HOST
+                                rsync -avH /etc/ssh/ssh_host_* /mnt/xax_root/etc/ssh/" $HOST
 }
 
 
