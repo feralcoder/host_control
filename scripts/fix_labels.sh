@@ -32,6 +32,21 @@ fix_labels () {
   sed -i "s/^.* \/var /LABEL=${LABEL_PREFIX}_var \/var /g" /mnt/${LABEL_PREFIX}_root/etc/fstab
   sed -i "s/^.* swap /LABEL=${LABEL_PREFIX}_swap none swap /g" /mnt/${LABEL_PREFIX}_root/etc/fstab
   umount /mnt/${LABEL_PREFIX}_root
+
+
+  BOOT_MOUNT=/mnt/${LABEL_PREFIX}_boot
+  mount -L ${LABEL_PREFIX}_boot $BOOT_MOUNT
+  # UPDATE GRUB TITLES FOR LOCAL-BOOTING
+  BOOT_LABEL=`blkid | grep -v osprober | grep $DEVICE | grep boot | sed 's/ /\n/g' | grep LABEL | awk -F"=" '{print $2}'`
+  cd $BOOT_MOUNT
+  LOADER_ENTRIES=`ls loader/entries/`
+  for i in $LOADER_ENTRIES; do
+      cp loader/entries/$i loader/entry_bak.$i
+      sed -i "s/title .*CentOS/title $BOOT_LABEL CentOS/g" loader/entries/$i
+  done
+  umount $BOOT_MOUNT
+
+
 }
 
 fix_labels $1 $2
