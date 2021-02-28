@@ -199,7 +199,7 @@ ilo_control_refetch_ilo_hostkey_these_hosts () {
       ILO_IP=`getent ahosts $SHORT_HOSTNAME-ipmi | awk '{print $1}' | tail -n 1`
       ilo_control_get_ilo_hostkey $HOST & >/dev/null 2>&1
       PIDS="$PIDS:$!"
-      echo "Getting host key for $HOST: $!"
+      echo "Getting host key for $HOST-ipmi: $!"
     fi
   done
 }
