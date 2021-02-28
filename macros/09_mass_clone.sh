@@ -49,10 +49,22 @@ while [[ ${CONTINUE,,} != "yes" ]]; do
   read -p "Type 'yes' here: " CONTINUE
 done
 
+ERROR_COUNT=0
 echo; echo "BOOTING HOSTS FROM USB STICK: $HOSTS"
 ilo_boot_target_once_these_hosts $DEV_USB "$HOSTS"
 echo; echo "WAITING FOR HOSTS TO COME UP: $HOSTS"
 ssh_control_wait_for_host_up_these_hosts "$HOSTS"
+ERROR_COUNT=$?
+if [[ $? -gt 0 ]]; then
+  echo "$ERROR_COUNT hosts did not come up!"
+  echo "Waiting some more..."
+  ssh_control_wait_for_host_up_these_hosts "$HOSTS"
+  if [[ $? -gt 0 ]]; then
+    echo "$ERROR_COUNT hosts are still not up!"
+    echo "EXITING!"
+    exit 1
+  fi
+fi
 echo; echo "ALL HOSTS ARE UP: $HOSTS"
 
 echo; echo "FIXING GRUB ON NEW DUMPS ON $HOSTS"
@@ -69,3 +81,4 @@ os_control_assert_hosts_booted_target admin "$HOSTS" || {
 echo; echo "ALL HOSTS ARE BOOTED TO ADMIN"
 echo; echo "FIXING GRUB AGAIN TO FIX TIMEOUT (infinite --> 30s)
 . $MACRO_DIR/../admin_control_fix_grub "$HOSTS"
+echo; echo "ALL UPDATES FINISHED!"

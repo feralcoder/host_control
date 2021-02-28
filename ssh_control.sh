@@ -213,6 +213,7 @@ ssh_control_wait_for_host_down_these_hosts () {
   local HOST
 
   local RETURN_CODE PIDS=""
+  local ERROR_COUNT=0
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -221,6 +222,7 @@ ssh_control_wait_for_host_down_these_hosts () {
         wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
+          ERROR_COUNT=$(($ERROR_COUNT+1))
           echo "Return code for PID $PID: $RETURN_CODE"
           echo "wait for down, no more info available"
         fi
@@ -231,6 +233,10 @@ ssh_control_wait_for_host_down_these_hosts () {
       echo "Waiting for $HOST to come down."
     fi
   done
+  if [[ $ERROR_COUNT -gt 0 ]]; then
+    echo "There were errors on $ERROR_COUNT hosts!"
+    return "$ERROR_COUNT"
+  fi
 }
 
 ssh_control_wait_for_host_up_these_hosts () {
@@ -238,6 +244,7 @@ ssh_control_wait_for_host_up_these_hosts () {
   local HOST
 
   local RETURN_CODE PIDS=""
+  local ERROR_COUNT=0
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -246,6 +253,7 @@ ssh_control_wait_for_host_up_these_hosts () {
         wait ${PID} 2>/dev/null
         RETURN_CODE=$?
         if [[ $RETURN_CODE != 0 ]]; then
+          ERROR_COUNT=$(($ERROR_COUNT+1))
           echo "Return code for PID $PID: $RETURN_CODE"
           echo "wait for up, no more info available"
         fi
@@ -256,6 +264,10 @@ ssh_control_wait_for_host_up_these_hosts () {
       echo "Waiting for $HOST to come up."
     fi
   done
+  if [[ $ERROR_COUNT -gt 0 ]]; then
+    echo "There were errors on $ERROR_COUNT hosts!"
+    return "$ERROR_COUNT"
+  fi
 }
 
 ssh_control_run_as_user () {

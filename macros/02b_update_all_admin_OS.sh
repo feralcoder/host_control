@@ -22,6 +22,7 @@ NAME_SUFFIX=`echo $SELFNAME_SHORT | awk -F'-' '{print $2}'`
   return 1
 }
 
+ilo_control_refetch_ilo_hostkey_these_hosts "$ALL_HOSTS"
 
 REBOOT_HOSTS=`group_logic_remove_self "$HOSTS"`
 ilo_power_off_these_hosts "$REBOOT_HOSTS"
