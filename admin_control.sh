@@ -187,9 +187,10 @@ admin_control_bootstrap_admin () {
   }
 
   echo "Installing, configuring git."
+  ssh_control_run_as_user root "dnf -y install git" $HOST
   GIT_PASS=`cat ~/.git_password`
   ssh_control_sync_as_user cliff ~/.git_password /home/cliff/.git_password $HOST
-  ssh_control_run_as_user cliff "git config --global user.name 'Cliff McIntire'; git config --global user.email 'feralcoder@gmail.com'; GIT_NAME=feralcoder; GIT_PASS=`cat ~/.git_password`; mkdir -p ~/CODE/feralcoder ; cd ~/CODE/feralcoder; git clone https://feralcoder:${GIT_PASS}@github.com/feralcoder/bootstrap-scripts; cd bootstrap-scripts" $HOST
+  ssh_control_run_as_user cliff "git config --global user.name 'Cliff McIntire'; git config --global user.email 'feralcoder@gmail.com'; GIT_NAME=feralcoder; GIT_PASS=`cat ~/.git_password`; mkdir -p ~/CODE/feralcoder ; cd ~/CODE/feralcoder; git clone https://feralcoder:${GIT_PASS}@github.com/feralcoder/bootstrap-scripts" $HOST
   # In case bootstrap-scripts was already cloned there...
   ssh_control_run_as_user cliff "cd ~/CODE/feralcoder/bootstrap-scripts; sed -i -E 's|(.*feralcoder:)[^@]+(@.*)|\1$GIT_PASS\2|g' .git/config; git pull" $HOST
 
