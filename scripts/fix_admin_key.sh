@@ -24,7 +24,7 @@ LABEL_PREFIX=${DRIVE_PREFIX}${HOSTNAME_ABBREV}
 ROOT_LABEL=${LABEL_PREFIX}_root
 ROOT_MOUNT=/mnt/$ROOT_LABEL
 mkdir $ROOT_MOUNT >/dev/null 2>&1
-mountpoint $ROOT_MOUNT || /mount LABEL=$ROOT_LABEL $ROOT_MOUNT
+mountpoint $ROOT_MOUNT || mount LABEL=$ROOT_LABEL $ROOT_MOUNT
 
 # UPDATE ADMIN STICK'S IP, FSTAB, HOSTNAME, HOST_KEYS
 cd $ROOT_MOUNT/etc
@@ -59,7 +59,7 @@ cp -f hostname hostname.orig
 cat hostname | sed "s/xxxaaaxxx/${HOSTNAME_ADMIN}/g" > /tmp/hostname_$$ && cat /tmp/hostname_$$ > hostname
 
 # PRESERVE HOST_KEYS
-cp /etc/ssh/ssh_host_* ssh/
+rsync -av /etc/ssh/ssh_host_* ssh/
 chmod 600 ssh/ssh_host_*
 
 # DONE!  (done?)
@@ -80,7 +80,7 @@ echo "(hd1) /dev/sda" >> grub2/device.map
 LOADER_ENTRIES=`ls loader/entries/`
 for i in $LOADER_ENTRIES; do
     cp loader/entries/$i loader/entry_bak.$i
-    cat loader/entries/$i | sed "s/title .*CentOS/title \"${LABEL_PREFIX}_root\" CentOS/g" > /tmp/${i}_$$ && cp /tmp/${i}_$$ loader/entries/$i
+    sed -i "s/title .*CentOS/title \"${LABEL_PREFIX}_root\" CentOS/g" loader/entries/$i
 done
 
 cd / && umount $BOOT_MOUNT

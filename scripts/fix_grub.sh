@@ -98,14 +98,15 @@ EOF
   LOADER_ENTRIES=`ls loader/entries/`
   for i in $LOADER_ENTRIES; do
       cp loader/entries/$i loader/entry_bak.$i
-      cat loader/entries/$i | sed "s/title .*CentOS/title $ROOT_LABEL CentOS/g" > /tmp/${i}_$$ && cp /tmp/${i}_$$ loader/entries/$i
+      sed -i "s/title .*CentOS/title $ROOT_LABEL CentOS/g" loader/entries/$i
   done
 
   # UPDATE GRUB: SELF-BOOT
   cp -f /etc/default/grub /etc/default/grub.orig
-  cat /etc/default/grub | sed "s/GRUB_DEFAULT=saved/GRUB_DEFAULT=0/g" | sed "s/ resume=.*/ noresume\"/g" > /tmp/grub_$$ && cat /tmp/grub_$$ > /etc/default/grub
-  cp -f /boot/grub2/grub.cfg /boot/grub2/grub.cfg-orig
+  sed -i "s/GRUB_DEFAULT=saved/GRUB_DEFAULT=0/g" /etc/default/grub
+  sed -i "s/ resume=.*/ noresume\"/g" /etc/default/grub
 
+  cp -f /boot/grub2/grub.cfg /boot/grub2/grub.cfg-orig
   grub2-mkconfig -o /boot/grub2/grub.cfg
   fix_timeout
 
