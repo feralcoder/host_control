@@ -34,95 +34,41 @@ LONGNAME=`echo $UNQUALIFIED_NAME | awk -F'-' '{print $1}'`
   }
 }
 
-#CONTINUE="wait"
-#echo "DEBUGGING: UNQUALIFIED_NAME:$UNQUALIFIED_NAME LONGNAME:$LONGNAME HOST:$HOST DEVICE:$DEVICE"
-#echo "About to fix labels: admin_control_fix_labels $DEVICE x $HOST"
-#
-#echo "Type 'yes' and hit enter."
-#while [[ ${CONTINUE,,} != "yes" ]]; do
-#  read -p "Type 'yes' here: " CONTINUE
-#done
-#
-#
-#
-#echo; echo "FIXING LABELS ON $HOST ADMIN STICK"
-#admin_control_fix_labels $DEVICE x $HOST
-#
-#CONTINUE="wait"
-#echo "About to fix admin key: admin_control_fix_admin_key $DEVICE $LONGNAME"
-#echo "Type 'yes' and hit enter."
-#while [[ ${CONTINUE,,} != "yes" ]]; do
-#  read -p "Type 'yes' here: " CONTINUE
-#done
-#
+
+echo; echo "FIXING LABELS ON $HOST ADMIN STICK"
+admin_control_fix_labels $DEVICE x $HOST
 admin_control_fix_admin_key $DEVICE $LONGNAME
-
-
-
-CONTINUE="wait"
-echo "About to sync keys: admin_control_sync_keys_to_admin $HOST"
-echo "Type 'yes' and hit enter."
-while [[ ${CONTINUE,,} != "yes" ]]; do
-  read -p "Type 'yes' here: " CONTINUE
-done
 
 
 echo; echo "FIXING KEYS ON $HOST ADMIN STICK"
 admin_control_sync_keys_to_admin $HOST
 
-
-CONTINUE="wait"
-echo "About to fix grub: admin_control_fix_grub $HOST -1"
-echo "Type 'yes' and hit enter."
-while [[ ${CONTINUE,,} != "yes" ]]; do
-  read -p "Type 'yes' here: " CONTINUE
-done
-
 echo; echo "FIXING GRUB ON $HOST"
 admin_control_fix_grub $HOST -1
 
-
-CONTINUE="wait"
-echo "About to power cycle"
-echo "Type 'yes' and hit enter."
-while [[ ${CONTINUE,,} != "yes" ]]; do
-  read -p "Type 'yes' here: " CONTINUE
-done
-
 echo; echo "BOOTING TO HD GRUB, CHOOSE x$SHORT_NAME!"
 ilo_power_cycle $HOST
+ssh_control_wait_for_host_up $HOST
+if [[ $? -gt 0 ]]; then
+  echo "Host $HOST did not come up!"
+  echo "Waiting some more..."
+  ssh_control_wait_for_host_up_these_hosts "$HOSTS"
+  if [[ $? -gt 0 ]]; then
+    echo "Host $HOST did not come up!"
+    echo "EXITING!"
+    exit 1
+  fi
+fi
+echo; echo "$HOST IS UP."
+
 os_control_assert_hosts_booted_target admin $HOST || { echo "Failed to boot to admin!"; return 1; }
-
-CONTINUE="wait"
-echo "About to make no xboot, os-prober, fix grub"
-echo "Type 'yes' and hit enter."
-while [[ ${CONTINUE,,} != "yes" ]]; do
-  read -p "Type 'yes' here: " CONTINUE
-done
-
 admin_control_make_no_crossboot $HOST
 admin_control_fix_grub_os_prober $HOST
 admin_control_fix_grub $HOST
 
-CONTINUE="wait"
-echo "About to boot back to default"
-echo "Type 'yes' and hit enter."
-while [[ ${CONTINUE,,} != "yes" ]]; do
-  read -p "Type 'yes' here: " CONTINUE
-done
-
-
 echo; echo "BOOTING $HOST BACK TO DEFAULT OS"
 os_control_boot_to_target_installation default $HOST
 os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default!"; return 1; }
-
-CONTINUE="wait"
-echo "About to fix grub back"
-echo "Type 'yes' and hit enter."
-while [[ ${CONTINUE,,} != "yes" ]]; do
-  read -p "Type 'yes' here: " CONTINUE
-done
-
 
 echo; echo "FIXING GRUB ON $HOST"
 admin_control_fix_grub $HOST

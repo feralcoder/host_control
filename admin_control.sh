@@ -199,11 +199,13 @@ admin_control_bootstrap_admin () {
 
 admin_control_make_no_crossboot () {
   local HOST=$1
+  echo "Making grub no-crossboot config on $HOST"
   ssh_control_run_as_user root "chmod 644 /etc/grub.d/30_os-prober; grub2-mkconfig -o /boot/grub2/grub.cfg.no-crossboot; chmod 755 /etc/grub.d/30_os-prober" $HOST
 }
 
 admin_control_fix_grub_os_prober () {
   local HOST=$1
+  echo "Fixing grub os-prober on $HOST"
   ssh_control_sync_as_user root $CONTROL_DIR/scripts/30_os-prober /etc/grub.d/ $HOST
   ssh_control_run_as_user root "chmod 755 /etc/grub.d/30_os-prober; chown root:root /etc/grub.d/30_os-prober" $HOST
 }
@@ -214,6 +216,9 @@ admin_control_fix_grub () {
   [[ $TIMEOUT != "" ]] || TIMEOUT=30
   admin_control_make_no_crossboot $HOST
   local SHORT_NAME=`group_logic_get_short_name $HOST`
+  admin_control_fix_grub_os_prober $HOST
+  admin_control_make_no_crossboot $HOST
+  "Regenerating grub on $HOST"
   ssh_control_sync_as_user root $CONTROL_DIR/scripts/fix_grub.sh /root/fix_grub.sh $HOST
   ssh_control_run_as_user root "echo $SHORT_NAME > /root/abbrev_hostname; chmod 755 /root/fix_grub.sh; TIMEOUT=$TIMEOUT /root/fix_grub.sh" $HOST
 }
