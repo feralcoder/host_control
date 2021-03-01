@@ -1,0 +1,10 @@
+Most aspects of post-install configuration are handled here.
+
+Notable exceptions are:
+
+Setting up of mounts:
+/backups/ on any hosts with a backups dir
+/repo-store/ on dumbledore
+/registry/ on dumbledore
+/var/lib/image-serve/ on dumbledore (still needed?)
+
