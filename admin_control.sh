@@ -233,6 +233,15 @@ admin_control_clone () {
   ssh_control_run_as_user root "/root/dynamic_clone.sh $SRC_DEV $DEST_DEV" $HOST
 }
 
+admin_control_fix_labels_from_prefix () {
+  local PREFIX=$1 HOST=$2
+  local SHORT_NAME=`group_logic_get_short_name $HOST`
+  local LABEL_PREFIX=${PREFIX}${SHORT_NAME}
+  local PARTITION=`ssh_control_run_as_user root "blkid" $HOST | grep ${LABEL_PREFIX}_boot | awk '{print $1}'`
+  local DEVICE=`echo $PARTITION | sed 's/[0-9]*:.*//g'`
+  admin_control_fix_labels $DEVICE $PREFIX $HOST
+}
+
 admin_control_fix_labels () {
   local DEVICE=$1 PREFIX=$2 HOST=$3
   local SHORT_NAME=`group_logic_get_short_name $HOST`
@@ -248,6 +257,30 @@ admin_control_fix_admin_key () {
   ssh_control_run_as_user root "/root/fix_admin_key.sh $DEVICE ${SHORT_NAME} $LONG_HOSTNAME" $LONG_HOSTNAME
 }
 
+admin_control_fix_labels_from_prefix_these_hosts () {
+  local PREFIX=$1
+  local HOSTS=$2
+
+  local HOST RETURN_CODE PIDS=""
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID} 2>/dev/null
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Fix labels from prefix, PREFIX:$PREFIX"
+        fi
+      done
+    else
+      admin_control_fix_labels_from_prefix $PREFIX $HOST & 2>/dev/null
+      PIDS="$PIDS:$!"
+      echo "Fixing labels from prefix on $HOST..."
+    fi
+  done
+}
 admin_control_fix_grub_these_hosts () {
   local HOSTS=$1
   local TIMEOUT=$2
