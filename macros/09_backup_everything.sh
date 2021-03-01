@@ -11,6 +11,11 @@ BACKUPLINK=$1
 #   by default to Updated Centos8 Admin images
 # Run from admin box (yoda)
 
+# root users also need to know all hosts, for backup rsyncs
+for HOST in $ALL_HOSTS; do
+  ssh_control_run_as_user root ". ~cliff/CODE/feralcoder/host_control/control_scripts.sh; ssh_control_refetch_hostkey_these_hosts \"$ALL_HOSTS\"" $HOST
+done
+
 SELFNAME_SHORT=`hostname | awk -F'.' '{print $1}'`
 NAME_SUFFIX=`echo $SELFNAME_SHORT | awk -F'-' '{print $2}'`
 [[ $NAME_SUFFIX == "admin" ]] || {
@@ -27,7 +32,7 @@ os_control_assert_hosts_booted_target admin "$REBOOT_HOSTS" || {
   return 1
 }
 
-backup_control_backup_all 01_CentOS_8_3_Admin_Install
+backup_control_backup_all $BACKUPLINK
 
 os_control_boot_to_target_installation_these_hosts default "$REBOOT_HOSTS"
 os_control_assert_hosts_booted_target default "$REBOOT_HOSTS" || {
