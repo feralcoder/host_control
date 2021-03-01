@@ -14,7 +14,7 @@ NOW=`date +%Y%m%d-%H%M%S`
 HOSTS=$1
 [[ $HOSTS == "" ]] && {
   echo "No hosts provided.  You must provide a list of hosts to update."
-  return 1
+  exit 1
 }
 
 host_control_setup_host_access () {

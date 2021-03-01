@@ -32,8 +32,8 @@ admin_control_fix_grub $HOST
 
 echo; echo "BOOTING $HOST TO ADMIN TO RELABEL"
 os_control_boot_to_target_installation admin $HOST
-os_control_assert_hosts_booted_target admin $HOST || { echo "Failed to boot to admin!"; return 1; }
+os_control_assert_hosts_booted_target admin $HOST || { echo "Failed to boot to admin!"; exit 1; }
 admin_control_fix_labels $DEVICE $PREFIX $HOST
 admin_control_fix_grub $HOST
 os_control_boot_to_target_installation default $HOST
-os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default!"; return 1; }
+os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default!"; exit 1; }

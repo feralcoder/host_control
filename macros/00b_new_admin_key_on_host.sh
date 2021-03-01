@@ -30,7 +30,7 @@ LONGNAME=`echo $UNQUALIFIED_NAME | awk -F'-' '{print $1}'`
   [[ $NULL_IF_SPACES_DETECTED != "" ]] || {
     echo "Multiple admin sticks detected in $HOST!"
     echo "Please remove extras, or explicitly provide $DEVICE argument!"
-    return 1
+    exit 1
   }
 }
 
@@ -61,14 +61,14 @@ if [[ $? -gt 0 ]]; then
 fi
 echo; echo "$HOST IS UP."
 
-os_control_assert_hosts_booted_target admin $HOST || { echo "Failed to boot to admin!"; return 1; }
+os_control_assert_hosts_booted_target admin $HOST || { echo "Failed to boot to admin!"; exit 1; }
 admin_control_make_no_crossboot $HOST
 admin_control_fix_grub_os_prober $HOST
 admin_control_fix_grub $HOST
 
 echo; echo "BOOTING $HOST BACK TO DEFAULT OS"
 os_control_boot_to_target_installation default $HOST
-os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default!"; return 1; }
+os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default!"; exit 1; }
 
 echo; echo "FIXING GRUB ON $HOST"
 admin_control_fix_grub $HOST

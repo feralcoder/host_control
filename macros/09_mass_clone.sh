@@ -23,7 +23,7 @@ echo; echo "BOOTING TO ADMIN ON $HOSTS"
 os_control_boot_to_target_installation_these_hosts admin "$HOSTS"
 os_control_assert_hosts_booted_target admin "$HOSTS" || {
   echo "Not all hosts booted to admin OS, check the environment!"
-  return 1
+  exit 1
 }
 echo; echo "ALL HOSTS ARE BOOTED TO ADMIN"
 echo; echo "CLONING DRIVES $SRC_PREFIX TO $DEST_PREFIX on $HOSTS, THEN FIXING LABELS"
@@ -77,7 +77,7 @@ echo; echo "BOOTING TO ADMIN ON $HOSTS"
 os_control_boot_to_target_installation_these_hosts admin "$HOSTS"
 os_control_assert_hosts_booted_target admin "$HOSTS" || {
   echo "Not all hosts booted to admin OS, check the environment!"
-  return 1
+  exit 1
 }
 
 echo; echo "ALL HOSTS ARE BOOTED TO ADMIN"

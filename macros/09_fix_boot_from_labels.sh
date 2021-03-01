@@ -36,7 +36,7 @@ echo; echo "BOOTING TO $OPERATING_DRIVE ON $HOSTS"
 os_control_boot_to_target_installation_these_hosts $OPERATING_DRIVE "$HOSTS"
 os_control_assert_hosts_booted_target $OPERATING_DRIVE "$HOSTS" || {
   echo "Not all hosts booted to $OPERATING_DRIVE OS, check the environment!"
-  return 1
+  exit 1
 }
 echo; echo "ALL HOSTS ARE BOOTED TO $OPERATING_DRIVE"
 
@@ -90,7 +90,7 @@ echo; echo "BOOTING TO $OPERATING_DRIVE ON $HOSTS"
 os_control_boot_to_target_installation_these_hosts $OPERATING_DRIVE "$HOSTS"
 os_control_assert_hosts_booted_target $OPERATING_DRIVE "$HOSTS" || {
   echo "Not all hosts booted to $OPERATING_DRIVE OS, check the environment!"
-  return 1
+  exit 1
 }
 
 echo; echo "ALL HOSTS ARE BOOTED TO $OPERATING_DRIVE"

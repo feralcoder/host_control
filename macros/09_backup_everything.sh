@@ -28,7 +28,7 @@ NAME_SUFFIX=`echo $SELFNAME_SHORT | awk -F'-' '{print $2}'`
 [[ $NAME_SUFFIX == "admin" ]] || {
   echo "RUN THIS SCRIPT FROM AN ADMIN OS!"
   echo "This host will back itself up without reboots."
-  return 1
+  exit 1
 }
 
 if [[ $DRIVESET == x ]]; then
@@ -43,7 +43,7 @@ REBOOT_HOSTS=`group_logic_remove_self "$ALL_HOSTS"`
 os_control_boot_to_target_installation_these_hosts $OPERATING_DRIVE "$REBOOT_HOSTS"
 os_control_assert_hosts_booted_target $OPERATING_DRIVE "$REBOOT_HOSTS" || {
   echo "Not all hosts booted to $OPERATING_DRIVE OS, check the environment!"
-  return 1
+  exit 1
 }
 
 backup_control_backup_all $BACKUPLINK $DRIVESET
@@ -52,7 +52,7 @@ backup_control_backup_all $BACKUPLINK $DRIVESET
 #os_control_boot_to_target_installation_these_hosts default "$REBOOT_HOSTS"
 #os_control_assert_hosts_booted_target default "$REBOOT_HOSTS" || {
 #  echo "Not all hosts booted to default OS, check the environment!"
-#  return 1
+#  exit 1
 #}
 
 # WHY?
