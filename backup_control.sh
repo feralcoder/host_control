@@ -160,7 +160,7 @@ backup_control_restore () {
 
   local ERRFILE=restore_output_${SHORT_NAME}_${NOW}_$$_error.log
   local LOGFILE=restore_output_${SHORT_NAME}_${NOW}_$$.log
-  ssh_control_run_as_user root "/root/restore_script_${SHORT_NAME}_${NOW}.sh" $HOST > $LOGFILE 2> $ERRFILE
+  ssh_control_run_as_user root "/root/restore_script_${SHORT_NAME}_${NOW}.sh" $HOST > /tmp/$LOGFILE 2> /tmp/$ERRFILE
   [[ $? == 0 ]] || echo "Restore had errors!  See logfile $HOST:/root/$ERRFILE"
 
   ssh_control_sync_as_user root /tmp/$ERRFILE /root/$ERRFILE $HOST
@@ -190,7 +190,7 @@ backup_control_backup () {
 
   local ERRFILE=backup_output_${SHORT_NAME}_${NOW}_$$_error.log
   local LOGFILE=backup_output_${SHORT_NAME}_${NOW}_$$.log
-  ssh_control_run_as_user root "/root/backup_script_${SHORT_NAME}_${NOW}.sh" $HOST > $LOGFILE 2> $ERRFILE
+  ssh_control_run_as_user root "/root/backup_script_${SHORT_NAME}_${NOW}.sh" $HOST > /tmp/$LOGFILE 2> /tmp/$ERRFILE
   [[ $? == 0 ]] || echo "Backup had errors!  See logfile $HOST:/root/$ERRFILE"
 
   ssh_control_sync_as_user root /tmp/$ERRFILE /root/$ERRFILE $HOST
