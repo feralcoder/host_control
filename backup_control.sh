@@ -157,10 +157,13 @@ backup_control_restore () {
   local SCRIPT=`backup_control_make_restore_script $HOST $SRC $DEST $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY`
   ssh_control_sync_as_user root $SCRIPT /root/restore_script_${SHORT_NAME}_${NOW}.sh $HOST
   ssh_control_run_as_user root "chmod 755 /root/restore_script_${SHORT_NAME}_${NOW}.sh" $HOST
-  SYNC_OUTPUT=$(ssh_control_run_as_user root "/root/restore_script_${SHORT_NAME}_${NOW}.sh" $HOST)
 
+  local ERRFILE=restore_output_${SHORT_NAME}_${NOW}_$$_error.log
   local LOGFILE=restore_output_${SHORT_NAME}_${NOW}_$$.log
-  echo "$SYNC_OUTPUT" > /tmp/$LOGFILE
+  ssh_control_run_as_user root "/root/restore_script_${SHORT_NAME}_${NOW}.sh" $HOST > $LOGFILE 2> $ERRFILE
+  [[ $? == 0 ]] || echo "Restore had errors!  See logfile $HOST:/root/$ERRFILE"
+
+  ssh_control_sync_as_user root /tmp/$ERRFILE /root/$ERRFILE $HOST
   ssh_control_sync_as_user root /tmp/$LOGFILE /root/$LOGFILE $HOST
 }
 
@@ -184,10 +187,13 @@ backup_control_backup () {
   local SCRIPT=`backup_control_make_backup_script $HOST $SRC $DEST $MOUNTS $BACKUPSERV "$BACKUPLINK" $OVERWRITE_IDENTITY`
   ssh_control_sync_as_user root $SCRIPT /root/backup_script_${SHORT_NAME}_${NOW}.sh $HOST
   ssh_control_run_as_user root "chmod 755 /root/backup_script_${SHORT_NAME}_${NOW}.sh" $HOST
-  SYNC_OUTPUT=$(ssh_control_run_as_user root "/root/backup_script_${SHORT_NAME}_${NOW}.sh" $HOST)
 
+  local ERRFILE=backup_output_${SHORT_NAME}_${NOW}_$$_error.log
   local LOGFILE=backup_output_${SHORT_NAME}_${NOW}_$$.log
-  echo "$SYNC_OUTPUT" > /tmp/$LOGFILE
+  ssh_control_run_as_user root "/root/backup_script_${SHORT_NAME}_${NOW}.sh" $HOST > $LOGFILE 2> $ERRFILE
+  [[ $? == 0 ]] || echo "Backup had errors!  See logfile $HOST:/root/$ERRFILE"
+
+  ssh_control_sync_as_user root /tmp/$ERRFILE /root/$ERRFILE $HOST
   ssh_control_sync_as_user root /tmp/$LOGFILE /root/$LOGFILE $HOST
 }
 
@@ -216,7 +222,7 @@ backup_control_restore_all () {
   fi
 
   local HOST HOST_BACKUPLINK PIDS RETURN_CODE SHORT_NAME RESTORE_DIR
-  for HOST in $STACK_HOSTS     now_wait; do
+  for HOST in $ALL_HOSTS     now_wait; do
     SHORT_NAME=`group_logic_get_short_name $HOST`
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -233,10 +239,10 @@ backup_control_restore_all () {
       RESTORE_DIR=$SRCDIR/${SHORT_NAME}_$BACKUPLINK
       if [[ "${SHORT_NAME,,}" =~ ^(kgn|neo|bmn|lmn|mtn|dmb)$ ]]; then
         echo Starting: backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY
-        backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY & 2>/dev/null
+        backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY &
       elif [[ "${SHORT_NAME,,}" =~ ^(str|mrl|yda|gnd)$ ]]; then
         echo Starting: backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY
-        backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY & 2>/dev/null
+        backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY &
       fi
       PIDS="$PIDS:$!"
       echo "Started Restore for $HOST..."
@@ -267,7 +273,7 @@ backup_control_backup_all () {
   fi
 
   local HOST HOST_BACKUPLINK PIDS RETURN_CODE SHORT_NAME
-  for HOST in $STACK_HOSTS     now_wait; do
+  for HOST in $ALL_HOSTS     now_wait; do
     SHORT_NAME=`group_logic_get_short_name $HOST`
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -284,10 +290,10 @@ backup_control_backup_all () {
       if [[ $BACKUPLINK != "" ]] ; then HOST_BACKUPLINK=${SHORT_NAME}_$BACKUPLINK; fi
       if [[ "${SHORT_NAME,,}" =~ ^(kgn|neo|bmn|lmn|mtn|dmb)$ ]]; then
         echo Starting: backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS local "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY
-        backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS local "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY & 2>/dev/null
+        backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS local "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY &
       elif [[ "${SHORT_NAME,,}" =~ ^(str|mrl|yda|gnd)$ ]]; then
         echo Starting: backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS $BACKUPSERV "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY
-        backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS $BACKUPSERV "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY & 2>/dev/null
+        backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS $BACKUPSERV "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY &
       fi
       PIDS="$PIDS:$!"
       echo "Started Backup for $HOST..."
