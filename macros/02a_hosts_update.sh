@@ -47,13 +47,12 @@ host_control_updates () {
   echo; echo "UPDATING GIT REPOS EVERYWHERE"
   git_control_pull_push_these_hosts "$HOSTS" 2>/dev/null
 
-  echo; echo "REFETCHING HOST KEYS EVERYWHERE"
-  ssh_control_run_as_user_these_hosts cliff "ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" "$HOSTS" 2>/dev/null
-
-  # Serialize to not hose ILO's
+  # Serialize to not DOS ILO's and HOSTS
   for HOST in $HOSTS; do
-     echo; echo "Getting ILO hostkeys on $HOST"
-     ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
+    echo; echo "REFETCHING HOST KEYS on $HOST"
+    ssh_control_run_as_user cliff "ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
+    echo; echo "Getting ILO hostkeys on $HOST"
+    ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
   done
 }
 
