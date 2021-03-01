@@ -22,15 +22,6 @@ BACKUPLINK=$1 DRIVESET=$2
 #ssh_control_sync_as_user_these_hosts root /tmp/root_pubs /tmp/root_pubs "$ALL_HOSTS"
 #ssh_control_run_as_user_these_hosts root "cat ~/.ssh/authorized_keys /tmp/root_pubs | sort | uniq > /tmp/root_pubs_$$ ; cat /tmp/root_pubs_$$ > ~/.ssh/authorized_keys" "$ALL_HOSTS"
 
-
-SELFNAME_SHORT=`hostname | awk -F'.' '{print $1}'`
-NAME_SUFFIX=`echo $SELFNAME_SHORT | awk -F'-' '{print $2}'`
-[[ $NAME_SUFFIX == "admin" ]] || {
-  echo "RUN THIS SCRIPT FROM AN ADMIN OS!"
-  echo "This host will back itself up without reboots."
-  exit 1
-}
-
 if [[ $DRIVESET == x ]]; then
   OPERATING_DRIVE=default
   TARGET_DRIVE=admin
@@ -38,6 +29,17 @@ else
   OPERATING_DRIVE=admin
   TARGET_DRIVE=default
 fi
+
+
+SELFNAME_SHORT=`hostname | awk -F'.' '{print $1}'`
+NAME_SUFFIX=`echo $SELFNAME_SHORT | awk -F'-' '{print $2}'`
+
+[[ $NAME_SUFFIX == "" ]] && NAME_SUFFIX=default
+[[ $NAME_SUFFIX == "$OPERATING_DRIVE" ]] || {
+  echo "RUN THIS SCRIPT FROM THE $OPERATING_DRIVE OS!"
+  echo "This host will back itself up without reboots."
+  exit 1
+}
 
 REBOOT_HOSTS=`group_logic_remove_self "$ALL_HOSTS"`
 os_control_boot_to_target_installation_these_hosts $OPERATING_DRIVE "$REBOOT_HOSTS"
