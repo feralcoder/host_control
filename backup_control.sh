@@ -152,6 +152,10 @@ backup_control_restore () {
   [[ $BACKUPSERV == "" ]] && BACKUPSERV=$BACKUP_HOST
   [[ $OVERWRITE_IDENTITY == "" ]] && OVERWRITE_IDENTITY=false
 
+  local OLD_RESTORE_LOGS=/tmp/old_restores/$HOST
+  [[ -d $OLD_RESTORE_LOGS ]] || mkdir -p $OLD_RESTORE_LOGS
+  mv /tmp/restore_output_${SHORT_NAME}_* /tmp/restore_script_${SHORT_NAME}_* $OLD_RESTORE_LOGS >/dev/null 2>&1
+
   local NOW=`date +%Y%m%d-%H%M%S`
 
   local SCRIPT=`backup_control_make_restore_script $HOST $SRC $DEST $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY`
@@ -181,6 +185,10 @@ backup_control_backup () {
   [[ $BACKUPSERV == "" ]] && BACKUPSERV=$BACKUP_HOST
   [[ $BACKUPLINK == "" ]] && BACKUPLINK=""
   [[ $OVERWRITE_IDENTITY == "" ]] && OVERWRITE_IDENTITY=false
+
+  local OLD_BACKUP_LOGS=/tmp/old_backups/$HOST
+  [[ -d $OLD_BACKUP_LOGS ]] || mkdir -p $OLD_BACKUP_LOGS
+  mv /tmp/backup_output_${SHORT_NAME}_* /tmp/backup_script_${SHORT_NAME}_* $OLD_BACKUP_LOGS >/dev/null 2>&1
 
   local NOW=`date +%Y%m%d-%H%M%S`
 
