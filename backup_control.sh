@@ -287,7 +287,7 @@ backup_control_backup_all () {
         fi
       done
     else
-      if [[ $BACKUPLINK != "" ]] ; then HOST_BACKUPLINK=${SHORT_NAME}_$BACKUPLINK; fi
+      if [[ $BACKUPLINK != "" ]] ; then HOST_BACKUPLINK=${DRIVESET}${SHORT_NAME}_$BACKUPLINK; fi
       if [[ "${SHORT_NAME,,}" =~ ^(kgn|neo|bmn|lmn|mtn|dmb)$ ]]; then
         echo Starting: backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS local "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY
         backup_control_backup $HOST ${DRIVESET}$SHORT_NAME $BACKUP_DIR $MOUNTS local "$HOST_BACKUPLINK" $OVERWRITE_IDENTITY &
