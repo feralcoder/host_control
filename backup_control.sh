@@ -37,16 +37,16 @@ backup_control_make_restore_script () {
 
 
 
-cat << EOF > $SCRIPT
-#!/bin/bash
+  echo "#!/bin/bash" > $SCRIPT
 
-for MOUNT in $MOUNTS; do
-  mkdir /mnt/${DESTVOL}_\${MOUNT} > /dev/null 2>&1
-  mount LABEL=${DESTVOL}_\${MOUNT} /mnt/${DESTVOL}_\${MOUNT} > /dev/null 2>&1
-  # Clean up after failed mounts...
-  rmdir /mnt/${DESTVOL}_\${MOUNT} > /dev/null 2>&1
-done
-EOF
+  # Mount all the drives we're backing
+  for MOUNT in $MOUNTS; do
+    echo "mkdir /mnt/${DESTVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
+    echo "mkdir /mnt/${DESTVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
+    echo "mount LABEL=${DESTVOL}_${MOUNT} /mnt/${DESTVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
+    # Clean up after failed mounts...
+    echo "rmdir /mnt/${DESTVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
+  done
 
   local ROOT_EXCLUDE BOOT_EXCLUDE
   if [[ "${OVERWRITE_IDENTITY,,}" != "true" ]]; then
@@ -55,15 +55,26 @@ EOF
   fi
 
 
+  for MOUNT in $MOUNTS; do
+    case $MOUNT in
+      boot)
+        echo "rsync -avxHAX ${SOURCE_PATH}_boot/  ${DEST_PATH}_boot/ --delete $BOOT_EXCLUDE" >> $SCRIPT
+        ;;
+      root)
+        echo "rsync -avxHAX ${SOURCE_PATH}_root/ ${DEST_PATH}_root/ --delete $ROOT_EXCLUDE" >> $SCRIPT
+        ;;
+      home)
+        echo "rsync -avxHAX ${SOURCE_PATH}_home/ ${DEST_PATH}_home/ --delete" >> $SCRIPT
+        ;;
+      var)
+        echo "rsync -avxHAX ${SOURCE_PATH}_var/ ${DEST_PATH}_var/ --delete" >> $SCRIPT
+        ;;
+      *)
+        ;;
+    esac
+  done
 
-cat << EOF >> $SCRIPT
-rsync -avxHAX ${SOURCE_PATH}_root/ ${DEST_PATH}_root/ --delete $ROOT_EXCLUDE
-rsync -avxHAX ${SOURCE_PATH}_home/ ${DEST_PATH}_home/ --delete
-rsync -avxHAX ${SOURCE_PATH}_var/ ${DEST_PATH}_var/ --delete
-rsync -avxHAX ${SOURCE_PATH}_boot/  ${DEST_PATH}_boot/ --delete $BOOT_EXCLUDE
-EOF
-
-echo $SCRIPT
+  echo $SCRIPT
 }
 
 
@@ -96,18 +107,19 @@ backup_control_make_backup_script () {
   local DEST_PATH=${BACKUPSERV_PREFIX}$DEST_PATH_ON_TARGET
 
   local SCRIPT=/tmp/backup_script_${SHORT_NAME}_${NOW}_$$.sh
-cat << EOF > $SCRIPT
-#!/bin/bash
 
-for MOUNT in $MOUNTS; do
-  mkdir /mnt/${SRCVOL}_\${MOUNT} > /dev/null 2>&1
-  mount LABEL=${SRCVOL}_\${MOUNT} /mnt/${SRCVOL}_\${MOUNT} > /dev/null 2>&1
-  # Clean up after failed mounts...
-  rmdir /mnt/${SRCVOL}_\${MOUNT} > /dev/null 2>&1
-done
+  echo "#!/bin/bash" > $SCRIPT
 
-EOF
+  # Mount all the drives we're backing
+  for MOUNT in $MOUNTS; do
+    echo "mkdir /mnt/${SRCVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
+    echo "mkdir /mnt/${SRCVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
+    echo "mount LABEL=${SRCVOL}_${MOUNT} /mnt/${SRCVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
+    # Clean up after failed mounts...
+    echo "rmdir /mnt/${SRCVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
+  done
 
+  # If local backup, create target dir in script.  If remote, create it now from admin server.
   if [[ $BACKUPSERV_PREFIX == "" ]] ; then
     echo "mkdir -p $DEST_PATH_ON_TARGET" >> $SCRIPT
   else
@@ -120,12 +132,24 @@ EOF
     BOOT_EXCLUDE="--exclude='grub2/grub.cfg*' --exclude='grub2/grubenv*' --exclude='grub2/device.map*'"
   fi
 
-cat << EOF >> $SCRIPT
-rsync -avxHAX ${SOURCE_PATH}_root/ ${DEST_PATH}/${SHORT_NAME}_root/ --delete $ROOT_EXCLUDE
-rsync -avxHAX ${SOURCE_PATH}_home/ ${DEST_PATH}/${SHORT_NAME}_home/ --delete
-rsync -avxHAX ${SOURCE_PATH}_var/ ${DEST_PATH}/${SHORT_NAME}_var/ --delete
-rsync -avxHAX ${SOURCE_PATH}_boot/  ${DEST_PATH}/${SHORT_NAME}_boot/ --delete $BOOT_EXCLUDE
-EOF
+  for MOUNT in $MOUNTS; do
+    case $MOUNT in
+      boot)
+        echo "rsync -avxHAX ${SOURCE_PATH}_boot/  ${DEST_PATH}/${SHORT_NAME}_boot/ --delete $BOOT_EXCLUDE" >> $SCRIPT
+        ;;
+      root)
+        echo "rsync -avxHAX ${SOURCE_PATH}_root/ ${DEST_PATH}/${SHORT_NAME}_root/ --delete $ROOT_EXCLUDE" >> $SCRIPT
+        ;;
+      home)
+        echo "rsync -avxHAX ${SOURCE_PATH}_home/ ${DEST_PATH}/${SHORT_NAME}_home/ --delete" >> $SCRIPT
+        ;;
+      var)
+        echo "rsync -avxHAX ${SOURCE_PATH}_var/ ${DEST_PATH}/${SHORT_NAME}_var/ --delete" >> $SCRIPT
+        ;;
+      *)
+        ;;
+    esac
+  done
 
   if [[ $BACKUPLINK != "" ]]; then
     if [[ $BACKUPSERV_PREFIX == "" ]] ; then
@@ -137,7 +161,7 @@ EOF
     fi
   fi
 
-echo $SCRIPT
+  echo $SCRIPT
 }
 
 
