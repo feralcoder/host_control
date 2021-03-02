@@ -2,23 +2,33 @@
 
 
 ssh_control_get_password () {
+  local PASSFILE=$1 VERIFY=$2
+  # PASSFILE: if provided, will be used instead of /tmp/password_$$
+  # VERIFY: if true, check and change if needed.  If false, just return file if it exists.
+  [[ $PASSFILE == "" ]] && PASSFILE=/tmp/password_$$
+  [[ $VERIFY == "" ]] && VERIFY=true
   local PASSWORD
 
-  # if ~/.password exists and works, use it
-  [[ -f ~/.password ]] && {
-    cat ~/.password | sudo -k -S ls >/dev/null 2>&1
-    if [[ $? == 0 ]] ; then
-      echo ~/.password
+  # if $PASSFILE exists and works, use it
+  [[ -f $PASSFILE ]] && {
+    if [[ $VERIFY == true ]]; then
+      cat $PASSFILE | sudo -k -S ls >/dev/null 2>&1
+      if [[ $? == 0 ]] ; then
+        echo $PASSFILE
+        return
+      fi
+    else # $PASSFILE exists and VERIFY != true
+      echo $PASSWORD
       return
     fi
   }
 
-  # either ~.password doesn't exiist, or it doesn't work
+  # either ~.password doesn't exiist, or it doesn't work and VERIFY==true
   read -s -p "Enter Password: " PASSWORD
-  touch /tmp/password_$$
-  chmod 600 /tmp/password_$$
-  echo $PASSWORD > /tmp/password_$$
-  echo /tmp/password_$$
+  touch $PASSFILE
+  chmod 600 $PASSFILE
+  echo $PASSWORD > $PASSFILE
+  echo $PASSFILE
 }
 
 
@@ -50,7 +60,7 @@ ssh_control_push_key () {
   [[ $? == 0 ]] || {
     # PASSFILE may have been passed to us...
     [[ $PASSFILE == "" ]] && {
-      PASSFILE=`ssh_control_get_password`
+      PASSFILE=`ssh_control_get_password ~/.password`
       # ONLY DELETE it if we created it...
     }
 
@@ -78,12 +88,11 @@ ssh_control_distribute_admin_key_these_hosts () {
   }
 
   # This part is serialized, because it requires IO from user
-  local PASSFILE=`ssh_control_get_password`
+  local PASSFILE=`ssh_control_get_password ~/.password`
   for HOST in $HOSTS; do
     echo "Started Key Push for $HOST: $!"
     ssh_control_push_key $HOST $PASSFILE
   done
-  [[ $PASSFILE == ~/.password ]] || rm $PASSFILE
 
   # This can be done in parallel
   local RETURN_CODE

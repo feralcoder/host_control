@@ -6,8 +6,7 @@ CODE_PATH=/home/cliff/CODE/feralcoder/
 
 git_control_set_local_password () {
   echo "Setting new local git password..."
-  local PASSFILE=`ssh_control_get_password`
-  mv $PASSFILE ~/.git_password && chmod 600 ~/.git_password
+  local PASSFILE=`ssh_control_get_password ~/.git_password false`
 }
 
 git_control_fix_repos () {
