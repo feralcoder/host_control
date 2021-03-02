@@ -42,7 +42,6 @@ backup_control_make_restore_script () {
   # Mount all the drives we're backing
   for MOUNT in $MOUNTS; do
     echo "mkdir /mnt/${DESTVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
-    echo "mkdir /mnt/${DESTVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
     echo "mount LABEL=${DESTVOL}_${MOUNT} /mnt/${DESTVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
     # Clean up after failed mounts...
     echo "rmdir /mnt/${DESTVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
@@ -113,7 +112,6 @@ backup_control_make_backup_script () {
   # Mount all the drives we're backing
   for MOUNT in $MOUNTS; do
     echo "mkdir /mnt/${SRCVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
-    echo "mkdir /mnt/${SRCVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
     echo "mount LABEL=${SRCVOL}_${MOUNT} /mnt/${SRCVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
     # Clean up after failed mounts...
     echo "rmdir /mnt/${SRCVOL}_${MOUNT} > /dev/null 2>&1" >> $SCRIPT
@@ -176,6 +174,7 @@ backup_control_restore () {
   [[ $BACKUPSERV == "" ]] && BACKUPSERV=$BACKUP_HOST
   [[ $OVERWRITE_IDENTITY == "" ]] && OVERWRITE_IDENTITY=false
 
+  local SHORT_NAME=`group_logic_get_short_name $HOST`
   local OLD_RESTORE_LOGS=/tmp/old_restores/$HOST
   [[ -d $OLD_RESTORE_LOGS ]] || mkdir -p $OLD_RESTORE_LOGS
   mv /tmp/restore_output_${SHORT_NAME}_* /tmp/restore_script_${SHORT_NAME}_* $OLD_RESTORE_LOGS >/dev/null 2>&1
@@ -210,6 +209,7 @@ backup_control_backup () {
   [[ $BACKUPLINK == "" ]] && BACKUPLINK=""
   [[ $OVERWRITE_IDENTITY == "" ]] && OVERWRITE_IDENTITY=false
 
+  local SHORT_NAME=`group_logic_get_short_name $HOST`
   local OLD_BACKUP_LOGS=/tmp/old_backups/$HOST
   [[ -d $OLD_BACKUP_LOGS ]] || mkdir -p $OLD_BACKUP_LOGS
   mv /tmp/backup_output_${SHORT_NAME}_* /tmp/backup_script_${SHORT_NAME}_* $OLD_BACKUP_LOGS >/dev/null 2>&1
