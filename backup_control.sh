@@ -268,7 +268,10 @@ backup_control_restore_all () {
         fi
       done
     else
-      RESTORE_DIR=$SRCDIR/${SHORT_NAME}_$BACKUPLINK
+      # ASSUME WE WANT TO RESTORE FROM BACKUPS FROM SAME DRIVESET
+      #   Until we build relinker to support agnd, bgnd, gnd --> agnd --> dir...
+      RESTORE_DIR=$SRCDIR/${DRIVESET}${SHORT_NAME}_$BACKUPLINK
+#      RESTORE_DIR=$SRCDIR/${SHORT_NAME}_$BACKUPLINK
       if [[ "${SHORT_NAME,,}" =~ ^(kgn|neo|bmn|lmn|mtn|dmb)$ ]]; then
         echo Starting: backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY
         backup_control_restore $HOST $RESTORE_DIR ${DRIVESET}$SHORT_NAME $MOUNTS local $OVERWRITE_IDENTITY &
