@@ -4,9 +4,10 @@ MACRO_DIR=$( dirname $MACRO_SOURCE )
 
 . ~/CODE/feralcoder/host_control/control_scripts.sh
 
-BACKUPLINK=$1 DRIVESET=$2
+BACKUPLINK=$1 DRIVESET=$2 HOSTS=$3
 [[ $BACKUPLINK == "" ]] && BACKUPLINK=01_CentOS_8_3_Admin_Install
 [[ $DRIVESET == "" ]] && DRIVESET=a
+[[ $HOSTS == "" ]] && HOSTS="$ALL_HOSTS"
 
 # This script will backup all hard drive OS's
 #   by default: DriveA to Updated Centos8 Admin images
