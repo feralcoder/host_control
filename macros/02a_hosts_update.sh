@@ -39,21 +39,21 @@ host_control_updates () {
   os_control_checkout_repofetcher `hostname`
   os_control_repoint_repos_to_feralcoder_these_hosts "$HOSTS"
 
-  echo; echo "UPDATING ADMIN ENV ON $HOSTS"
-  for HOST in $HOSTS; do
-    admin_control_bootstrap_admin $HOST
-  done
+#  echo; echo "UPDATING ADMIN ENV ON $HOSTS"
+#  for HOST in $HOSTS; do
+#    admin_control_bootstrap_admin $HOST
+#  done
 
   echo; echo "UPDATING GIT REPOS EVERYWHERE"
   git_control_pull_push_these_hosts "$HOSTS" 2>/dev/null
 
-  # Serialize to not DOS ILO's and HOSTS
-  for HOST in $HOSTS; do
-    echo; echo "REFETCHING HOST KEYS on $HOST"
-    ssh_control_run_as_user cliff "ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
-    echo; echo "Getting ILO hostkeys on $HOST"
-    ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
-  done
+#  # Serialize to not DOS ILO's and HOSTS
+#  for HOST in $HOSTS; do
+#    echo; echo "REFETCHING HOST KEYS on $HOST"
+#    ssh_control_run_as_user cliff "ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
+#    echo; echo "Getting ILO hostkeys on $HOST"
+#    ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
+#  done
 }
 
 
@@ -71,7 +71,7 @@ host_updates () {
 
 SUDO_PASS_FILE=`admin_control_get_sudo_password`
 [[ -f ~/.password ]] || { mv $SUDO_PASS_FILE ~/.password && SUDO_PASS_FILE=~/.password ; }
-host_control_setup_host_access "$HOSTS"
+#host_control_setup_host_access "$HOSTS"
 os_control_setup_repo_mirror $REPO_HOST
 host_control_updates "$HOSTS"
 host_updates "$HOSTS"
