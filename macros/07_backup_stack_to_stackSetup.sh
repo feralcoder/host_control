@@ -9,9 +9,9 @@ $MACRO_DIR/09_backup_everything.sh 02_Stack_Setup a "$STACK_HOSTS"
 
 
 
-echo; echo "BOOTING TO DEFAULT OS ON $HOSTS"
-os_control_boot_to_target_installation_these_hosts default "$HOSTS"
-os_control_assert_hosts_booted_target default "$HOSTS" || {
+echo; echo "BOOTING TO DEFAULT OS ON $STACK_HOSTS"
+os_control_boot_to_target_installation_these_hosts default "$STACK_HOSTS"
+os_control_assert_hosts_booted_target default "$STACK_HOSTS" || {
   echo "Not all hosts booted to default OS, check the environment!"
   exit 1
 }
