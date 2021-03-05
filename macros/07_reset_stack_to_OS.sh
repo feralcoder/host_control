@@ -15,5 +15,3 @@ os_control_assert_hosts_booted_target default "$STACK_HOSTS" || {
   exit 1
 }
 echo; echo "ALL HOSTS ARE BOOTED TO default"
-
-ilo_power_off_these_hosts "$STACK_HOSTS"
