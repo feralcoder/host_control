@@ -15,8 +15,9 @@ CONTROL_DIR=$( dirname $CONTROL_SOURCE )
 . $CONTROL_DIR/ssh_control.sh
 . $CONTROL_DIR/os_control.sh
 . $CONTROL_DIR/backup_control.sh
-. $CONTROL_DIR/stack_control.sh
 . $CONTROL_DIR/admin_control.sh
+. $CONTROL_DIR/kolla_control.sh
+. $CONTROL_DIR/tripleo_control.sh
 
 ILO2_HOSTS="mrl gnd yda dmb"
 ILO4_HOSTS="mtn lmn bmn neo str kgn"
@@ -27,7 +28,8 @@ TERNARY_CONTROL_HOSTS="gnd"
 CONTROL_HOSTS="$PRIMARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $TERNARY_CONTROL_HOSTS"
 
 COMPUTE_HOSTS="mtn lmn bmn neo kgn"
-COMPUTE_HCI_HOSTS="kgn neo bmn"
+OSD_HOSTS="mtn lmn bmn neo kgn"
+COMPUTE_HCI_HOSTS=`group_logic_intersection "$COMPUTE_HOSTS" "OSD_HOSTS"`
 
 OVERCLOUD_HOSTS="mtn lmn bmn neo mrl gnd str kgn"
 
