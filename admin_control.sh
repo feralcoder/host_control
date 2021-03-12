@@ -314,18 +314,31 @@ admin_control_umount_all_parts () {
   [[ $MOUNTS != "" ]] && ssh_control_run_as_user root "umount $MOUNTS" $HOST
 }
 
-admin_control_find_labeled_drive_by_prefix () {
+admin_control_find_partitions_by_prefix () {
   local PREFIX=$1 HOST=$2
 
   local SHORTNAME=`group_logic_get_short_name $HOST`
   local LABEL=${PREFIX}$SHORTNAME
-  local PARTS=`ssh_control_run_as_user root "blkid | grep $LABEL" $HOST | sed 's/: LABEL=\"/:/g' | awk -F'\"' '{print $1}'`
+  local PARTS=`ssh_control_run_as_user root "blkid | grep $LABEL" $HOST | grep '/dev/' | sed 's/: LABEL=\"/:/g' | awk -F'\"' '{print $1}'`
   local PART
   for PART in $PARTS; do
     DEV=`echo $PART | awk -F':' '{print $1}'`
     LABEL=`echo $PART | awk -F':' '{print $2}'`
     echo $DEV $LABEL
   done
+}
+
+
+admin_control_find_labeled_drive_by_prefix () {
+  local PREFIX=$1 HOST=$2
+
+  local DEV=`admin_control_find_partitions_by_prefix $PREFIX $HOST | awk '{print $1}' | sed 's/[0-9]$//g' | sort | uniq | tr '\n' ' ' | sed 's/ $//g'`
+  if [[ "$DEV" =~ ( ) ]]; then
+    echo "Multiple devices matched prefix!  No safe answer, investigate!"
+    echo "$DEV"
+    return 1
+  fi
+  echo $DEV
 }
 
 
