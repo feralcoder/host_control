@@ -18,7 +18,7 @@ ssh_control_get_password () {
         return
       fi
     else # $PASSFILE exists and VERIFY != true
-      echo $PASSWORD
+      echo $PASSFILE
       return
     fi
   }
