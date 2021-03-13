@@ -16,6 +16,7 @@ CONTROL_DIR=$( dirname $CONTROL_SOURCE )
 . $CONTROL_DIR/os_control.sh
 . $CONTROL_DIR/backup_control.sh
 . $CONTROL_DIR/admin_control.sh
+. $CONTROL_DIR/ceph_control.sh
 . $CONTROL_DIR/kolla_control.sh
 . $CONTROL_DIR/tripleo_control.sh
 
@@ -28,6 +29,7 @@ TERNARY_CONTROL_HOSTS="gnd"
 CONTROL_HOSTS="$PRIMARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $TERNARY_CONTROL_HOSTS"
 
 COMPUTE_HOSTS="mtn lmn bmn neo kgn"
+CEPH_MON_HOSTS="str mrl gnd"
 OSD_HOSTS="mtn lmn bmn neo kgn"
 COMPUTE_HCI_HOSTS=`group_logic_intersection "$COMPUTE_HOSTS" "OSD_HOSTS"`
 
