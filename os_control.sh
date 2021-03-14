@@ -287,6 +287,8 @@ os_control_checkout_repofetcher () {
 os_control_update_repo_mirror () {
   local HOST=$1
 
+  echo "Checking out latest repo-fetchen on $HOST"
+  os_control_checkout_repofetcher $HOST
   echo "Running repo-fetcher update on $HOST, see logs in /tmp/repo-fetcher_update_$NOW.log"
   ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/update.sh | tee /tmp/repo-fetcher_update_$NOW.log" $HOST
 }
@@ -294,7 +296,7 @@ os_control_update_repo_mirror () {
 os_control_setup_repo_mirror () {
   local HOST=$1
 
-  echo "SETTING UP LOCAL YUM MIRROR ON $HOST"
+  echo "Checking out latest repo-fetchen on $HOST"
   os_control_checkout_repofetcher $HOST
   echo "Running repo-fetcher setup on $HOST, see logs in /tmp/repo-fetcher_setup_$NOW.log"
   ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/setup.sh | tee /tmp/repo-fetcher_setup_$NOW.log" $HOST
