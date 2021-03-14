@@ -1,24 +1,42 @@
 #!/bin/bash
 
 
+admin_control_test_sudo () {
+  local PASSFILE=$1
+  sudo -K
+  if [[ $PASSFILE == "" ]]; then
+    echo "PASSFILE is undefined!"
+    return 1
+  fi
+  cat $PASSFILE | sudo -S ls > /dev/null 2>&1
+}
+
+
+
 admin_control_get_sudo_password () {
+  local PASSFILE=$1
   local PASSWORD
 
-  # if ~/.password exists and works, use it
-  [[ -f ~/.password ]] && {
-    cat ~/.password | sudo -k -S ls >/dev/null 2>&1
-    if [[ $? == 0 ]] ; then
+  if [[ $PASSFILE != "" ]]; then
+    if ( admin_control_test_sudo $PASSFILE ); then
+      echo $PASSFILE
+      return
+    fi
+  elif [[ -f ~/.password ]]; then
+    if ( admin_control_test_sudo ~/.password ); then
       echo ~/.password
       return
     fi
-  }
+  else
+    PASSFILE=/tmp/passfile_$$
+  fi
 
-  # either ~.password doesn't exiist, or it doesn't work
+  # either supplied file doesn't work, or ~.password doesn't exiist, or it doesn't work
   read -s -p "Enter Sudo Password: " PASSWORD
-  touch /tmp/password_$$
-  chmod 600 /tmp/password_$$
-  echo $PASSWORD > /tmp/password_$$
-  echo /tmp/password_$$
+  touch $PASSFILE
+  chmod 600 $PASSFILE
+  echo $PASSWORD > $PASSFILE
+  echo $PASSFILE
 }
 
 admin_control_mount_xax () {
