@@ -66,8 +66,7 @@ host_updates () {
 
 
 
-SUDO_PASS_FILE=`admin_control_get_sudo_password`
-[[ -f ~/.password ]] || { mv $SUDO_PASS_FILE ~/.password && SUDO_PASS_FILE=~/.password ; }
+SUDO_PASS_FILE=`admin_control_get_sudo_password ~/.password`
 #host_control_setup_host_access "$HOSTS"
 os_control_update_repo_mirror $REPO_HOST
 host_control_updates "$HOSTS"
