@@ -51,7 +51,7 @@ os_control_assert_hosts_booted_target $OPERATING_DRIVE "$REBOOT_HOSTS" || {
   exit 1
 }
 
-backup_control_backup_all $BACKUPLINK $DRIVESET
+backup_control_backup_all "$BACKUPLINK" "$DRIVESET"
 
 # DON'T NEED TO BOOT TO DEFAULT, NECESSARILY...
 #os_control_boot_to_target_installation_these_hosts default "$REBOOT_HOSTS"

@@ -50,7 +50,7 @@ os_control_assert_hosts_booted_target $OPERATING_DRIVE "$REBOOT_HOSTS" || {
 }
 
 SOURCEDIR=""  # Default backup directory can change in backup scripts.
-backup_control_restore_all $BACKUPLINK $SOURCEDIR $DRIVESET
+backup_control_restore_all "$BACKUPLINK" "$SOURCEDIR" "$DRIVESET"
 admin_control_fix_grub_these_hosts "$HOSTS"
 
 echo; echo "GRUB MAY BE BROKEN ON TARGET DRIVE - if reboot fails, then access from $OPERATING_DRIVE GRUB, then fix grub."
