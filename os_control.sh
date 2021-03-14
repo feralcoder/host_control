@@ -279,7 +279,7 @@ os_control_checkout_repofetcher () {
   local HOST=$1
 
   echo "Checking out repo-fetcher on $REPO_HOST"
-  ssh_control_sync_as_user cliff ~/.git_password ~/.git_password $REPO_HOST
+  ssh_control_sync_as_user cliff ~/.git_password ~/.git_password $HOST
   ssh_control_run_as_user cliff "cd ~/CODE/feralcoder; [[ -d repo-fetcher ]] && echo repo-fetcher already checked out on \$HOST || git clone https://feralcoder:\`cat ~/.git_password\`@github.com/feralcoder/repo-fetcher.git" $HOST
   ssh_control_run_as_user cliff "cd ~/CODE/feralcoder/repo-fetcher && git pull" $HOST
 }
@@ -289,8 +289,8 @@ os_control_update_repo_mirror () {
 
   echo "Checking out latest repo-fetchen on $HOST"
   os_control_checkout_repofetcher $HOST
-  echo "Running repo-fetcher update on $HOST, see logs in /tmp/repo-fetcher_update_$NOW.log"
-  ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/update.sh | tee /tmp/repo-fetcher_update_$NOW.log" $HOST
+  echo "Running repo-fetcher update on $HOST, see logs in /tmp/repo-fetcher_update_$$.log"
+  ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/update.sh | tee /tmp/repo-fetcher_update_$$.log" $HOST
 }
 
 os_control_setup_repo_mirror () {
@@ -298,8 +298,8 @@ os_control_setup_repo_mirror () {
 
   echo "Checking out latest repo-fetchen on $HOST"
   os_control_checkout_repofetcher $HOST
-  echo "Running repo-fetcher setup on $HOST, see logs in /tmp/repo-fetcher_setup_$NOW.log"
-  ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/setup.sh | tee /tmp/repo-fetcher_setup_$NOW.log" $HOST
+  echo "Running repo-fetcher setup on $HOST, see logs in /tmp/repo-fetcher_setup_$$.log"
+  ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/setup.sh | tee /tmp/repo-fetcher_setup_$$.log" $HOST
 }
 
 os_control_repoint_repos_to_feralcoder_these_hosts () {
