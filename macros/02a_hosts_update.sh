@@ -17,6 +17,8 @@ HOSTS=$1
   exit 1
 }
 
+
+
 host_control_setup_host_access () {
   local HOSTS=$1
 
@@ -35,6 +37,9 @@ host_control_setup_host_access () {
 host_control_updates () {
   local HOSTS=$1
 
+  # Who doesn't need a good /tmp/x.  Right?
+  ssh_control_run_as_user_these_hosts root "touch /tmp/x" "$HOSTS"
+
   echo; echo "REPOINTING YUM TO LOCAL MIRROR ON $HOSTS"
   os_control_checkout_repofetcher `hostname`
   os_control_repoint_repos_to_feralcoder_these_hosts "$HOSTS"
@@ -44,13 +49,13 @@ host_control_updates () {
   echo; echo "UPDATING GIT REPOS EVERYWHERE"
   git_control_pull_push_these_hosts "$HOSTS" 2>/dev/null
 
-#  # Serialize to not DOS ILO's and HOSTS
-#  for HOST in $HOSTS; do
-#    echo; echo "REFETCHING HOST KEYS on $HOST"
-#    ssh_control_run_as_user cliff "ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
-#    echo; echo "Getting ILO hostkeys on $HOST"
-#    ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
-#  done
+  # Serialize to not DOS ILO's and HOSTS
+  for HOST in $HOSTS; do
+    echo; echo "REFETCHING HOST KEYS on $HOST"
+    ssh_control_run_as_user cliff "ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
+    echo; echo "Getting ILO hostkeys on $HOST"
+    ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
+  done
 }
 
 
@@ -67,7 +72,7 @@ host_updates () {
 
 
 SUDO_PASS_FILE=`admin_control_get_sudo_password ~/.password`
-#host_control_setup_host_access "$HOSTS"
+host_control_setup_host_access "$HOSTS"
 os_control_update_repo_mirror $REPO_HOST
 host_control_updates "$HOSTS"
 host_updates "$HOSTS"
