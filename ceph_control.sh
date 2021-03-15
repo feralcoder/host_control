@@ -44,6 +44,26 @@ kgn:OSD_1_data:/dev/sdf:6DFC0E9F-2411-4084-A069-968E766E6F6F'
 }
 
 
+ceph_control_create_OSDs_from_map () {
+  local OSD_MAP=$1
+  
+  local MAPLINE HOST VG DEV UUID DRIVES DRIVE
+  for MAPLINE in $OSD_MAP; do
+    HOST=`echo $MAPLINE | awk -F':' '{print $1}'`
+    DRIVES=`ssh_control_run_as_user root "ls /dev/sd?" $HOST | grep '/dev/'`
+    VG=`echo $MAPLINE | awk -F':' '{print $2}'`
+    # ORIG DEV MAY NOT BE CURRENT DEV
+    #DEV=`echo $MAPLINE | awk -F':' '{print $3}'`
+    UUID=`echo $MAPLINE | awk -F':' '{print $4}'`
+    DEV=$(for DRIVE in $DRIVES; do
+      ( ssh_control_run_as_user root "fdisk -l $DRIVE" $HOST | grep $UUID >/dev/null ) && echo $DRIVE
+    done)
+
+    echo "CREATING ON $HOST: $VG $DEV $UUID"
+    ssh_control_run_as_user root "pvcreate -y ${DEV}1; vgcreate -y $VG ${DEV}1; lvcreate -y -n $VG -l 100%FREE $VG" $HOST
+  done
+}
+
 ceph_control_wipe_OSDs () {
   local OSD_MAP=$1
   
