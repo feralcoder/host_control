@@ -30,19 +30,42 @@ ceph_control_setup_OSD () {
 
 # WARNING: /dev/xxx CAN CHANGE ACROSS REBOOT!!!
 #  verify by UUID
+ceph_control_show_map () {
+echo 'mtn:OSD_1_db:/dev/sde:5DF26BAA-0185-4F57-8763-DB5378711819
+mtn:OSD_1_data:/dev/sdd:2ABBF474-5FAC-482A-9F2E-C6061790B505
+lmn:OSD_1_db:/dev/sde:1BDD2355-3776-48FF-A704-87C49BD8333E
+lmn:OSD_1_data:/dev/sdd:676E27B6-057F-460D-B6A8-960B7E590A03
+bmn:OSD_1_db:/dev/sde:632DFF71-2758-4DB2-8092-D525BA42A58C
+bmn:OSD_1_data:/dev/sdd:8877C770-20BD-4826-BB74-511AF41D7AD2
+neo:OSD_1_db:/dev/sde:A784A191-2CEC-49AF-B8A9-6F590F615299
+neo:OSD_1_data:/dev/sdc:9CBA2B15-FB1E-4AF8-8BFF-8AE8558F27BA
+kgn:OSD_1_db:/dev/sdg:F0C24FA2-BFE0-4445-AE10-05D68E31A13B
+kgn:OSD_1_data:/dev/sdf:6DFC0E9F-2411-4084-A069-968E766E6F6F'
+}
 
-# for HOST in $OSD_HOSTS ; do ceph_control_map_OSDs $HOST; done
-# mtn:OSD_1_db:/dev/sde:5DF26BAA-0185-4F57-8763-DB5378711819
-# mtn:OSD_1_data:/dev/sdd:2ABBF474-5FAC-482A-9F2E-C6061790B505
-# lmn:OSD_1_db:/dev/sde:1BDD2355-3776-48FF-A704-87C49BD8333E
-# lmn:OSD_1_data:/dev/sdd:676E27B6-057F-460D-B6A8-960B7E590A03
-# bmn:OSD_1_db:/dev/sde:632DFF71-2758-4DB2-8092-D525BA42A58C
-# bmn:OSD_1_data:/dev/sdd:8877C770-20BD-4826-BB74-511AF41D7AD2
-# neo:OSD_1_db:/dev/sde:A784A191-2CEC-49AF-B8A9-6F590F615299
-# neo:OSD_1_data:/dev/sdc:9CBA2B15-FB1E-4AF8-8BFF-8AE8558F27BA
-# kgn:OSD_1_db:/dev/sdg:F0C24FA2-BFE0-4445-AE10-05D68E31A13B
-# kgn:OSD_1_data:/dev/sdf:6DFC0E9F-2411-4084-A069-968E766E6F6F
 
+ceph_control_wipe_OSDs () {
+  local OSD_MAP=$1
+  
+  local MAPLINE HOST VG DEV UUID DRIVES DRIVE
+  for MAPLINE in $OSD_MAP; do
+    HOST=`echo $MAPLINE | awk -F':' '{print $1}'`
+    DRIVES=`ssh_control_run_as_user root "ls /dev/sd?" $HOST | grep '/dev/'`
+    VG=`echo $MAPLINE | awk -F':' '{print $2}'`
+    # ORIG DEV MAY NOT BE CURRENT DEV
+    #DEV=`echo $MAPLINE | awk -F':' '{print $3}'`
+    UUID=`echo $MAPLINE | awk -F':' '{print $4}'`
+    DEV=$(for DRIVE in $DRIVES; do
+      ( ssh_control_run_as_user root "fdisk -l $DRIVE" $HOST | grep $UUID >/dev/null ) && echo $DRIVE
+    done)
+
+    echo "REMOVING ON $HOST: $VG $DEV $UUID"
+    ssh_control_run_as_user root "lvremove -y $VG" $HOST
+    ssh_control_run_as_user root "vgremove -y $VG" $HOST
+    ssh_control_run_as_user root "pvremove -y ${DEV}1" $HOST
+    ssh_control_run_as_user root "dd bs=1M count=1024 conv=sync if=/dev/zero of=${DEV}1" $HOST
+  done
+}
 
 ceph_control_map_OSDs () {
   local HOST=$1
