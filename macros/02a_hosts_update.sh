@@ -40,6 +40,9 @@ host_control_updates () {
   # Who doesn't need a good /tmp/x.  Right?
   ssh_control_run_as_user_these_hosts root "touch /tmp/x" "$HOSTS"
 
+  # Some basic packages...
+  ssh_control_run_as_user_these_hosts root "dnf -y install telnet" "$HOSTS"
+
   echo; echo "REPOINTING YUM TO LOCAL MIRROR ON $HOSTS"
   os_control_checkout_repofetcher `hostname`
   os_control_repoint_repos_to_feralcoder_these_hosts "$HOSTS"
