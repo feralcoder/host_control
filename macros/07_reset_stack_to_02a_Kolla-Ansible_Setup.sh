@@ -11,7 +11,8 @@ fi
 
 . ~/CODE/feralcoder/host_control/control_scripts.sh
 
-$MACRO_DIR/09_reset_everything.sh 02b_Ceph_Setup a "$STACK_HOSTS"
+$MACRO_DIR/09_reset_everything.sh 02a_Kolla-Ansible_Setup a "$STACK_HOSTS"
+
 
 
 echo; echo "BOOTING TO DEFAULT OS ON $STACK_HOSTS"

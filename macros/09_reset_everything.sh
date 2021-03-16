@@ -2,6 +2,13 @@
 MACRO_SOURCE="${BASH_SOURCE[0]}"
 MACRO_DIR=$( dirname $MACRO_SOURCE )
 
+# BAIL OUT IF USER SOURCES SCRIPT, INSTEAD OF RUNNING IT
+if [ ! "${BASH_SOURCE[0]}" -ef "$0" ]; then
+  echo "Do not source this script (exits will bail you...)."
+  echo "Run it instead"
+  return 1
+fi
+
 . ~/CODE/feralcoder/host_control/control_scripts.sh
 
 BACKUPLINK=$1 DRIVESET=$2 HOSTS=$3
@@ -48,6 +55,12 @@ os_control_assert_hosts_booted_target $OPERATING_DRIVE "$REBOOT_HOSTS" || {
   echo "Not all hosts booted to $OPERATING_DRIVE OS, check the environment!"
   exit 1
 }
+
+
+MAP=`ceph_control_show_map`
+ceph_control_wipe_OSDs "$MAP"
+ceph_control_create_OSDs_from_map "$MAP"
+
 
 SOURCEDIR=""  # Default backup directory can change in backup scripts.
 backup_control_restore_all "$BACKUPLINK" "$SOURCEDIR" "$DRIVESET"
