@@ -335,3 +335,33 @@ backup_control_backup_all () {
     fi
   done
 }
+
+backup_control_sort_backups () {
+  local $HOST
+  ssh_control_run_as_user root "cd /backups/stack_dumps/ ; mkdir ../keep ../delete; ls -al |grep '^l' | awk '{print "mv " \$11 " ../keep"}' | bash; ls -al |grep '^l' | awk '{print "mv " \$9 " ../keep"}' | bash; mv * ../delete; mv ../keep/* .; rmdir ../keep/" $HOST
+}
+
+backup_control_sort_backups_these_hosts () {
+  local HOSTS=$1
+  local HOST PIDS=""
+
+  local RETURN_CODE
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'`; do
+        wait ${PID} 2>/dev/null
+        RETURN_CODE=$?
+        if [[ $RETURN_CODE != 0 ]]; then
+          echo "Return code for PID $PID: $RETURN_CODE"
+          echo "Sort backups, no more info available"
+        fi
+      done
+    else
+      backup_control_sort_backups $HOST & 2>/dev/null
+      PIDS="$PIDS:$!"
+      echo "Sorting backups on $HOST: $!"
+    fi
+  done
+}
