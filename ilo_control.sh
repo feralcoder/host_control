@@ -177,7 +177,9 @@ ilo_control_get_ilo_hostkey () {
 ilo_control_refetch_ilo_hostkey_these_hosts () {
   local HOSTS=$1
 
-  local HOST
+
+
+  local ERROR HOST
   for HOST in $HOSTS; do
     ilo_control_remove_ilo_hostkey $HOST
   done
@@ -186,12 +188,17 @@ ilo_control_refetch_ilo_hostkey_these_hosts () {
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} >/dev/null 2>&1
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Refetch ilo hostkey, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} >/dev/null 2>&1
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Refetch ilo hostkey, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else

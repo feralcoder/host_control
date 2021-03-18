@@ -60,17 +60,24 @@ ilo_boot_target_once_these_hosts () {
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local HOST RETURN_CODE PIDS=""
+
+
+  local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Boot target once: TARGET:$TARGET"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Boot target once: TARGET:$TARGET"
+            ERROR=true
+          fi
         fi
       done
     else

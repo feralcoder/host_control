@@ -13,21 +13,28 @@ os_control_graceful_stop () {
 os_control_graceful_stop_these_hosts () {
   local HOSTS=$1
 
+
+
   if [[ $UNSAFE == "" ]]; then
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local HOST RETURN_CODE PIDS=""
+  local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Graceful stop, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Graceful stop, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -95,17 +102,24 @@ os_control_boot_info () {
 os_control_boot_info_these_hosts () {
   local HOSTS=$1
 
-  local HOST RETURN_CODE PIDS=""
+
+
+  local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Boot info, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Boot info, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -231,21 +245,28 @@ os_control_boot_to_target_installation () {
 os_control_boot_to_target_installation_these_hosts () {
   local TARGET=$1 HOSTS=$2
 
+
+
   if [[ $UNSAFE == "" ]]; then
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local HOST RETURN_CODE PIDS=""
+  local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Boot to target installation: TARGET:$TARGET"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Boot to target installation: TARGET:$TARGET"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -305,17 +326,24 @@ os_control_setup_repo_mirror () {
 os_control_repoint_repos_to_feralcoder_these_hosts () {
   local HOSTS=$1
 
-  local HOST RETURN_CODE PIDS=""
+
+
+  local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Checkout repofetcher, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Checkout repofetcher, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else

@@ -208,7 +208,9 @@ ilo_power_off_hard_these_hosts () {
   local HOSTS=$1
   local HOST PIDS=""
 
-  if [[ $UNSAFE == "" ]]; then
+
+
+  if ERROR [[ $UNSAFE == "" ]]; then
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
@@ -217,12 +219,17 @@ ilo_power_off_hard_these_hosts () {
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Power off hard, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Power off hard, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -237,21 +244,28 @@ ilo_power_off_these_hosts () {
   local HOSTS=$1
   local HOST PIDS=""
 
+
+
   if [[ $UNSAFE == "" ]]; then
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local RETURN_CODE
+  local ERROR RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Power off, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Power off, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -264,17 +278,24 @@ ilo_power_off_these_hosts () {
 
 ilo_power_on_these_hosts () {
   local HOSTS=$1
-  local HOST RETURN_CODE PIDS=""
+
+
+  local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Power on, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Power on, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -288,21 +309,28 @@ ilo_power_on_these_hosts () {
 ilo_power_cycle_these_hosts () {
   local HOSTS=$1
 
+
+
   if [[ $UNSAFE == "" ]]; then
     HOSTS=$(group_logic_remove_self "$HOSTS")
   fi
 
-  local HOST RETURN_CODE PIDS=""
+  local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Power cycle, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Power cycle, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -315,17 +343,24 @@ ilo_power_cycle_these_hosts () {
 
 ilo_power_get_state_these_hosts () {
   local HOSTS=$1
-  local HOST RETURN_CODE PIDS=""
+
+
+  local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Get power state, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Get power state, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else

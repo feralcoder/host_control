@@ -78,7 +78,6 @@ ssh_control_push_key () {
 
 ssh_control_distribute_admin_key_these_hosts () {
   local HOSTS=$1
-  local HOST PIDS=""
 
   [[ -f ~/.ssh/pubkeys/id_rsa.pub ]] && {
     local KEY=`cat ~/.ssh/pubkeys/id_rsa.pub`
@@ -89,23 +88,33 @@ ssh_control_distribute_admin_key_these_hosts () {
 
   # This part is serialized, because it requires IO from user
   local PASSFILE=`ssh_control_get_password ~/.password`
+  local HOST ERROR
   for HOST in $HOSTS; do
     echo "Started Key Push for $HOST: $!"
     ssh_control_push_key $HOST $PASSFILE
+    if [[ $? != 0 ]]; then
+      echo "Problem pushing key for $HOST!"
+      return 1
+    fi
   done
 
   # This can be done in parallel
-  local RETURN_CODE
+  local RETURN_CODE PIDS
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "UNIQIFY, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "UNIQIFY, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -155,19 +164,29 @@ ssh_control_refetch_hostkey_these_hosts () {
   local HOST PIDS=""
   for HOST in $HOSTS ; do
     ssh_control_remove_hostkey $HOST
+    if [[ $? != 0 ]]; then
+      echo "Problem removing hostkey for HOST!"
+      return 1
+    fi
   done
 
-  local RETURN_CODE
+
+  local ERROR RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "refetch host key, no more info available."
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "refetch host key, no more info available."
+            ERROR=true
+          fi
         fi
       done
     else
@@ -295,17 +314,22 @@ ssh_control_run_as_user_these_hosts () {
   local USER=$1 COMMAND=$2 HOSTS=$3
   local HOST
 
-  local RETURN_CODE PIDS=""
+  local ERROR RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} >/dev/null 2>&1
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Run as user: COMMAND:$COMMAND"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} >/dev/null 2>&1
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Run as user: COMMAND:$COMMAND"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -329,17 +353,24 @@ ssh_control_sync_as_user_these_hosts () {
   local USER=$1 SOURCE=$2 DEST=$3 HOSTS=$4
   local HOST
 
-  local RETURN_CODE PIDS=""
+
+
+  local ERROR RETURN_CODE PIDS
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} >/dev/null 2>&1
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "syncing USER:$USER SOURCE:$SOURCE DEST:$DEST"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} >/dev/null 2>&1
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "syncing USER:$USER SOURCE:$SOURCE DEST:$DEST"
+            ERROR=true
+          fi
         fi
       done
     else

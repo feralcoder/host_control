@@ -29,17 +29,24 @@ git_control_fix_repos_these_hosts () {
 
   [[ -f ~/.git_password ]] || git_control_set_local_password
 
-  local RETURN_CODE
+
+
+  local ERROR RETURN_CODE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Fix repos, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Fix repos, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -64,16 +71,23 @@ git_control_pull_push () {
 git_control_pull_push_these_hosts () {
   local HOSTS=$1
 
-  local RETURN_CODE PID
+
+
+  local ERROR RETURN_CODE PID
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Pull push repos, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Pull push repos, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else

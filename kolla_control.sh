@@ -34,17 +34,24 @@ kolla_control_stop_containers () {
 kolla_control_stop_containers_these_hosts () {
   local CONTAINERS=$1 HOSTS=$2
 
-  local HOST RETURN_CODE PIDS=""
+
+
+  local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Stop containers, CONTAINERS:$CONTAINERS"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Stop containers, CONTAINERS:$CONTAINERS"
+            ERROR=true
+          fi
         fi
       done
     else

@@ -59,17 +59,24 @@ admin_control_mount_everything () {
 admin_control_mount_everything_these_hosts () {
   local HOSTS=$1
 
-  local SHORT_NAME HOST RETURN_CODE PIDS=""
+
+
+  local ERROR SHORT_NAME HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Mount everything, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Mount everything, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -102,17 +109,24 @@ admin_control_sync_keys_from_admin () {
 admin_control_sync_keys_from_admin_these_hosts () {
   local HOSTS=$1
 
-  local HOST RETURN_CODE SHORT_NAME PIDS=""
+
+
+  local ERROR HOST RETURN_CODE SHORT_NAME PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Sync keys from admin, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Sync keys from admin, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -139,17 +153,24 @@ admin_control_sync_keys_to_admin () {
 admin_control_sync_keys_to_admin_these_hosts () {
   local HOSTS=$1
 
-  local HOST RETURN_CODE SHORT_NAME PIDS=""
+
+
+  local ERROR HOST RETURN_CODE SHORT_NAME PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Sync keys to admin, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Sync keys to admin, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -175,17 +196,24 @@ admin_control_sync_keys_to_xax () {
 admin_control_sync_keys_to_xax_these_hosts () {
   local HOSTS=$1
 
-  local HOST RETURN_CODE SHORT_NAME PIDS=""
+
+
+  local ERROR HOST RETURN_CODE SHORT_NAME PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Sync keys to xax, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Sync keys to xax, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -279,17 +307,24 @@ admin_control_fix_labels_from_prefix_these_hosts () {
   local PREFIX=$1
   local HOSTS=$2
 
-  local HOST RETURN_CODE PIDS=""
+
+
+  local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Fix labels from prefix, PREFIX:$PREFIX"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Fix labels from prefix, PREFIX:$PREFIX"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -304,17 +339,24 @@ admin_control_fix_grub_these_hosts () {
   local TIMEOUT=$2
   [[ $TIMEOUT != "" ]] || TIMEOUT=30
 
-  local HOST RETURN_CODE PIDS=""
+
+
+  local ERROR HOST RETURN_CODE PIDS
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Fix grub, no more info available"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Fix grub, no more info available"
+            ERROR=true
+          fi
         fi
       done
     else
@@ -389,17 +431,24 @@ admin_control_clone_and_fix_labels_these_hosts () {
   # HOST="kerrigan neo merlin.feralcoder.org"
   local SRC_PREFIX=$1 DEST_PREFIX=$2 HOSTS=$3
 
-  local RETURN_CODE HOST PID SHORT_NAME SRC_DISK DEST_DISK SRC_DEV DEST_DEV PIDS LOGFILE
+
+
+  local ERROR RETURN_CODE HOST PID SHORT_NAME SRC_DISK DEST_DISK SRC_DEV DEST_DEV PIDS LOGFILE
   for HOST in $HOSTS now_wait; do
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
       local PID
-      for PID in `echo $PIDS | sed 's/:/ /g'`; do
-        wait ${PID} 2>/dev/null
-        RETURN_CODE=$?
-        if [[ $RETURN_CODE != 0 ]]; then
-          echo "Return code for PID $PID: $RETURN_CODE"
-          echo "Mass clone, SRC_PREFIX:$SRC_PREFIX DEST_PREFIX:$DEST_PREFIX"
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Mass clone, SRC_PREFIX:$SRC_PREFIX DEST_PREFIX:$DEST_PREFIX"
+            ERROR=true
+          fi
         fi
       done
     else

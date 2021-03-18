@@ -83,4 +83,3 @@ group_logic_remove_self () {
   fi
   echo "$HOSTS"
 }
-
