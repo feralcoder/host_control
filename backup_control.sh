@@ -9,11 +9,14 @@ backup_control_make_restore_script () {
   # MOUNTS="boot,root,home,var"                                   (REQUIRED)
   # BACKUPSERV=[hostname|local]                                   ("" --> local)
   # OVERWRITE_IDENTITY=true|false                                 ("" --> false)
-  local HOST=$1 SRCDIR=$2 DESTVOL=$3 MOUNTS=$4 BACKUPSERV=$5 OVERWRITE_IDENTITY=$6
+  # REPARTITION=true|false                                        ("" --> false)
+  # REPART_DEVICE=/dev/sdx                                        ("" --> discover from DESTVOL or FAIL)
+  local HOST=$1 SRCDIR=$2 DESTVOL=$3 MOUNTS=$4 BACKUPSERV=$5 OVERWRITE_IDENTITY=$6 REPARTITION=$7 REPART_DEVICE=$8
   local SHORT_NAME=`group_logic_get_short_name $HOST`
 
-  [[ $OVERWRITE_IDENTITY == "" ]] && OVERWRITE_IDENTITY=false
   [[ $BACKUPSERV == "" ]] && BACKUPSERV=local
+  [[ $OVERWRITE_IDENTITY == "" ]] && OVERWRITE_IDENTITY=false
+  [[ $REPARTITION == "" ]] && REPARTITION=false
   local BACKUPSERV_PREFIX
   [[ "${BACKUPSERV,,}" == "local" ]] && {
     BACKUPSERV_PREFIX=""
@@ -38,6 +41,18 @@ backup_control_make_restore_script () {
 
 
   echo "#!/bin/bash" > $SCRIPT
+
+  # Partition table should be in every backup.  Repartition on restore is optional...
+  if [[ "${REPARTITION,,}" != "false" ]] ; then
+    [[ $REPART_DEVICE != "" ]] || {
+      REPART_DEVICE=`admin_control_find_labeled_drive_by_prefix ${DESTVOL:0:1} $HOST`
+      [[ $? == 0 ]] || {
+        echo "Could not determine REPART_DEVICE for $HOST"
+        return 1
+      }
+    }
+    echo "# REPARTITIONING $REPART_DEVICE" >> $SCRIPT
+  fi
 
   # Mount all the drives we're backing
   for MOUNT in $MOUNTS; do
@@ -77,6 +92,9 @@ backup_control_make_restore_script () {
 }
 
 
+
+
+
 backup_control_make_backup_script () {
   # SRCVOL=[akgn|bdmb|etc]                        (REQUIRED)
   # DESTDIR=/backups/stack_dumps/                 (REQUIRED)
@@ -108,6 +126,17 @@ backup_control_make_backup_script () {
   local SCRIPT=/tmp/backup_script_${SHORT_NAME}_${NOW}_$$.sh
 
   echo "#!/bin/bash" > $SCRIPT
+
+
+
+  # On backup, just dump the partition table every time
+  local DEVICE=`admin_control_find_labeled_drive_by_prefix ${SRCVOL:0:1} $HOST`
+  [[ $? == 0 ]] || {
+    echo "Could not determine REPART_DEVICE for $HOST"
+    return 1
+  }
+  echo "# DUMPING $DEVICE PARTITION TABLE" >> $SCRIPT
+
 
   # Mount all the drives we're backing
   for MOUNT in $MOUNTS; do
@@ -169,10 +198,14 @@ backup_control_restore () {
   # MOUNTS=boot,root,home,var                                      ("" --> boot,root,home,var)
   # BACKUPSERV=local|hostname                                      ("" --> $BACKUP_HOST)
   # OVERWRITE_IDENTITY=true|false                                  ("" --> false)
-  local HOST=$1 SRC=$2 DEST=$3 MOUNTS=$4 BACKUPSERV=$5 OVERWRITE_IDENTITY=$6
+  # REPARTITION=true|false                                         ("" --> false)
+  # REPART_DEVICE=/dev/sdx                                         (OPTIONAL, can be discovered by make_script function if target is labeled)
+  # NOTE: There is the possibility that OVERWRITE_IDENTITY=false, REPARTITION=true.  Make Sense?  Beware.
+  local HOST=$1 SRC=$2 DEST=$3 MOUNTS=$4 BACKUPSERV=$5 OVERWRITE_IDENTITY=$6 REPARTITION=$7 REPART_DEVICE=$8
   [[ $MOUNTS == "" ]] && MOUNTS=boot,root,home,var
   [[ $BACKUPSERV == "" ]] && BACKUPSERV=$BACKUP_HOST
   [[ $OVERWRITE_IDENTITY == "" ]] && OVERWRITE_IDENTITY=false
+  [[ $REPARTITION == "" ]] && REPARTITION=false
 
   local SHORT_NAME=`group_logic_get_short_name $HOST`
   local OLD_RESTORE_LOGS=/tmp/old_restores/$HOST
@@ -181,7 +214,7 @@ backup_control_restore () {
 
   local NOW=`date +%Y%m%d-%H%M%S`
 
-  local SCRIPT=`backup_control_make_restore_script $HOST $SRC $DEST $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY`
+  local SCRIPT=`backup_control_make_restore_script $HOST $SRC $DEST $MOUNTS $BACKUPSERV $OVERWRITE_IDENTITY $REPARTITION "$REPART_DEVICE"`
   ssh_control_sync_as_user root $SCRIPT /root/restore_script_${SHORT_NAME}_${NOW}.sh $HOST
   ssh_control_run_as_user root "chmod 755 /root/restore_script_${SHORT_NAME}_${NOW}.sh" $HOST
 
