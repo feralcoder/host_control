@@ -371,7 +371,7 @@ backup_control_backup_all () {
 
 backup_control_sort_backups () {
   local $HOST
-  ssh_control_run_as_user root "cd /backups/stack_dumps/ ; mkdir ../keep ../delete; ls -al |grep '^l' | awk '{print "mv " \$11 " ../keep"}' | bash; ls -al |grep '^l' | awk '{print "mv " \$9 " ../keep"}' | bash; mv * ../delete; mv ../keep/* .; rmdir ../keep/" $HOST
+  ssh_control_run_as_user root "cd /backups/stack_dumps/ ; mkdir ../keep ../delete; ls -al |grep '^l' | awk '{print \"mv \" \$11 \" ../keep\"}' | bash; ls -al |grep '^l' | awk '{print \"mv \" \$9 \" ../keep\"}' | bash; mv * ../delete; mv ../keep/* .; rmdir ../keep/" $HOST
 }
 
 backup_control_sort_backups_these_hosts () {
