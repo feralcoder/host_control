@@ -1,6 +1,49 @@
 #!/bin/bash -x
 
 
+ceph_control_get_mon () {
+  local HOST MON_CONTAINER HEALTH
+  for HOST in $CEPH_MON_HOSTS; do
+    MON_CONTAINER=`ssh_control_run_as_user root "docker container list" $HOST | grep ' ceph-mon-' | awk '{print $1}'`
+    HEALTH=`ssh_control_run_as_user root "docker exec $MON_CONTAINER ceph -s" $HOST | grep 'health:' | grep 'HEALTH_OK\|WARN' | awk '{print $2}'`
+    [[ $HEALTH != "" ]] && { echo "$HOST:$MON_CONTAINER:$HEALTH"; return 0; }
+  done
+  echo "Health is not OK or WARN!  Exiting."
+  return 1
+}
+
+ceph_control_get_status () {
+  local HOST=$1 MON_CONTAINER=$2
+  STATUS=`ssh_control_run_as_user root "docker exec $MON_CONTAINER ceph -s" $HOST`
+  if [[ $? == 00 ]]; then
+    echo "$STATUS"
+  else
+    echo "Failed to fetch status: $HOST $MON_CONTAINER"
+    return 1
+  fi
+}
+
+ceph_control_make_ceph_bluestore_OSD () {
+  local HOST=$1 BLOCK_DEVICE=$2 SUFFIX=$3 DB_DEVICE=$4 WAL_DEVICE=$5
+  # BLOCK_DEVICE=/dev/sdx       (REQUIRED)
+  # SUFFIX=ANYTHING             (OPTIONAL, but required if 2+ OSD's ON SYSTEM with WAL or DB devices)
+  # DB_DEVICE=/dev/sdx          (OPTIONAL, if empty DB will write to block device)
+  # WAL_DEVICE=/dev/sdx         (OPTIONAL, if empty WAL will write to DB device if it exists, or block device)
+
+  local LABEL=KOLLA_CEPH_OSD_BOOTSTRAP_BS
+  [[ $SUFFIX == "" ]] || LABEL=${LABEL}_$SUFFIX
+ 
+  if [[ $DB_DEVICE == "" ]] && [[ $WAL_DEVICE == "" ]]; then
+    ssh_control_run_as_user root "parted $BLOCK_DEVICE -s -- mklabel gpt mkpart $LABEL 1 -1" $HOST
+  else
+    ssh_control_run_as_user root "parted $BLOCK_DEVICE -s -- mklabel gpt mkpart ${LABEL}_B 1 -1" $HOST
+    [[ $DB_DEVICE != "" ]] && ssh_control_run_as_user root "parted $DB_DEVICE -s -- mklabel gpt mkpart ${LABEL}_D 1 -1" $HOST
+    [[ $WAL_DEVICE != "" ]] && ssh_control_run_as_user root "parted $WAL_DEVICE -s -- mklabel gpt mkpart ${LABEL}_W 1 -1" $HOST
+  fi
+}
+
+
+
 
 ceph_control_setup_OSD () {
   local HOST=$1 BLOCK_DEVICE=$2 SUFFIX=$3 DB_DEVICE=$4 WAL_DEVICE=$5
