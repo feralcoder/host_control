@@ -6,6 +6,12 @@ KOLLA_VENV=/home/cliff/CODE/venvs/kolla-ansible
 ANSIBLE_CONTROLLER=dmb
 
 
+kolla_control_start_containers () {
+  local CONTAINERS=$1 HOST=$2
+  echo "Stopping $CONTAINERS on $HOST"
+  ssh_control_run_as_user root "docker container start $CONTAINERS" $HOST
+}
+
 kolla_control_stop_containers () {
   local CONTAINERS=$1 HOST=$2
   echo "Stopping $CONTAINERS on $HOST"
@@ -52,6 +58,36 @@ kolla_control_stop_containers_these_hosts () {
 }
  
 
+kolla_control_start_containers_these_hosts () {
+  local CONTAINERS=$1 HOSTS=$2
+
+  local ERROR HOST RETURN_CODE PIDS=""
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} 2>/dev/null
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Start containers, CONTAINERS:$CONTAINERS"
+            ERROR=true
+          fi
+        fi
+      done
+    else
+      kolla_control_start_containers "$CONTAINERS" $HOST & 2>/dev/null
+      PIDS="$PIDS:$!"
+      echo "Stopping $HOST..."
+    fi
+  done
+}
+ 
+
 kolla_control_check_mariadb_synced_these_hosts () {
   local HOSTS=$1
 
@@ -86,7 +122,7 @@ kolla_control_stop_mariadb_these_hosts () {
 
 
 kolla_control_recover_galera () {
-  ssh_control_run_as_user cliff "$KOLLA_CHECKOUT/admin-scripts/utility/recover_galera.sh" $ANSIBLE_CONTROLLER
+  ssh_control_run_as_user cliff "$KOLLA_CHECKOUT/admin-scripts/utility/recover_galera.sh" $ANSIBLE_CONTROLLER || return 1
 }
 
 
@@ -241,6 +277,8 @@ kolla_control_startup_stack () {
   ssh_control_wait_for_host_up_these_hosts "$CONTROL_HOSTS" || return 1
   
   # GALERA SEEMS TO NEED RECOVERY EVERY TIME, FIGURE THIS OUT
+  echo; echo "Starting keepalived, haproxy, for galera."
+  kolla_control_start_containers_these_hosts "haproxy keepalived" "$CONTROL_HOSTS"
   echo; echo "Recovering galera DB cluster."
   kolla_control_recover_galera || return 1
 
