@@ -1,40 +1,29 @@
 #!/bin/bash -x
 
 
-kolla_control_make_ceph_bluestore_OSD () {
-  local HOST=$1 BLOCK_DEVICE=$2 SUFFIX=$3 DB_DEVICE=$4 WAL_DEVICE=$5
-  # BLOCK_DEVICE=/dev/sdx       (REQUIRED)
-  # SUFFIX=ANYTHING             (OPTIONAL, but required if 2+ OSD's ON SYSTEM with WAL or DB devices)
-  # DB_DEVICE=/dev/sdx          (OPTIONAL, if empty DB will write to block device)
-  # WAL_DEVICE=/dev/sdx         (OPTIONAL, if empty WAL will write to DB device if it exists, or block device)
-
-  local LABEL=KOLLA_CEPH_OSD_BOOTSTRAP_BS
-  [[ $SUFFIX == "" ]] || LABEL=${LABEL}_$SUFFIX
- 
-  if [[ $DB_DEVICE == "" ]] && [[ $WAL_DEVICE == "" ]]; then
-    ssh_control_run_as_user root "parted $BLOCK_DEVICE -s -- mklabel gpt mkpart $LABEL 1 -1" $HOST
-  else
-    ssh_control_run_as_user root "parted $BLOCK_DEVICE -s -- mklabel gpt mkpart ${LABEL}_B 1 -1" $HOST
-    [[ $DB_DEVICE != "" ]] && ssh_control_run_as_user root "parted $DB_DEVICE -s -- mklabel gpt mkpart ${LABEL}_D 1 -1" $HOST
-    [[ $WAL_DEVICE != "" ]] && ssh_control_run_as_user root "parted $WAL_DEVICE -s -- mklabel gpt mkpart ${LABEL}_W 1 -1" $HOST
-  fi
-}
-
+KOLLA_CHECKOUT=/home/cliff/CODE/feralcoder/kolla-ansible
+KOLLA_VENV=/home/cliff/CODE/venvs/kolla-ansible
+ANSIBLE_CONTROLLER=dmb
 
 
 kolla_control_stop_containers () {
   local CONTAINERS=$1 HOST=$2
+  echo "Stopping $CONTAINERS on $HOST"
+  ssh_control_run_as_user root "docker container stop $CONTAINERS" $HOST
+}
+
+kolla_control_stop_containers_by_grep_these_hosts () {
+  local CONTAINERS=$1 HOSTS=$2
   local CONTAINER
   for CONTAINER in $CONTAINERS; do
-    echo "Stopping $CONTAINERS on $HOST"
-    ssh_control_run_as_user root "ID=\`docker container list|grep $CONTAINER|awk '{print \$1}'\`; [[ \$ID == \"\" ]] || docker container stop \$ID" $HOST
+    echo "Stopping $CONTAINER on $HOST"
+    ssh_control_run_as_user_these_hosts root "ID=\`docker container list|grep $CONTAINER|awk '{print \$1}'\`; [[ \$ID == \"\" ]] || docker container stop \$ID" "$HOSTS"
   done
 }
 
+
 kolla_control_stop_containers_these_hosts () {
   local CONTAINERS=$1 HOSTS=$2
-
-
 
   local ERROR HOST RETURN_CODE PIDS=""
   for HOST in $HOSTS now_wait; do
@@ -63,6 +52,45 @@ kolla_control_stop_containers_these_hosts () {
 }
  
 
+kolla_control_check_mariadb_synced_these_hosts () {
+  local HOSTS=$1
+
+  local SQL_FILE=/tmp/x_$$ COMM_FILE=/tmp/y_$$
+  local HOST PASS STATE ERROR OUTPUT
+  echo "SHOW STATUS LIKE 'wsrep_local_state_comment';" > $SQL_FILE
+  OUTPUT=`ssh_control_sync_as_user_these_hosts root $SQL_FILE $SQL_FILE "$CONTROL_HOSTS"`
+  for HOST in $CONTROL_HOSTS; do
+    PASS=`ssh_control_run_as_user root "docker exec -u root  mariadb cat /etc/my.cnf | grep wsrep_sst_auth" mrl | grep wsrep | awk -F':' '{print $2}'`
+    echo "mysql --password=$PASS < $SQL_FILE" > $COMM_FILE
+    ssh_control_sync_as_user root $COMM_FILE $COMM_FILE $HOST
+    OUTPUT=`ssh_control_run_as_user root "chmod 755 $COMM_FILE; docker cp $COMM_FILE mariadb:$COMM_FILE; docker cp $SQL_FILE mariadb:$SQL_FILE" $HOST`
+    STATE=`ssh_control_run_as_user root "docker exec -u root mariadb bash $COMM_FILE" $HOST | grep wsrep_local_state_comment | awk '{print $2}'`
+    [[ $STATE == "Synced" ]] || ERROR=true
+  done
+  [[ $ERROR == "" ]] || return 1
+}
+
+kolla_control_stop_mariadb_these_hosts () {
+  local HOSTS=$1
+  local HOST
+  for HOST in $HOSTS; do 
+    ssh_control_run_as_user root "docker stop mariadb" $HOST
+    sleep 10
+  done
+}
+
+
+
+
+
+
+
+kolla_control_recover_galera () {
+  ssh_control_run_as_user cliff "$KOLLA_CHECKOUT/admin-scripts/utility/recover_galera.sh" $ANSIBLE_CONTROLLER
+}
+
+
+
 # BRING DOWN STACK
 #  Compute:
 #    Stop the tenant VMs, Containers
@@ -87,36 +115,69 @@ kolla_control_stop_containers_these_hosts () {
 # NOTES: OSD / Compute nodes can shutdown together
 #        Ceph Monitor / Admin and Control nodes can be shutdown together
 
+
+
 kolla_control_shutdown_stack () {
-  local CONTROL_WAIT=300
+  local CONTROL_WAIT=20
 
   echo "Bringing down tenant VMs and Containers"
   # kolla_control_stop_tenant_resources "$COMPUTE_HOSTS"
-  echo "Bringing down Compute Services: $COMPUTE_HOSTS"
-  kolla_control_stop_containers_these_hosts "centos-binary-nova-compute centos-binary-nova-libvirt centos-binary-nova-ssh" "$COMPUTE_HOSTS"
+
+  echo "Bringing down Compute Services"
+  kolla_control_stop_containers_these_hosts "nova_compute nova_libvirt nova_ssh" "$COMPUTE_HOSTS"
+  kolla_control_stop_containers_these_hosts "nova_novncproxy nova_conductor nova_api nova_scheduler placement_api" "$CONTROL_HOSTS"
+
+  echo "Bringing down Network Services"
+  kolla_control_stop_containers_these_hosts "neutron_openvswitch_agent openvswitch_vswitchd openvswitch_db" "$CLOUD_HOSTS"
+  kolla_control_stop_containers_these_hosts "neutron_server neutron_dhcp_agent neutron_l3_agent neutron_metadata_agent" "$CONTROL_HOSTS"
+
+  echo "Stopping Keepalived"
+  kolla_control_stop_containers_these_hosts "keepalived" "$CONTROL_HOSTS"
+
+  echo "Bringing down Metrics and Dashboard Services"
+  # grafana not on all controllers...
+  kolla_control_stop_containers_these_hosts "grafana gnocchi_metricd gnocchi_api horizon keystone keystone_fernet keystone_ssh kibana heat_engine heat_api_cfn heat_api elasticsearch_curator elasticsearch" "$CONTROL_HOSTS"
 
   echo "Stopping all CEPH usage"
-  # kolla_control_stop_containers_these_hosts "manila-shit" "$WHICH_HOSTS"
-  # kolla_control_stop_containers_these_hosts "glance-shit" "$WHICH_HOSTS"
-  # kolla_control_stop_containers_these_hosts "cinder-shit" "$WHICH_HOSTS"
+  kolla_control_stop_containers_these_hosts "cinder_volume cinder_backup" "$COMPUTE_HOSTS"
+  kolla_control_stop_containers_these_hosts "cinder_scheduler cinder_api glance_api" "$CONTROL_HOSTS"
+  kolla_control_stop_containers_by_grep_these_hosts "ceph-osd-" "$OSD_HOSTS"
+  kolla_control_stop_containers_by_grep_these_hosts "ceph-mds-" "$CONTROL_HOSTS"
 
-  echo "Readying to bring down CEPH: $OSD_HOSTS"
-#  local CEPH_MON=`kolla_control_get_ceph_monitor "$CONTROL_HOSTS"`
-#  local OUTPUT=`ssh_control_run_as_user stack "ceph -s" $CEPH_MON`
-#  if ( grep "HEALTH_OK" "$OUTPUT" ); then
-#    echo "CEPH Health is OK, proceeding..."
-#    local FLAG
-#    for FLAG in noout norecover norebalance nobackfill nodown pause; do
-#      ssh_run_as_user stack "ceph osd set $FLAG" $CEPH_MON
-#    done
-#  else
-#    echo "CEPH HEALTH NOT OK, Please intervene!"
-#    echo "EXITING!"
-#    return 1
-#  fi
+  echo "Readying Ceph Cluster for Shutdown"
+  local MON MON_HOST MON_CONTAINER MON_HEALTH SETTING
+  MON=`ceph_control_get_mon`
+  MON_HOST=`echo $MON | awk -F':' '{print $1}'`
+  MON_CONTAINER=`echo $MON | awk -F':' '{print $2}'`
+  MON_HEALTH=`echo $MON | awk -F':' '{print $3}'`
+
+  ( echo $MON_HEALTH | grep 'HEALTH_OK\|HEALTH_WARN' ) && {
+    for SETTING in noout norecover norebalance nobackfill nodown pause; do
+      echo "ceph osd set $SETTING"
+      ssh_control_run_as_user root "docker exec $MON_CONTAINER ceph osd set $SETTING" $MON_HOST
+    done
+  } || {
+    echo "CEPH CLUSTER HEALTH NOT OK!"
+    echo $MON_HOST $MON_CONTAINER $MON_HEALTH
+    ceph_control_get_status $MON_HOST $MON_CONTAINER
+    echo "Investigate.  Exiting."
+    return 1
+  }
 
   echo "STOPPING COMPUTE AND CEPH NODES: `group_logic_union \"$COMPUTE_HOSTS\" \"$OSD_HOSTS\"`"
   os_control_graceful_stop_these_hosts "`group_logic_union \"$COMPUTE_HOSTS\" \"$OSD_HOST\"`"
+
+
+  echo "STOPPING MARIADB"
+  ( kolla_control_check_mariadb_synced_these_hosts "$CONTROL_HOSTS" ) || {
+    echo "MariaDB is not sync'd, sleeping 20..."
+    sleep 20
+    ( check_mariadb_synced "$CONTROL_HOSTS" ) || {
+      echo "MariaDB Still Not Sync'd. Exiting."
+      return 1
+    }
+  }
+  kolla_control_stop_mariadb_these_hosts "$TERNARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $PRIMARY_CONTROL_HOSTS"
 
 
   echo "Bringing down Control Nodes: $TERNARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $PRIMARY_CONTROL_HOSTS"
@@ -129,6 +190,8 @@ kolla_control_shutdown_stack () {
     echo "Control Node $HOST Stopped.  Waiting $CONTROL_WAIT seconds to proceed."
     sleep $CONTROL_WAIT
   done
+
+  echo; echo "CLUSTER IS SHUT DOWN"
 }
 
 
@@ -158,9 +221,10 @@ kolla_control_shutdown_stack () {
 
 kolla_control_startup_stack () {
   echo "Starting Stack..."
-  local CONTROL_WAIT=300
+  local CONTROL_WAIT=1  # This applies AFTER each host has booted to OS...
   local HOST
 
+  # Start control nodes
   echo "Bringing up Control Nodes: $PRIMARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $TERNARY_CONTROL_HOSTS"
   for HOST in $PRIMARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $TERNARY_CONTROL_HOSTS; do
     echo "Starting: $HOST"
@@ -172,7 +236,40 @@ kolla_control_startup_stack () {
     }
     sleep $CONTROL_WAIT
   done
+  
+  # GALERA SEEMS TO NEED RECOVERY EVERY TIME, FIGURE THIS OUT
+  echo; echo "Recovering galera DB cluster."
+  kolla_control_recover_galera
 
-  echo "Bringing up Compute Nodes: $COMPUTE_HOSTS"
-  os_control_boot_to_target_installation_these_hosts default "$COMPUTE_HOSTS"
+  echo "Bringing up Compute and OSD Nodes: `group_logic_union \"$COMPUTE_HOSTS\" \"$OSD_HOST\"`"
+  os_control_boot_to_target_installation_these_hosts default "`group_logic_union \"$COMPUTE_HOSTS\" \"$OSD_HOST\"`"
+  sleep 60
+
+
+  # Discover ceph mon host.  Enable cluster for balancing and recovery.  Or exit if unhealthy.
+  echo "READYING CEPH CLUSTER FOR ACTION"
+  local MON MON_HOST MON_CONTAINER MON_HEALTH SETTING
+  echo "Discovering active ceph mon host and daemon."
+  MON=`ceph_control_get_mon`
+  MON_HOST=`echo $MON | awk -F':' '{print $1}'`
+  MON_CONTAINER=`echo $MON | awk -F':' '{print $2}'`
+  MON_HEALTH=`echo $MON | awk -F':' '{print $3}'`
+
+  ( echo $MON_HEALTH | grep 'HEALTH_OK\|HEALTH_WARN' ) && {
+    for SETTING in noout norecover norebalance nobackfill nodown pause; do
+      echo "ceph osd unset $SETTING"
+      ssh_control_run_as_user root "docker exec $MON_CONTAINER ceph osd unset $SETTING" $MON_HOST
+    done
+  } || {
+    echo "CEPH CLUSTER HEALTH NOT OK!"
+    echo $MON_HOST $MON_CONTAINER $MON_HEALTH
+    ceph_control_get_status $MON_HOST $MON_CONTAINER
+    echo "Investigate.  Exiting."
+    return 1
+  }
+
+
+  # START ALL STOPPED CONTAINERS EVERYWHERE...
+  echo; echo "Starting all stopped containers everywhere."
+  ssh_control_run_as_user_these_hosts root "docker container ls --format '{{.Names}}' --filter status=exited | awk '{print \$1}' | grep -v CONTAINER | xargs -r docker start 2>&1" "$STACK_HOSTS"
 }
