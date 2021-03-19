@@ -221,14 +221,15 @@ kolla_control_shutdown_stack () {
 
 kolla_control_startup_stack () {
   echo "Starting Stack..."
-  local CONTROL_WAIT=1  # This applies AFTER each host has booted to OS...
+  local CONTROL_WAIT=60  # This applies AFTER each host has booted to OS...
   local HOST
 
   # Start control nodes
   echo "Bringing up Control Nodes: $PRIMARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $TERNARY_CONTROL_HOSTS"
   for HOST in $PRIMARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $TERNARY_CONTROL_HOSTS; do
     echo "Starting: $HOST"
-    os_control_boot_to_target_installation default $HOST
+    # os_control_boot_to_target_installation default $HOST
+    ilo_power_on $HOST
     [[ $? == 0 ]] || {
       echo; echo "BOOT TO DEFAULT FAILED FOR $HOST.  INVESTIGATE!"
       echo "EXITING!"
@@ -236,13 +237,15 @@ kolla_control_startup_stack () {
     }
     sleep $CONTROL_WAIT
   done
+
+  ssh_control_wait_for_host_up_these_hosts "$CONTROL_HOSTS" || return 1
   
   # GALERA SEEMS TO NEED RECOVERY EVERY TIME, FIGURE THIS OUT
   echo; echo "Recovering galera DB cluster."
-  kolla_control_recover_galera
+  kolla_control_recover_galera || return 1
 
   echo "Bringing up Compute and OSD Nodes: `group_logic_union \"$COMPUTE_HOSTS\" \"$OSD_HOST\"`"
-  os_control_boot_to_target_installation_these_hosts default "`group_logic_union \"$COMPUTE_HOSTS\" \"$OSD_HOST\"`"
+  os_control_boot_to_target_installation_these_hosts default "`group_logic_union \"$COMPUTE_HOSTS\" \"$OSD_HOST\"`" || return 1
   sleep 60
 
 
@@ -258,7 +261,7 @@ kolla_control_startup_stack () {
   ( echo $MON_HEALTH | grep 'HEALTH_OK\|HEALTH_WARN' ) && {
     for SETTING in noout norecover norebalance nobackfill nodown pause; do
       echo "ceph osd unset $SETTING"
-      ssh_control_run_as_user root "docker exec $MON_CONTAINER ceph osd unset $SETTING" $MON_HOST
+      ssh_control_run_as_user root "docker exec $MON_CONTAINER ceph osd unset $SETTING" $MON_HOST || return 1
     done
   } || {
     echo "CEPH CLUSTER HEALTH NOT OK!"
