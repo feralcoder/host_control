@@ -23,7 +23,7 @@ ceph_control_get_status () {
   fi
 }
 
-ceph_control_make_ceph_bluestore_OSD () {
+ceph_control_make_ceph_bluestore_OSD_the_defunct_way () {
   local HOST=$1 BLOCK_DEVICE=$2 SUFFIX=$3 DB_DEVICE=$4 WAL_DEVICE=$5
   # BLOCK_DEVICE=/dev/sdx       (REQUIRED)
   # SUFFIX=ANYTHING             (OPTIONAL, but required if 2+ OSD's ON SYSTEM with WAL or DB devices)
@@ -45,7 +45,7 @@ ceph_control_make_ceph_bluestore_OSD () {
 
 
 
-ceph_control_setup_OSD () {
+ceph_control_setup_LVM_OSD () {
   local HOST=$1 BLOCK_DEVICE=$2 SUFFIX=$3 DB_DEVICE=$4 WAL_DEVICE=$5
   # BLOCK_DEVICE=/dev/sdx       (REQUIRED)
   # SUFFIX=ANYTHING             (OPTIONAL, but required if 2+ OSD's ON SYSTEM with WAL or DB devices)
@@ -74,59 +74,80 @@ ceph_control_setup_OSD () {
 # WARNING: /dev/xxx CAN CHANGE ACROSS REBOOT!!!
 #  verify by UUID
 ceph_control_show_map () {
-echo 'mtn:OSD_1_db:/dev/sde:5DF26BAA-0185-4F57-8763-DB5378711819
-mtn:OSD_1_data:/dev/sdd:2ABBF474-5FAC-482A-9F2E-C6061790B505
+echo 'neo:OSD_1_db:/dev/sde:51072BFB-B7A2-4ADD-9489-F932AE509D0E
+neo:OSD_1_data:/dev/sdc:3412ECBA-40C5-4633-BA12-24FA57841CCE
+bmn:OSD_1_db:/dev/sde:067BC4D8-6791-43E9-A23F-F456D50D2B0C
+bmn:OSD_1_data:/dev/sdd:844386A8-DB43-40AA-B947-A3348A00E4A2
+kgn:OSD_1_db:/dev/sdg:264058DA-DAA3-4E97-BA7F-B5A2F5E3FA61
+kgn:OSD_1_data:/dev/sdf:FC563395-D751-4C88-9B87-A6992AC5589D
 lmn:OSD_1_db:/dev/sde:1BDD2355-3776-48FF-A704-87C49BD8333E
 lmn:OSD_1_data:/dev/sdd:676E27B6-057F-460D-B6A8-960B7E590A03
-bmn:OSD_1_db:/dev/sde:632DFF71-2758-4DB2-8092-D525BA42A58C
-bmn:OSD_1_data:/dev/sdd:8877C770-20BD-4826-BB74-511AF41D7AD2
-neo:OSD_1_db:/dev/sde:A784A191-2CEC-49AF-B8A9-6F590F615299
-neo:OSD_1_data:/dev/sdc:9CBA2B15-FB1E-4AF8-8BFF-8AE8558F27BA
-kgn:OSD_1_db:/dev/sdg:F0C24FA2-BFE0-4445-AE10-05D68E31A13B
-kgn:OSD_1_data:/dev/sdf:6DFC0E9F-2411-4084-A069-968E766E6F6F'
+mtn:OSD_1_db:/dev/sde:5DF26BAA-0185-4F57-8763-DB5378711819
+mtn:OSD_1_data:/dev/sdd:2ABBF474-5FAC-482A-9F2E-C6061790B505'
 }
 
 
-ceph_control_create_OSDs_from_map () {
-  local OSD_MAP=$1
+ceph_control_create_LVM_OSDs_from_map () {
+  local OSD_MAP=$1 HOSTS=$2
   
   local MAPLINE HOST VG DEV UUID DRIVES DRIVE
   for MAPLINE in $OSD_MAP; do
-    HOST=`echo $MAPLINE | awk -F':' '{print $1}'`
-    DRIVES=`ssh_control_run_as_user root "ls /dev/sd?" $HOST | grep '/dev/'`
-    VG=`echo $MAPLINE | awk -F':' '{print $2}'`
-    # ORIG DEV MAY NOT BE CURRENT DEV
-    #DEV=`echo $MAPLINE | awk -F':' '{print $3}'`
-    UUID=`echo $MAPLINE | awk -F':' '{print $4}'`
-    DEV=$(for DRIVE in $DRIVES; do
-      ( ssh_control_run_as_user root "fdisk -l $DRIVE" $HOST | grep $UUID >/dev/null ) && echo $DRIVE
-    done)
-
-    echo "CREATING ON $HOST: $VG $DEV $UUID"
-    ssh_control_run_as_user root "pvcreate -y ${DEV}1; vgcreate -y $VG ${DEV}1; lvcreate -y -n $VG -l 100%FREE $VG" $HOST
+    if ( echo $MAPLINE | grep "^$HOST:" ); then
+      HOST=`echo $MAPLINE | awk -F':' '{print $1}'`
+      DRIVES=`ssh_control_run_as_user root "ls /dev/sd?" $HOST | grep '/dev/'`
+      VG=`echo $MAPLINE | awk -F':' '{print $2}'`
+      # ORIG DEV MAY NOT BE CURRENT DEV
+      #DEV=`echo $MAPLINE | awk -F':' '{print $3}'`
+      UUID=`echo $MAPLINE | awk -F':' '{print $4}'`
+      DEV=$(for DRIVE in $DRIVES; do
+        ( ssh_control_run_as_user root "fdisk -l $DRIVE" $HOST | grep $UUID >/dev/null ) && echo $DRIVE
+      done)
+  
+      echo "CREATING ON $HOST: $VG $DEV $UUID"
+      ssh_control_run_as_user root "pvcreate -y ${DEV}1; vgcreate -y $VG ${DEV}1; lvcreate -y -n $VG -l 100%FREE $VG" $HOST
+    fi
   done
 }
 
-ceph_control_wipe_OSDs () {
-  local OSD_MAP=$1
+ceph_control_create_LVM_OSDs_from_map_these_hosts () {
+  local OSD_MAP=$1 HOSTS=$2
+  
+  local HOST
+  for HOST in $HOSTS; do
+    ceph_control_create_LVM_OSDs_from_map "$OSD_MAP" $HOST
+  done
+}
+
+ceph_control_wipe_LVM_OSDs () {
+  local OSD_MAP=$1 HOST=$2
   
   local MAPLINE HOST VG DEV UUID DRIVES DRIVE
   for MAPLINE in $OSD_MAP; do
-    HOST=`echo $MAPLINE | awk -F':' '{print $1}'`
-    DRIVES=`ssh_control_run_as_user root "ls /dev/sd?" $HOST | grep '/dev/'`
-    VG=`echo $MAPLINE | awk -F':' '{print $2}'`
-    # ORIG DEV MAY NOT BE CURRENT DEV
-    #DEV=`echo $MAPLINE | awk -F':' '{print $3}'`
-    UUID=`echo $MAPLINE | awk -F':' '{print $4}'`
-    DEV=$(for DRIVE in $DRIVES; do
-      ( ssh_control_run_as_user root "fdisk -l $DRIVE" $HOST | grep $UUID >/dev/null ) && echo $DRIVE
-    done)
+    if ( echo $MAPLINE | grep "^$HOST:" ); then
+      DRIVES=`ssh_control_run_as_user root "ls /dev/sd?" $HOST | grep '/dev/'`
+      VG=`echo $MAPLINE | awk -F':' '{print $2}'`
+      # ORIG DEV MAY NOT BE CURRENT DEV
+      #DEV=`echo $MAPLINE | awk -F':' '{print $3}'`
+      UUID=`echo $MAPLINE | awk -F':' '{print $4}'`
+      DEV=$(for DRIVE in $DRIVES; do
+        ( ssh_control_run_as_user root "fdisk -l $DRIVE" $HOST | grep $UUID >/dev/null ) && echo $DRIVE
+      done)
+  
+      echo "REMOVING ON $HOST: $VG $DEV $UUID"
+      ssh_control_run_as_user root "lvremove -y $VG" $HOST
+      ssh_control_run_as_user root "vgremove -y $VG" $HOST
+      ssh_control_run_as_user root "pvremove -y ${DEV}1" $HOST
+      ssh_control_run_as_user root "dd bs=1M count=1024 conv=sync if=/dev/zero of=${DEV}1" $HOST
+    fi
+  done
+}
 
-    echo "REMOVING ON $HOST: $VG $DEV $UUID"
-    ssh_control_run_as_user root "lvremove -y $VG" $HOST
-    ssh_control_run_as_user root "vgremove -y $VG" $HOST
-    ssh_control_run_as_user root "pvremove -y ${DEV}1" $HOST
-    ssh_control_run_as_user root "dd bs=1M count=1024 conv=sync if=/dev/zero of=${DEV}1" $HOST
+ceph_control_wipe_LVM_OSDs_these_hosts () {
+  local OSD_MAP=$1 HOSTS=$2
+  
+  local HOST
+  for HOST in $HOSTS; do
+    ceph_control_wipe_LVM_OSDs "$OSD_MAP" $HOST
   done
 }
 
