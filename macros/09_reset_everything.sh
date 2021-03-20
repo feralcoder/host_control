@@ -56,11 +56,13 @@ os_control_assert_hosts_booted_target $OPERATING_DRIVE "$REBOOT_HOSTS" || {
   exit 1
 }
 
+reset_OSDs () {
+  MAP=`ceph_control_show_map`
+  ceph_control_wipe_LVM_OSDs_from_map_these_hosts "$MAP" "$COMPUTE_HOSTS" || exit 1
+  ceph_control_create_LVM_OSDs_from_map_these_hosts "$MAP" "$COMPUTE_HOSTS" || exit 1
+}
 
-MAP=`ceph_control_show_map`
-ceph_control_wipe_OSDs "$MAP"
-ceph_control_create_OSDs_from_map "$MAP"
-
+reset_OSDs
 
 SOURCEDIR=""  # Default backup directory can change in backup scripts.
 backup_control_restore_all "$BACKUPLINK" "$SOURCEDIR" "$DRIVESET"
