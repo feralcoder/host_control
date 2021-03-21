@@ -59,6 +59,8 @@ host_control_updates () {
   echo; echo "UPDATING GIT REPOS EVERYWHERE"
   git_control_pull_push_these_hosts "$HOSTS" 2>/dev/null
 
+  ssh_control_run_as_user_these_hosts cliff "~/CODE/feralcoder/workstation/update.sh" "$HOSTS"
+
   # Serialize to not DOS ILO's and HOSTS
   for HOST in $HOSTS; do
     echo; echo "REFETCHING HOST KEYS on $HOST"
