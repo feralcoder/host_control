@@ -88,12 +88,11 @@ mtn:OSD_1_data:/dev/sdd:2ABBF474-5FAC-482A-9F2E-C6061790B505'
 
 
 ceph_control_create_LVM_OSDs_from_map () {
-  local OSD_MAP=$1 HOSTS=$2
+  local OSD_MAP=$1 HOST=$2
   
   local MAPLINE HOST VG DEV UUID DRIVES DRIVE
   for MAPLINE in $OSD_MAP; do
     if ( echo $MAPLINE | grep "^$HOST:" ); then
-      HOST=`echo $MAPLINE | awk -F':' '{print $1}'`
       DRIVES=`ssh_control_run_as_user root "ls /dev/sd?" $HOST | grep '/dev/'`
       VG=`echo $MAPLINE | awk -F':' '{print $2}'`
       # ORIG DEV MAY NOT BE CURRENT DEV
