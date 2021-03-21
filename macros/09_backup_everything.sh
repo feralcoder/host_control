@@ -12,23 +12,13 @@ fi
 . ~/CODE/feralcoder/host_control/control_scripts.sh
 
 BACKUPLINK=$1 DRIVESET=$2 HOSTS=$3
-[[ $BACKUPLINK == "" ]] && BACKUPLINK=01_CentOS_8_3_Admin_Install
+[[ $BACKUPLINK == "" ]] && BACKUPLINK=01a_CentOS_8_3_Admin_Install
 [[ $DRIVESET == "" ]] && DRIVESET=a
 [[ $HOSTS == "" ]] && HOSTS="$ALL_HOSTS"
 
 # This script will backup all hard drive OS's
 #   by default: DriveA to Updated Centos8 Admin images
 # Run from admin box (yoda)
-
-# root users also need to know all hosts, for backup rsyncs
-#for HOST in $HOSTS; do
-#  ssh_control_run_as_user root ". ~cliff/CODE/feralcoder/host_control/control_scripts.sh; ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" $HOST
-#done
-#
-#ssh_control_run_as_user_these_hosts root "[[ -f ~/.ssh/id_rsa ]] || ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa" "$HOSTS"
-#ssh_control_run_as_user_these_hosts root "cat ~/.ssh/id_rsa.pub" "$HOSTS" | grep '^ssh' > /tmp/root_pubs
-#ssh_control_sync_as_user_these_hosts root /tmp/root_pubs /tmp/root_pubs "$HOSTS"
-#ssh_control_run_as_user_these_hosts root "cat ~/.ssh/authorized_keys /tmp/root_pubs | sort | uniq > /tmp/root_pubs_$$ ; cat /tmp/root_pubs_$$ > ~/.ssh/authorized_keys" "$HOSTS"
 
 if [[ $DRIVESET == x ]]; then
   OPERATING_DRIVE=default
