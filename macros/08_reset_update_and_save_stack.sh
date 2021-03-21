@@ -24,24 +24,30 @@ BACKUP_TO=01b_CentOS_8_3_Admin_Install
 remediate () {
 # root users also need to know all hosts, for backup rsyncs
   for HOST in $STACK_HOSTS; do
-    ssh_control_run_as_user root ". ~cliff/CODE/feralcoder/host_control/control_scripts.sh; ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" $HOST
+    ssh_control_run_as_user root ". ~cliff/CODE/feralcoder/host_control/control_scripts.sh; ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" $HOST                  || return 1
   done
   
   $ROOT_PUBS=/tmp/root_pubs_$$
-  ssh_control_run_as_user_these_hosts root "[[ -f ~/.ssh/id_rsa ]] || ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa" "$ALL_HOSTS"
-  ssh_control_run_as_user_these_hosts root "cat ~/.ssh/id_rsa.pub" "$STACK_HOSTS" | grep '^ssh' > $ROOT_PUBS
-  ssh_control_sync_as_user_these_hosts root $ROOT_PUBS $ROOT_PUBS "$STACK_HOSTS"
-  ssh_control_run_as_user_these_hosts root "cat ~/.ssh/authorized_keys $ROOT_PUBS | sort | uniq > ${ROOT_PUBS}x ; cat ${ROOT_PUBS}x > ~/.ssh/authorized_keys" "$HOSTS"
+  ssh_control_run_as_user_these_hosts root "[[ -f ~/.ssh/id_rsa ]] || ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa" "$ALL_HOSTS"                                         || return 1
+  ssh_control_run_as_user_these_hosts root "cat ~/.ssh/id_rsa.pub" "$STACK_HOSTS" | grep '^ssh' > $ROOT_PUBS                                                           || return 1
+  ssh_control_sync_as_user_these_hosts root $ROOT_PUBS $ROOT_PUBS "$STACK_HOSTS"                                                                                       || return 1
+  ssh_control_run_as_user_these_hosts root "cat ~/.ssh/authorized_keys $ROOT_PUBS | sort | uniq > ${ROOT_PUBS}x ; cat ${ROOT_PUBS}x > ~/.ssh/authorized_keys" "$HOSTS" || return 1
+}
+
+fail_exit () {
+  echo; echo "INSTALLATION FAILED AT STEP: $1"
+  echo "Check the logs and try again.  Or just give up.  I don't care."
+  exit 1
 }
 
 
 boot_to_target () {
   local TARGET=$1
-  [[ $TARGET == "admin" ]] || [[ $TARGET == "default" ]] || fail_exit "boot_to_target - target must be 'admin' or 'default'!"
+  [[ $TARGET == "admin" ]] || [[ $TARGET == "default" ]] || { echo "boot_to_target - target must be 'admin' or 'default'!"; return 1; }
 
   # Boot all hosts to default / admin
-  os_control_boot_to_target_installation_these_hosts $TARGET "$STACK_HOSTS" || exit 1
-  ssh_control_wait_for_host_up_these_hosts "$STACK_HOSTS" || exit 1
+  os_control_boot_to_target_installation_these_hosts $TARGET "$STACK_HOSTS" || return 1
+  ssh_control_wait_for_host_up_these_hosts "$STACK_HOSTS" || return 1
   os_control_assert_hosts_booted_target $TARGET "$STACK_HOSTS" || {
     echo "All stack hosts must be in their $TARGET OS to install the stack!"
     exit 1
@@ -50,17 +56,17 @@ boot_to_target () {
 
 
 
-$MACRO_DIR/09_reset_everything.sh $RESTORE_FROM a "$STACK_HOSTS"
+$MACRO_DIR/09_reset_everything.sh $RESTORE_FROM a "$STACK_HOSTS"  || fail_exit "09_reset_everything.sh $RESTORE_FROM a \"$STACK_HOSTS\""
 
 echo; echo "BOOTING TO DEFAULT OS ON $STACK_HOSTS"
-boot_to_target default || exit 1
+boot_to_target default                                            || fail_exit "boot_to_target default"
 echo; echo "ALL HOSTS ARE BOOTED TO default"
 
-remediate
+remediate                                                         || fail_exit "remediate"
 
-$MACRO_DIR/02a_hosts_update.sh "$STACK_HOSTS"
-$MACRO_DIR/09_backup_everything.sh $BACKUP_TO a "$STACK_HOSTS"
+$MACRO_DIR/02a_hosts_update.sh "$STACK_HOSTS"                     || fail_exit "02a_hosts_update.sh \"$STACK_HOSTS\""
+$MACRO_DIR/09_backup_everything.sh $BACKUP_TO a "$STACK_HOSTS"    || fail_exit "09_backup_everything.sh $BACKUP_TO a \"$STACK_HOSTS\""
 
 echo; echo "BOOTING TO DEFAULT OS ON $STACK_HOSTS"
-boot_to_target default || exit 1
+boot_to_target default                                            || fail_exit "boot_to_target default"
 echo; echo "ALL HOSTS ARE BOOTED TO default"
