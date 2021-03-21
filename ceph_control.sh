@@ -118,7 +118,7 @@ ceph_control_create_LVM_OSDs_from_map_these_hosts () {
   done
 }
 
-ceph_control_wipe_LVM_OSDs () {
+ceph_control_wipe_LVM_OSDs_from_map () {
   local OSD_MAP=$1 HOST=$2
   
   local MAPLINE HOST VG DEV UUID DRIVES DRIVE
@@ -142,12 +142,12 @@ ceph_control_wipe_LVM_OSDs () {
   done
 }
 
-ceph_control_wipe_LVM_OSDs_these_hosts () {
+ceph_control_wipe_LVM_OSDs_from_map_these_hosts () {
   local OSD_MAP=$1 HOSTS=$2
   
   local HOST
   for HOST in $HOSTS; do
-    ceph_control_wipe_LVM_OSDs "$OSD_MAP" $HOST
+    ceph_control_wipe_LVM_OSDs_from_map "$OSD_MAP" $HOST
   done
 }
 
