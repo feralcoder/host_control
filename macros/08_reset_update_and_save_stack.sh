@@ -27,7 +27,7 @@ remediate () {
     ssh_control_run_as_user root ". ~cliff/CODE/feralcoder/host_control/control_scripts.sh; ssh_control_refetch_hostkey_these_hosts \"$HOSTS\"" $HOST                  || return 1
   done
   
-  $ROOT_PUBS=/tmp/root_pubs_$$
+  ROOT_PUBS=/tmp/root_pubs_$$
   ssh_control_run_as_user_these_hosts root "[[ -f ~/.ssh/id_rsa ]] || ssh-keygen -t rsa -P \"\" -f ~/.ssh/id_rsa" "$ALL_HOSTS"                                         || return 1
   ssh_control_run_as_user_these_hosts root "cat ~/.ssh/id_rsa.pub" "$STACK_HOSTS" | grep '^ssh' > $ROOT_PUBS                                                           || return 1
   ssh_control_sync_as_user_these_hosts root $ROOT_PUBS $ROOT_PUBS "$STACK_HOSTS"                                                                                       || return 1
