@@ -89,4 +89,4 @@ os_control_update_repo_mirror $REPO_HOST
 host_control_updates "$HOSTS"
 host_updates "$HOSTS"
 
-[[ $SUDO_PASS_FILE != ~/.password ]] && rm $SUDO_PASS_FILE
+[[ $SUDO_PASS_FILE == ~/.password ]] || rm $SUDO_PASS_FILE
