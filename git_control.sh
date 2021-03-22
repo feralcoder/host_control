@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-REPOS="bootstrap-scripts  host_control  kolla-ansible  workstation  workstation.wiki"
+REPOS="bootstrap-scripts  host_control  kolla-ansible  twilio-pager workstation  workstation.wiki"
 CODE_PATH=/home/cliff/CODE/feralcoder/
 
 
