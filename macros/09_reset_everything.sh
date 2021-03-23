@@ -31,6 +31,7 @@ fi
 fail_exit () {
   echo; echo "INSTALLATION FAILED AT STEP: $1"
   echo "Check the logs and try again.  Or just give up.  I don't care."
+  python3 ~/CODE/feralcoder/twilio-pager/pager.py "Fallen.  Can't get up.  Installation failed at $1."
   exit 1
 }
 
