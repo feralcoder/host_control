@@ -22,6 +22,8 @@ CONTROL_DIR=$( dirname $CONTROL_SOURCE )
 
 ILO2_HOSTS="mrl gnd yda dmb"
 ILO4_HOSTS="mtn lmn bmn neo str kgn"
+BACKUP_SELF_HOSTS="kgn neo bmn lmn mtn dmb"
+BACKUP_REMOTE_HOSTS="yda str mrl gnd"
 
 PRIMARY_CONTROL_HOSTS="str"
 SECONDARY_CONTROL_HOSTS="mrl"
