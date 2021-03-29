@@ -1,8 +1,9 @@
 #!/bin/bash -x
 
+# Returns 3-character hostname; Translates *-api names to base names.
 group_logic_get_short_name () {
   HOST=$1
-
+  HOST=`echo $HOST | sed 's/-api//g'`
   local NAMES=`group_logic_get_all_names $HOST`
   local SHORT_NAME=`echo $NAMES | tr ' '  '\n' | grep -E '^[a-z]{3,3}$' | tail -n 1`
   echo $SHORT_NAME
