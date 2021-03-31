@@ -4,7 +4,7 @@ UNDERCLOUD_HOST=dmb
 UNDERCLOUD_IP=`getent ahosts $UNDERCLOUD_HOST | awk '{print $1}' | tail -n 1`
 
 
-stack_control_build_the_whole_fucking_thing () {
+tripleo_control_build_the_whole_fucking_thing () {
   local HOST=$1
 
   backup_control_restore dmb admb /backups/stack_dumps/dumbledore_01_CentOS_8 default
@@ -18,7 +18,7 @@ stack_control_build_the_whole_fucking_thing () {
   backup_control_backup dmb admb /backups/stack_dumps default new-dumbledore_03_Ussuri_Overcloud
 }
 
-stack_control_get_instance_ips_all () {
+tripleo_control_get_instance_ips_all () {
   local INSTANCE_OUTPUT="`ssh_control_run_as_user root "su - stack -c '. stackrc && nova list'" $UNDERCLOUD_HOST $UNDERCLOUD_IP`"
   [[ $? == 0 ]] || { echo "Error fetching nova list, check your stack!  Exiting!"; return 1; }
 
@@ -26,13 +26,13 @@ stack_control_get_instance_ips_all () {
   echo "$INSTANCE_OUTPUT" | awk '{print $2 ":" $12}' | sed 's/ctlplane=//g'
 }
 
-stack_control_get_instance_ip () {
+tripleo_control_get_instance_ip () {
   local INSTANCE_IP INSTANCE=$1
 
-  INSTANCE_IP=$(stack_control_get_instance_ips | grep $INSTANCE | awk -F':' '{print $2}')
+  INSTANCE_IP=$(tripleo_control_get_instance_ips | grep $INSTANCE | awk -F':' '{print $2}')
 }
 
-stack_control_get_node_ip_these_hosts () {
+tripleo_control_get_node_ip_these_hosts () {
   local HOSTS=$1
   local HOST LONG_HOST NODE_OUTPUT INSTANCE_ID INSTANCE_IPS INSTANCE_IP
   local HOST_LIST=""
@@ -48,7 +48,7 @@ stack_control_get_node_ip_these_hosts () {
     echo "$HOST:$INSTANCE_ID"
   done)"
 
-  INSTANCE_IPS="$(stack_control_get_instance_ips_all)"
+  INSTANCE_IPS="$(tripleo_control_get_instance_ips_all)"
 
   for HOST in $HOSTS; do
     INSTANCE_ID=$(echo "$HOST_LIST" | grep "$HOST:" | awk -F':' '{print $2}')
@@ -62,12 +62,12 @@ stack_control_get_node_ip_these_hosts () {
   done
 }
 
-stack_control_get_node_ip () {
+tripleo_control_get_node_ip () {
   local HOST=$1
-  stack_control_get_node_ip_these_hosts $HOST
+  tripleo_control_get_node_ip_these_hosts $HOST
 }
 
-stack_control_graceful_stop_node () {
+tripleo_control_graceful_stop_node () {
   local HOST=$1 INSTANCE_IP=$2
 
   ssh_control_run_as_user root "su - stack -c '. stackrc && ssh heat-admin@$INSTANCE_IP sudo poweroff'" $UNDERCLOUD_HOST $UNDERCLOUD_IP
@@ -77,13 +77,13 @@ stack_control_graceful_stop_node () {
   [[ $? == 0 ]] || return 1
 }
 
-stack_control_graceful_stop_node_these_hosts () {
+tripleo_control_graceful_stop_node_these_hosts () {
   local HOSTS=$1
   local HOST INSTANCE_IP PIDS=""
 
 
 
-  local INSTANCE_IPS="$(stack_control_get_node_ip_these_hosts '$HOSTS')"
+  local INSTANCE_IPS="$(tripleo_control_get_node_ip_these_hosts '$HOSTS')"
 
   local ERROR RETURN_CODE
   for HOST in $HOSTS now_wait; do
@@ -106,7 +106,7 @@ stack_control_graceful_stop_node_these_hosts () {
     else
       INSTANCE_IP=$(echo "$INSTANCE_IPS" | grep $HOST | awk -F':' '{print $2}')
 
-      stack_control_graceful_stop_node $HOST $INSTANCE_IP & 2>/dev/null
+      tripleo_control_graceful_stop_node $HOST $INSTANCE_IP & 2>/dev/null
 
       PIDS="$PIDS:$!"
       echo "Stopping $HOST..."
@@ -114,17 +114,17 @@ stack_control_graceful_stop_node_these_hosts () {
   done
 }
 
-stack_control_shutdown_stack () {
+tripleo_control_shutdown_stack () {
   local CONTROL_WAIT=300
 
   echo "Bringing down Compute Nodes: $COMPUTE_HOSTS"
-  stack_control_graceful_stop_node_these_hosts "$COMPUTE_HOSTS"
+  tripleo_control_graceful_stop_node_these_hosts "$COMPUTE_HOSTS"
   echo "Bringing down Control Nodes: $TERNARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $PRIMARY_CONTROL_HOSTS"
 
   local HOST
   for HOST in $TERNARY_CONTROL_HOSTS $SECONDARY_CONTROL_HOSTS $PRIMARY_CONTROL_HOSTS; do
     echo "Stopping: $HOST"
-    stack_control_graceful_stop_node_these_hosts $HOST
+    tripleo_control_graceful_stop_node_these_hosts $HOST
     [[ $? == 0 ]] || { echo "Failed to stop Control Node: $HOST, EXITING!"; return 1; }
 
     echo "Control Node $HOST Stopped.  Waiting $CONTROL_WAIT seconds to proceed."
@@ -132,7 +132,7 @@ stack_control_shutdown_stack () {
   done
 }
 
-stack_control_startup_stack () {
+tripleo_control_startup_stack () {
   # THIS NEEDS WORK - NO STARTUP VALIDATION - root logins don't work!
   echo "Starting Stack..."
   local CONTROL_WAIT=300
