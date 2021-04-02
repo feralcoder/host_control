@@ -301,7 +301,7 @@ os_control_checkout_repofetcher () {
 
   echo "Checking out repo-fetcher on $REPO_HOST"
   ssh_control_sync_as_user cliff ~/.git_password ~/.git_password $HOST
-  ssh_control_run_as_user cliff "cd ~/CODE/feralcoder; [[ -d repo-fetcher ]] && echo repo-fetcher already checked out on \$HOST || git clone https://feralcoder:\`cat ~/.git_password\`@github.com/feralcoder/repo-fetcher.git" $HOST
+  ssh_control_run_as_user cliff "mkdir -p ~/CODE/feralcoder && cd ~/CODE/feralcoder; [[ -d repo-fetcher ]] && echo repo-fetcher already checked out on \$HOST || git clone https://feralcoder:\`cat ~/.git_password\`@github.com/feralcoder/repo-fetcher.git" $HOST
   ssh_control_run_as_user cliff "cd ~/CODE/feralcoder/repo-fetcher && git pull" $HOST
 }
 
