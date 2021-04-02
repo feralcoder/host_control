@@ -13,8 +13,8 @@ fi
 
 KOLLA_ADMIN_DIR=~/CODE/feralcoder/kolla-ansible/admin-scripts/
 
-#RESTORE_FROM=01_CentOS_8_3_Admin_Install
-RESTORE_FROM=01b_CentOS_8_3_Admin_Install
+RESTORE_FROM=01_CentOS_8_3_Admin_Install
+#RESTORE_FROM=01b_CentOS_8_3_Admin_Install
 #RESTORE_FROM=02a_Kolla-Ansible_Setup
 #RESTORE_FROM=02b_Ceph_Setup
 
