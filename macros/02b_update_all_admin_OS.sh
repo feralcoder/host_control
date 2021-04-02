@@ -38,4 +38,4 @@ os_control_assert_hosts_booted_target admin "$REBOOT_HOSTS" || {
   echo "Not all hosts booted to admin OS, check the environment!"
   exit 1
 }
-. $MACRO_DIR/02a_hosts_update.sh "$HOSTS"
+. $MACRO_DIR/02a_hosts_setup.sh "$HOSTS"
