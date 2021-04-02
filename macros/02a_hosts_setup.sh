@@ -1,6 +1,7 @@
 #!/bin/bash
 MACRO_SOURCE="${BASH_SOURCE[0]}"
 MACRO_DIR=$( dirname $MACRO_SOURCE )
+# THIS SCRIPT ALSO USED FOR UPDATES - MAINTAIN IT AS SUCH
 
 # BAIL OUT IF USER SOURCES SCRIPT, INSTEAD OF RUNNING IT
 if [ ! "${BASH_SOURCE[0]}" -ef "$0" ]; then
@@ -24,6 +25,8 @@ HOSTS=$1
   exit 1
 }
 
+
+
 host_control_setup_host_access () {
   local HOSTS=$1
 
@@ -42,13 +45,24 @@ host_control_setup_host_access () {
 host_control_updates () {
   local HOSTS=$1
 
+  # Who doesn't need a good /tmp/x.  Right?
+  ssh_control_run_as_user_these_hosts root "touch /tmp/x" "$HOSTS"
+
+  # Some basic packages...
+  ssh_control_run_as_user_these_hosts root "dnf -y install telnet" "$HOSTS"
+
   echo; echo "REPOINTING YUM TO LOCAL MIRROR ON $HOSTS"
   os_control_checkout_repofetcher `hostname`
   os_control_repoint_repos_to_feralcoder_these_hosts "$HOSTS"
 
   echo; echo "UPDATING ADMIN ENV ON $HOSTS"
   for HOST in $HOSTS; do
-    admin_control_bootstrap_admin $HOST
+    if ( ssh_control_run_as_user cliff "ls -al ~/.local_settings" $HOST || [[ ${FORCEBOOTSTRAP,,} == true ]] ); then
+      admin_control_bootstrap_admin $HOST ||
+    else
+      echo "It seems admin has already been bootstrapped on $HOST."
+      echo "Run with FORCEBOOTSTRAP=true to re-bootstrap."
+    fi
   done
   ssh_control_run_as_user_these_hosts cliff "~/CODE/feralcoder/workstation/update.sh" "$HOSTS"
 
