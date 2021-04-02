@@ -8,6 +8,9 @@ unalias rm >/dev/null 2>&1
 
 
 mount_all_boots () {
+  #JUST IN CASE
+  mountpoint -q /boot || mount /boot
+
   BOOTS=`blkid| grep _boot |  sed 's/ /\n/g' | grep "^LABEL=" | awk -F"=" '{print $2}' | sed 's/\"//g'`
   for BOOT in $BOOTS; do
     mkdir /mnt/$BOOT
