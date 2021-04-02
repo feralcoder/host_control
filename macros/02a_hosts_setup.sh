@@ -41,6 +41,12 @@ host_control_setup_host_access () {
   ilo_control_refetch_ilo_hostkey_these_hosts "$HOSTS"
 }
 
+setup_repo_mirror () {
+  local REPO_HOST=$1
+  [[ REPO_HOST != "" ]] || { echo "No REPO_HOST supplied!"; exit 1; }
+  ssh_control_run_as_user root "dnf list installed git || dnf -y install git" $REPO_HOST || return 1
+  os_control_setup_repo_mirror $REPO_HOST || return 1
+}
 
 host_control_updates () {
   local HOSTS=$1
@@ -48,12 +54,13 @@ host_control_updates () {
   # Who doesn't need a good /tmp/x.  Right?
   ssh_control_run_as_user_these_hosts root "touch /tmp/x" "$HOSTS"
 
-  # Some basic packages...
-  ssh_control_run_as_user_these_hosts root "dnf -y install telnet" "$HOSTS"
-
   echo; echo "REPOINTING YUM TO LOCAL MIRROR ON $HOSTS"
+  ssh_control_run_as_user_these_hosts root "dnf list installed git || dnf -y install git" "$HOSTS"
   os_control_checkout_repofetcher `hostname`
   os_control_repoint_repos_to_feralcoder_these_hosts "$HOSTS"
+
+  # Some basic packages...
+  ssh_control_run_as_user_these_hosts root "dnf -y install telnet" "$HOSTS"
 
   echo; echo "UPDATING ADMIN ENV ON $HOSTS"
   for HOST in $HOSTS; do
@@ -68,7 +75,9 @@ host_control_updates () {
 
   echo; echo "UPDATING GIT REPOS EVERYWHERE"
   git_control_pull_push_these_hosts "$HOSTS" 2>/dev/null
+}
 
+refetch_keys () {
   # Serialize to not DOS ILO's and HOSTS
   for HOST in $HOSTS; do
     echo; echo "REFETCHING HOST KEYS on $HOST"
@@ -77,6 +86,13 @@ host_control_updates () {
     ssh_control_run_as_user cliff "ilo_control_refetch_ilo_hostkey_these_hosts \"$HOSTS\"" $HOST 2>/dev/null
   done
 }
+
+setup_perftools () {
+  local HOSTS=$1
+  ssh_control_run_as_user_these_hosts root "dnf -y install bcc perf systemtap" "$HOSTS"
+  ssh_control_run_as_user_these_hosts cliff "mkdir -p ~/CODE/brendangregg && cd ~/CODE/brendangregg && git clone https://github.com/brendangregg/perf-tools.git || ( cd ~/CODE/brendangregg/perf-tools && git pull )" "$HOSTS"
+}
+
 
 
 host_updates () {
@@ -93,8 +109,10 @@ host_updates () {
 
 SUDO_PASS_FILE=`admin_control_get_sudo_password ~/.password`
 host_control_setup_host_access "$HOSTS"
-os_control_setup_repo_mirror $REPO_HOST
-host_control_updates "$HOSTS"
-host_updates "$HOSTS"
+refetch_keys || exit 1
+setup_repo_mirror $REPO_HOST  || exit 1
+FORCEBOOTSTRAP=true host_control_updates "$HOSTS"  || exit 1
+host_updates "$HOSTS"  || exit 1
+setup_perftools "$HOSTS"
 
 [[ $SUDO_PASS_FILE != ~/.password ]] && rm $SUDO_PASS_FILE
