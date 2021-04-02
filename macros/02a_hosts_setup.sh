@@ -57,7 +57,7 @@ host_control_updates () {
 
   echo; echo "UPDATING ADMIN ENV ON $HOSTS"
   for HOST in $HOSTS; do
-    if ( ssh_control_run_as_user cliff "ls -al ~/.local_settings" $HOST || [[ ${FORCEBOOTSTRAP,,} == true ]] ); then
+    if ( ssh_control_run_as_user cliff "ls -al ~/.local_settings" $HOST ) || [[ ${FORCEBOOTSTRAP,,} == true ]] ; then
       admin_control_bootstrap_admin $HOST ||
     else
       echo "It seems admin has already been bootstrapped on $HOST."
