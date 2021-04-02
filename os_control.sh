@@ -305,19 +305,11 @@ os_control_checkout_repofetcher () {
   ssh_control_run_as_user cliff "cd ~/CODE/feralcoder/repo-fetcher && git pull" $HOST
 }
 
-os_control_update_repo_mirror () {
-  local HOST=$1
-
-  echo "Checking out latest repo-fetchen on $HOST"
-  os_control_checkout_repofetcher $HOST
-  echo "Running repo-fetcher update on $HOST, see logs in /tmp/repo-fetcher_update_$$.log"
-  ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/update.sh | tee /tmp/repo-fetcher_update_$$.log" $HOST
-}
-
 os_control_setup_repo_mirror () {
+  # repo-fetcher/setup.sh also does update
   local HOST=$1
 
-  echo "Checking out latest repo-fetchen on $HOST"
+  echo "Checking out latest repo-fetcher on $HOST"
   os_control_checkout_repofetcher $HOST
   echo "Running repo-fetcher setup on $HOST, see logs in /tmp/repo-fetcher_setup_$$.log"
   ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/setup.sh | tee /tmp/repo-fetcher_setup_$$.log" $HOST
