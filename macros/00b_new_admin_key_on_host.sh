@@ -28,7 +28,7 @@ LONGNAME=`echo $UNQUALIFIED_NAME | awk -F'-' '{print $1}'`
 
 
 [[ $DEVICE != "" ]] && {
-  echo "ADMIN STICK $DEVICE WILL BE USED"
+  echo "ADMIN STICK $DEVICE WILL BE USED (host $HOST)"
 } || {
   echo; echo "PROBING $HOST FOR ADMIN STICK"
   PARTLINES=`ssh_control_run_as_user root "blkid | grep 'LABEL=\"[a-z]*xax'" $HOST | grep LABEL`
@@ -75,7 +75,7 @@ admin_control_fix_grub $HOST
 
 echo; echo "BOOTING $HOST BACK TO DEFAULT OS"
 os_control_boot_to_target_installation default $HOST
-os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default!"; exit 1; }
+os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default on $HOST!"; exit 1; }
 
 echo; echo "FIXING GRUB ON $HOST"
 admin_control_fix_grub $HOST

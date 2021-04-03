@@ -28,7 +28,7 @@ fix_keys () {
   ilo_control_refetch_ilo_hostkey_these_hosts $HOST
   ssh_control_refetch_hostkey_these_hosts $HOST
 
-  echo; echo "SYNCING AUTH FROM ADMIN INSTALLATION"
+  echo; echo "SYNCING AUTH FROM ADMIN INSTALLATION on $HOST"
   echo "The next step may prompt for password, so I will wait until you type 'yes'."
   CONTINUE="wait"
   while [[ ${CONTINUE,,} != "yes" ]]; do
@@ -69,19 +69,19 @@ fix_boots () {
   done
   ilo_boot_target_once $DEV_USB $HOST
   ssh_control_wait_for_host_up $HOST
-  os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default for grub fix!"; exit 1; }
+  os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default for grub fix on $HOST!"; exit 1; }
 
   admin_control_fix_grub $HOST
   ilo_power_off $HOST
 
   echo; echo "BOOTING $HOST TO ADMIN TO UNSET INFINITE GRUB"
   os_control_boot_to_target_installation admin $HOST
-  os_control_assert_hosts_booted_target admin $HOST || { echo "Failed to boot to admin for grub fix!"; exit 1; }
+  os_control_assert_hosts_booted_target admin $HOST || { echo "Failed to boot to admin for grub fix on $HOST!"; exit 1; }
   admin_control_fix_grub $HOST
 
   echo; echo "REBOOTING $HOST TO DEFAULT"
   os_control_boot_to_target_installation default $HOST
-  os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default!"; exit 1; }
+  os_control_assert_hosts_booted_target default $HOST || { echo "Failed to boot to default on $HOST!"; exit 1; }
 }
 
 
