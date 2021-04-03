@@ -461,3 +461,79 @@ admin_control_clone_and_fix_labels_these_hosts () {
     fi
   done
 }
+
+admin_control_fix_mounts () {
+  local HOST=$1
+
+  SHORT_HOST=`group_logic_get_short_name $HOST`
+
+  local DRIVE_MAP=/tmp/${SHORT_HOST}_drive_map_$$
+  case $SHORT_HOST in
+    dmb)
+      ssh_control_run_as_user root "mkdir -p /registry /var/lib/image-serve /repo-store /backups" $HOST
+      echo "LABEL=registry /registry                        xfs     defaults        0 0" > $DRIVE_MAP
+      echo "LABEL=image-serve /var/lib/image-serve          xfs     defaults        0 0" >> $DRIVE_MAP
+      echo "LABEL=repo-store /repo-store                    xfs     defaults        0 0" >> $DRIVE_MAP
+      echo "LABEL=backups /backups                          xfs     defaults        0 0" >> $DRIVE_MAP
+      ;;
+    kgn)
+      ssh_control_run_as_user root "mkdir -p /backups" $HOST
+      echo "LABEL=kgn_backups /backups                      xfs     defaults        0 0" > $DRIVE_MAP
+      ;;
+    neo)
+      ssh_control_run_as_user root "mkdir -p /backups" $HOST
+      echo "LABEL=neo_backups /backups                      xfs     defaults        0 0" > $DRIVE_MAP
+      ;;
+    bmn)
+      ssh_control_run_as_user root "mkdir -p /backups" $HOST
+      echo "LABEL=bmn_backups /backups                      xfs     defaults        0 0" > $DRIVE_MAP
+      ;;
+    lmn)
+      ssh_control_run_as_user root "mkdir -p /backups" $HOST
+      echo "LABEL=lmn_backups /backups                      xfs     defaults        0 0" > $DRIVE_MAP
+      ;;
+    mtn)
+      ssh_control_run_as_user root "mkdir -p /backups" $HOST
+      echo "LABEL=mtn_backups /backups                      xfs     defaults        0 0" > $DRIVE_MAP
+      ;;
+    *)
+      echo "UNRECOGNIZED HOST $SHORT_HOST"
+      ;;
+  esac
+  ssh_control_sync_as_user root $DRIVE_MAP $DRIVE_MAP $HOST
+  ssh_control_run_as_user root "( grep '/backups' /etc/fstab ) || cat $DRIVE_MAP >> /etc/fstab" $HOST
+  ssh_control_run_as_user root "mount -a" $HOST
+  rm $DRIVE_MAP
+}
+
+
+
+admin_control_fix_mounts_these_hosts () {
+  local HOSTS=$1
+  local HOST
+
+  local ERROR RETURN_CODE PIDS
+  for HOST in $HOSTS now_wait; do
+    if [[ $HOST == "now_wait" ]]; then
+      PIDS=`echo $PIDS | sed 's/^://g'`
+      local PID
+      for PID in `echo $PIDS | sed 's/:/ /g'` 'all_reaped'; do
+        if [[ $PID == 'all_reaped' ]]; then
+          [[ $ERROR == "" ]] && return 0 || return 1
+        else
+          wait ${PID} >/dev/null 2>&1
+          RETURN_CODE=$?
+          if [[ $RETURN_CODE != 0 ]]; then
+            echo "Return code for PID $PID: $RETURN_CODE"
+            echo "Setting up mounts"
+            ERROR=true
+          fi
+        fi
+      done
+    else
+      admin_control_fix_mounts $HOST & >/dev/null 2>&1
+      PIDS="$PIDS:$!"
+      [[ $DEBUG == "" ]] || echo "Fixing mounts ons $HOST, PID: $!"
+    fi
+  done
+}
