@@ -25,10 +25,15 @@ HOST=$1
 
 
 setup_admin () {
-  ssh_control_sync_as_user cliff ~/.password ~/.password $HOST || fail_exit "sync .password"
-  ssh_control_sync_as_user cliff ~/.git_password ~/.git_password $HOST || fail_exit "sync .git_password"
-  yum -y install git tmux || fail_exit "yum install git tmux"
-  ssh_control_run_as_user cliff "cd ~/CODE/feralcoder && git clone https://feralcoder:`cat ~/.git_password`@github.com/feralcoder/bootstrap-scripts.git" $HOST || fail_exit "git checkout bootstrap"
+  ilo_control_refetch_ilo_hostkey_these_hosts $HOST                                                  || fail_exit "refetch ilo key for target"
+  ssh_control_refetch_hostkey_these_hosts $HOST                                                      || fail_exit "refetch host key for target"
+  ssh_control_distribute_admin_key_these_hosts $HOST                                                 || fail_exit "push admin keys"
+  ssh_control_sync_as_user cliff ~/.password ~/.password $HOST                                       || fail_exit "sync .password"
+  ssh_control_sync_as_user cliff ~/.git_password ~/.git_password $HOST                               || fail_exit "sync .git_password"
+  ssh_control_run_as_user root "yum -y install git tmux" $HOST                                       || fail_exit "yum install git tmux"
+  ssh_control_run_as_user cliff "mkdir -p ~/CODE/feralcoder" $HOST                                   || fail_exit "make code directory"
+  ssh_control_run_as_user cliff "cd ~/CODE/feralcoder && ( [[ -d bootstrap-scripts ]] || git clone https://feralcoder:`cat ~/.git_password`@github.com/feralcoder/bootstrap-scripts.git )" $HOST || fail_exit "git checkout bootstrap"
+  ssh_control_run_as_user cliff "cd ~/CODE/feralcoder/bootstrap-scripts && ./admin.sh" $HOST         || fail_exit "git run bootstrap"
 }
 
 
