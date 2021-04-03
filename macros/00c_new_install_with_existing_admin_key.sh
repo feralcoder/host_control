@@ -88,6 +88,7 @@ fix_boots () {
 
 
 
+admin_control_fix_mounts $HOST
 fix_keys
 fix_boots
 

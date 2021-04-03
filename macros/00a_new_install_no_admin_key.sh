@@ -33,3 +33,4 @@ echo; echo "FIXING GRUB ON $HOST"
 admin_control_make_no_crossboot $HOST
 admin_control_fix_grub_os_prober $HOST
 admin_control_fix_grub $HOST
+admin_control_fix_mounts $HOST

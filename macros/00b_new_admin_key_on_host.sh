@@ -53,6 +53,9 @@ admin_control_sync_keys_to_admin $HOST
 echo; echo "FIXING GRUB ON $HOST"
 admin_control_fix_grub $HOST -1
 
+echo; echo "SETTING UP MOUNTS ON $HOST"
+admin_control_fix_mounts $HOST
+
 echo; echo "BOOTING TO HD GRUB, CHOOSE x$SHORT_NAME!"
 ilo_power_cycle $HOST
 ssh_control_wait_for_host_up $HOST
