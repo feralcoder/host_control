@@ -72,7 +72,7 @@ check_active_drive                                                  || fail_exit
 echo; echo "BOOTING TO $OPERATING_DRIVE TO PERFORM RESTORE."
 boot_to_target $OPERATING_DRIVE "$REBOOT_HOSTS"                     || fail_exit "boot_to_target $OPERATING_DRIVE \"$REBOOT_HOSTS\""
 
-backup_control_backup_all "$BACKUPLINK" "$DRIVESET"                 || fail_exit "backup_control_backup_all \"$BACKUPLINK\" \"$DRIVESET\""
+backup_control_backup_these_hostns "$HOSTS" "$BACKUPLINK" "$DRIVESET"                 || fail_exit "backup_control_backup_these_hostns \"$BACKUPLINK\" \"$DRIVESET\""
 
 # DON'T NEED TO BOOT TO DEFAULT, NECESSARILY...
 #os_control_boot_to_target_installation_these_hosts default "$REBOOT_HOSTS"

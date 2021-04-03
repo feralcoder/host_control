@@ -264,8 +264,8 @@ backup_control_backup () {
 
 
 
-backup_control_restore_all () {
-  local BACKUPLINK=$1 SRCDIR=$2 DRIVESET=$3 MOUNTS=$4 BACKUPSERV=$5 OVERWRITE_IDENTITY=$6
+backup_control_restore_these_hosts () {
+  local HOSTS=$1 BACKUPLINK=$2 SRCDIR=$3 DRIVESET=$4 MOUNTS=$5 BACKUPSERV=$6 OVERWRITE_IDENTITY=$7
   # BACKUPLINK=dumbledore_02_Ussuri_Undercloud - will be prepended with $HOST                         (REQUIRED)
   # SRCDIR=/backups/stack_dumps/                                       ("" --> $BACKUP_DIR)
   # DRIVESET=a|b|...|x                                                 ("" --> "a")
@@ -287,7 +287,7 @@ backup_control_restore_all () {
   fi
 
   local HOST HOST_BACKUPLINK PIDS RETURN_CODE SHORT_NAME RESTORE_DIR
-  for HOST in $ALL_HOSTS     now_wait; do
+  for HOST in $HOSTS     now_wait; do
     SHORT_NAME=`group_logic_get_short_name $HOST`
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`
@@ -319,8 +319,8 @@ backup_control_restore_all () {
 }
 
 
-backup_control_backup_all () {
-  local BACKUPLINK=$1 DRIVESET=$2 MOUNTS=$3 BACKUPSERV=$4 OVERWRITE_IDENTITY=$5
+backup_control_backup_these_hosts () {
+  local HOSTS=$1 BACKUPLINK=$2 DRIVESET=$3 MOUNTS=$4 BACKUPSERV=$5 OVERWRITE_IDENTITY=$6
   # ALL ARGS ARE OPTIONAL:
   # BACKUPLINK="" | ie 02_Ussuri_Undercloud - will be prepended with $HOST unless NULL
   # DRIVESET=a|b|...|x                     ("" --> "a")
@@ -341,7 +341,7 @@ backup_control_backup_all () {
   fi
 
   local HOST HOST_BACKUPLINK PIDS RETURN_CODE SHORT_NAME
-  for HOST in $ALL_HOSTS     now_wait; do
+  for HOST in $HOSTS     now_wait; do
     SHORT_NAME=`group_logic_get_short_name $HOST`
     if [[ $HOST == "now_wait" ]]; then
       PIDS=`echo $PIDS | sed 's/^://g'`

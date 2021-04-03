@@ -78,7 +78,7 @@ boot_to_target $OPERATING_DRIVE "$REBOOT_HOSTS"                     || fail_exit
 reset_OSDs                                                          || fail_exit "reset_OSDs"
 
 SOURCEDIR=""  # Default backup directory can change in backup scripts, can override here...
-backup_control_restore_all "$BACKUPLINK" "$SOURCEDIR" "$DRIVESET"   || fail_exit "backup_control_restore_all \"$BACKUPLINK\" \"$SOURCEDIR\" \"$DRIVESET\""
+backup_control_restore_these_hosts "$HOSTS" "$BACKUPLINK" "$SOURCEDIR" "$DRIVESET"   || fail_exit "backup_control_restore_these_hosts \"$BACKUPLINK\" \"$SOURCEDIR\" \"$DRIVESET\""
 admin_control_fix_grub_these_hosts "$HOSTS"                         || fail_exit "admin_control_fix_grub_these_hosts \"$HOSTS\""
 
 echo; echo "GRUB MAY BE BROKEN ON TARGET DRIVE - if reboot fails, then access from $OPERATING_DRIVE GRUB, then fix grub."
