@@ -11,8 +11,15 @@ fi
 
 . ~/CODE/feralcoder/host_control/control_scripts.sh
 
+#DEFAULT_RESTORE_FROM=01_CentOS_8_3_Admin_Install_REBUILT
+#DEFAULT_RESTORE_FROM=01b_CentOS_8_3_Admin_Install_REBUILT
+#DEFAULT_RESTORE_FROM=01c_CentOS_8_3_Remediated
+DEFAULT_RESTORE_FROM=01d_CentOS_8_3_Postmediated
+#DEFAULT_RESTORE_FROM=02a_Kolla-Ansible_Setup
+#DEFAULT_RESTORE_FROM=02b_Ceph_Setup
+
 BACKUPLINK=$1 DRIVESET=$2 HOSTS=$3
-[[ $BACKUPLINK == "" ]] && BACKUPLINK=01_CentOS_8_3_Admin_Install
+[[ $BACKUPLINK == "" ]] && BACKUPLINK=$DEFAULT_RESTORE_FROM
 [[ $DRIVESET == "" ]] && DRIVESET=a
 [[ $HOSTS == "" ]] && HOSTS="$ALL_HOSTS"
 
