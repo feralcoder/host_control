@@ -48,21 +48,12 @@ setup_repo_mirror () {
   os_control_setup_repo_mirror $REPO_HOST || return 1
 }
 
-host_control_updates () {
+
+admin_setup () {
   local HOSTS=$1
-
-  # Who doesn't need a good /tmp/x.  Right?
-  ssh_control_run_as_user_these_hosts root "touch /tmp/x" "$HOSTS"
-
-  echo; echo "REPOINTING YUM TO LOCAL MIRROR ON $HOSTS"
+  local HOST
+  # This is where $REPO_HOST will get its git
   ssh_control_run_as_user_these_hosts root "dnf list installed git || dnf -y install git" "$HOSTS"
-  os_control_checkout_repofetcher `hostname`
-  os_control_repoint_repos_to_feralcoder_these_hosts "$HOSTS"
-
-  # Some basic packages...
-  ssh_control_run_as_user_these_hosts root "dnf -y install telnet" "$HOSTS"
-
-  echo; echo "UPDATING ADMIN ENV ON $HOSTS"
   for HOST in $HOSTS; do
     if ( ssh_control_run_as_user cliff "ls -al ~/.local_settings" $HOST ) || [[ ${FORCEBOOTSTRAP,,} == true ]] ; then
       admin_control_bootstrap_admin $HOST
@@ -72,6 +63,25 @@ host_control_updates () {
     fi
   done
   ssh_control_run_as_user_these_hosts cliff "~/CODE/feralcoder/workstation/update.sh" "$HOSTS"
+}
+
+
+host_control_updates () {
+  local HOSTS=$1
+
+  # Who doesn't need a good /tmp/x.  Right?
+  ssh_control_run_as_user_these_hosts root "touch /tmp/x" "$HOSTS"
+
+  echo; echo "REPOINTING YUM TO LOCAL MIRROR ON $HOSTS"
+  os_control_checkout_repofetcher `hostname`
+  os_control_repoint_repos_to_feralcoder_these_hosts "$HOSTS"
+
+  # Some basic packages...
+  # This is where all non-$REPO_HOST hosts will get their gits
+  ssh_control_run_as_user_these_hosts root "dnf list installed git || dnf -y install git" "$HOSTS"
+  ssh_control_run_as_user_these_hosts root "dnf list installed telnet || dnf -y install telnet" "$HOSTS"
+
+  admin_setup "$HOSTS"
 
   echo; echo "UPDATING GIT REPOS EVERYWHERE"
   git_control_pull_push_these_hosts "$HOSTS" 2>/dev/null
@@ -108,11 +118,13 @@ host_updates () {
 
 
 SUDO_PASS_FILE=`admin_control_get_sudo_password ~/.password`
-host_control_setup_host_access "$HOSTS"
-refetch_keys || exit 1
-setup_repo_mirror $REPO_HOST  || exit 1
-FORCEBOOTSTRAP=true host_control_updates "$HOSTS"  || exit 1
-host_updates "$HOSTS"  || exit 1
+host_control_setup_host_access "$HOSTS"              || exit 1
+# admin_setup is also called from host_control_updates - will be called twice on $REPO_HOST...  Oh well.
+FORCEBOOTSTRAP=true admin_setup $REPO_HOST           || exit 1
+setup_repo_mirror $REPO_HOST                         || exit 1
+FORCEBOOTSTRAP=true host_control_updates "$HOSTS"    || exit 1
+refetch_keys                                         || exit 1
+host_updates "$HOSTS"                                || exit 1
 setup_perftools "$HOSTS"
 
 [[ $SUDO_PASS_FILE != ~/.password ]] && rm $SUDO_PASS_FILE
