@@ -55,7 +55,6 @@ ceph_control_setup_LVM_OSD () {
   local LABEL=OSD
   [[ $SUFFIX == "" ]] || LABEL=${LABEL}_$SUFFIX
  
-  COMMAND="parted --script $DEVICE mklabel gpt mkpart primary 1MiB 100% name 1 $LABEL set 1 lvm on"
   ssh_control_run_as_user root "parted --script $BLOCK_DEVICE mklabel gpt mkpart primary 1MiB 100% name 1 ${LABEL}_data set 1 lvm on" $HOST
   ssh_control_run_as_user root "pvcreate -y ${BLOCK_DEVICE}1; vgcreate -y ${LABEL}_data ${BLOCK_DEVICE}1; lvcreate -y -n ${LABEL}_data -l 100%FREE ${LABEL}_data" $HOST
   
