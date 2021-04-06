@@ -101,6 +101,9 @@ setup_perftools () {
   local HOSTS=$1
   ssh_control_run_as_user_these_hosts root "dnf -y install bcc perf systemtap" "$HOSTS"
   ssh_control_run_as_user_these_hosts cliff "mkdir -p ~/CODE/brendangregg && cd ~/CODE/brendangregg && git clone https://github.com/brendangregg/perf-tools.git || ( cd ~/CODE/brendangregg/perf-tools && git pull )" "$HOSTS"
+
+  ssh_control_run_as_user_these_hosts cliff "( grep 'PATH.*share.bcc.tools' .bash_profile ) && sed -i 's|.*PATH.*share.bcc.tools.*|export PATH=\$PATH:/usr/share/bcc/tools:~cliff/CODE/brendangregg/perf-tools|g' .bash_profile || echo 'export PATH=\$PATH:/usr/share/bcc/tools:~cliff/CODE/brendangregg/perf-tools' >> ~/.bash_profile" "$STACK_HOSTS"
+  ssh_control_run_as_user_these_hosts root "( grep 'PATH.*share.bcc.tools' .bash_profile ) && sed -i 's|.*PATH.*share.bcc.tools.*|export PATH=\$PATH:/usr/share/bcc/tools:~cliff/CODE/brendangregg/perf-tools|g' .bash_profile || echo 'export PATH=\$PATH:/usr/share/bcc/tools:~cliff/CODE/brendangregg/perf-tools' >> ~/.bash_profile" "$STACK_HOSTS"
 }
 
 
