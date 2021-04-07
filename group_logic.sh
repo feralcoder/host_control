@@ -72,6 +72,18 @@ group_logic_get_all_names () {
   echo $HOST_NAMES
 }
 
+group_logic_remove_host () {
+  local HOSTS=$1 HOST=$2
+  if [[ $( group_logic_intersection "`group_logic_get_all_names $HOST`" "$HOSTS" ) != "" ]] ; then
+    echo "$HOST DETECTED in $HOSTS!" 1>&2
+    HOSTS=$(group_logic_exclusion "$ALL_HOSTS"  "`group_logic_get_all_names $HOST`")
+    echo "New hosts list: $HOSTS" 1>&2
+    echo "$HOSTS"
+    return
+  fi
+  echo "$HOSTS"
+}
+
 group_logic_remove_self () {
   local HOSTS=$1
   if [[ $( group_logic_intersection "`group_logic_get_all_names $(hostname)`" "$HOSTS" ) != "" ]] ; then
