@@ -130,4 +130,4 @@ refetch_keys                                         || exit 1
 host_updates "$HOSTS"                                || exit 1
 setup_perftools "$HOSTS"
 
-[[ $SUDO_PASS_FILE != ~/.password ]] && rm $SUDO_PASS_FILE
+[[ $SUDO_PASS_FILE == ~/.password ]] || rm $SUDO_PASS_FILE
