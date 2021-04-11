@@ -11,16 +11,16 @@ fi
 
 . ~/CODE/feralcoder/host_control/control_scripts.sh
 
-#RESTORE_FROM=01_CentOS_8_3_Admin_Install_REBUILT
-RESTORE_FROM=01b_CentOS_8_3_Admin_Install_REBUILT
+RESTORE_FROM=01_CentOS_8_3_Admin_Install_REBUILT
+#RESTORE_FROM=01b_CentOS_8_3_Admin_Install_REBUILT
 #RESTORE_FROM=01c_CentOS_8_3_Remediated
 #RESTORE_FROM=01d_CentOS_8_3_Postmediated
 #RESTORE_FROM=02a_Kolla-Ansible_Setup
 #RESTORE_FROM=02b_Ceph_Setup
 
 #BACKUP_TO=01_CentOS_8_3_Admin_Install_REBUILT
-#BACKUP_TO=01b_CentOS_8_3_Admin_Install_REBUILT
-BACKUP_TO=01c_CentOS_8_3_Remediated
+BACKUP_TO=01b_CentOS_8_3_Admin_Install_REBUILT
+#BACKUP_TO=01c_CentOS_8_3_Remediated
 #BACKUP_TO=01d_CentOS_8_3_Postmediated
 #BACKUP_TO=02a_Kolla-Ansible_Setup
 #BACKUP_TO=02b_Ceph_Setup
@@ -42,13 +42,27 @@ remediate_access () {
   ssh_control_run_as_user_these_hosts root "cat ~/.ssh/authorized_keys $ROOT_PUBS | sort | uniq > ${ROOT_PUBS}x ; cat ${ROOT_PUBS}x > ~/.ssh/authorized_keys" "$HOSTS" || return 1
 }
 
+
+
+
+
 remediate () {
-  # Admin and Pager
+  # Admin
   ssh_control_run_as_user_these_hosts cliff "cd ~/CODE/feralcoder/workstation && git pull" "$ALL_HOSTS"
   ssh_control_run_as_user_these_hosts cliff "~/CODE/feralcoder/workstation/update.sh" "$ALL_HOSTS" || return 1
+
+  # TWILIO Pager
+  TWILIO_PAGER_DIR=~/CODE/feralcoder/twilio-pager/
+  ssh_control_run_as_user_these_hosts cliff "cd ~/CODE/feralcoder/ && git clone https://feralcoder:\`cat ~/.git_password\`@github.com/feralcoder/twilio-pager.git" "$STACK_HOSTS"
+  ssh_control_run_as_user_these_hosts cliff "cd $TWILIO_PAGER_DIR && git git pull" "$STACK_HOSTS"
+  for HOST in $STACK_HOSTS; do
+    ssh_control_run_as_user cliff "cd $TWILIO_PAGER_DIR && ./setup.sh" $HOST
+  done
   ssh_control_run_as_user_these_hosts cliff "python3 $TWILIO_PAGER_DIR/pager.py \"hello from \`hostname\`\"" "$STACK_HOSTS"
   
   # Performance Tools
+  ssh_control_run_as_user_these_hosts root "dnf -y install bcc perf systemtap" "$STACK_HOSTS"
+  ssh_control_run_as_user_these_hosts cliff "mkdir -p ~/CODE/brendangregg && cd ~/CODE/brendangregg && git clone https://github.com/brendangregg/perf-tools.git || ( cd ~/CODE/brendangregg/perf-tools && git pull )" "$STACK_HOSTS"
   ssh_control_run_as_user_these_hosts cliff "( grep 'PATH.*share.bcc.tools' .bash_profile ) && sed -i 's|.*PATH.*share.bcc.tools.*|export PATH=\$PATH:/usr/share/bcc/tools:~cliff/CODE/brendangregg/perf-tools|g' .bash_profile || echo 'export PATH=\$PATH:/usr/share/bcc/tools:~cliff/CODE/brendangregg/perf-tools' >> ~/.bash_profile" "$STACK_HOSTS"
   ssh_control_run_as_user_these_hosts root "( grep 'PATH.*share.bcc.tools' .bash_profile ) && sed -i 's|.*PATH.*share.bcc.tools.*|export PATH=\$PATH:/usr/share/bcc/tools:~cliff/CODE/brendangregg/perf-tools|g' .bash_profile || echo 'export PATH=\$PATH:/usr/share/bcc/tools:~cliff/CODE/brendangregg/perf-tools' >> ~/.bash_profile" "$STACK_HOSTS"
 
@@ -85,12 +99,12 @@ echo; echo "BOOTING TO DEFAULT OS ON $STACK_HOSTS"
 boot_to_target default                                            || fail_exit "boot_to_target default"
 echo; echo "ALL HOSTS ARE BOOTED TO default"
 
-remediate_access                                                  || fail_exit "remediate_access"
+$MACRO_DIR/02a_hosts_setup.sh "$STACK_HOSTS"                     || fail_exit "02a_hosts_setup.sh \"$STACK_HOSTS\""
+#remediate_access                                                  || fail_exit "remediate_access"
 remediate                                                         || fail_exit "remediate"
 
-$MACRO_DIR/02a_hosts_update.sh "$STACK_HOSTS"                     || fail_exit "02a_hosts_update.sh \"$STACK_HOSTS\""
-$MACRO_DIR/09_backup_everything.sh $BACKUP_TO a "$STACK_HOSTS"    || fail_exit "09_backup_everything.sh $BACKUP_TO a \"$STACK_HOSTS\""
-
-echo; echo "BOOTING TO DEFAULT OS ON $STACK_HOSTS"
-boot_to_target default                                            || fail_exit "boot_to_target default"
-echo; echo "ALL HOSTS ARE BOOTED TO default"
+#$MACRO_DIR/09_backup_everything.sh $BACKUP_TO a "$STACK_HOSTS"    || fail_exit "09_backup_everything.sh $BACKUP_TO a \"$STACK_HOSTS\""
+#
+#echo; echo "BOOTING TO DEFAULT OS ON $STACK_HOSTS"
+#boot_to_target default                                            || fail_exit "boot_to_target default"
+#echo; echo "ALL HOSTS ARE BOOTED TO default"
