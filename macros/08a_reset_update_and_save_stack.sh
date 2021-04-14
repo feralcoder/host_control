@@ -100,11 +100,11 @@ boot_to_target default                                            || fail_exit "
 echo; echo "ALL HOSTS ARE BOOTED TO default"
 
 $MACRO_DIR/02a_hosts_setup.sh "$STACK_HOSTS"                     || fail_exit "02a_hosts_setup.sh \"$STACK_HOSTS\""
-#remediate_access                                                  || fail_exit "remediate_access"
+remediate_access                                                  || fail_exit "remediate_access"
 remediate                                                         || fail_exit "remediate"
 
-#$MACRO_DIR/09_backup_everything.sh $BACKUP_TO a "$STACK_HOSTS"    || fail_exit "09_backup_everything.sh $BACKUP_TO a \"$STACK_HOSTS\""
-#
-#echo; echo "BOOTING TO DEFAULT OS ON $STACK_HOSTS"
-#boot_to_target default                                            || fail_exit "boot_to_target default"
-#echo; echo "ALL HOSTS ARE BOOTED TO default"
+$MACRO_DIR/09_backup_everything.sh $BACKUP_TO a "$STACK_HOSTS"    || fail_exit "09_backup_everything.sh $BACKUP_TO a \"$STACK_HOSTS\""
+
+echo; echo "BOOTING TO DEFAULT OS ON $STACK_HOSTS"
+boot_to_target default                                            || fail_exit "boot_to_target default"
+echo; echo "ALL HOSTS ARE BOOTED TO default"
