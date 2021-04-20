@@ -50,3 +50,5 @@ ALL_HOSTS_MINUS_ADMIN=`group_logic_exclusion "$ALL_HOSTS" "$ADMIN_HOSTS"`
 ALL_HOSTS_LONGNAMES="manhattan lawnmowerman bowman kerrigan neo strange merlin gandalf yoda dumbledore"
 ALL_HOSTS_API_NET="manhattan-api lawnmowerman-api bowman-api kerrigan-api neo-api strange-api merlin-api gandalf-api yoda-api dumbledore-api"
 STACK_HOSTS_API_NET="manhattan-api lawnmowerman-api bowman-api kerrigan-api neo-api strange-api merlin-api gandalf-api dumbledore-api"
+
+FERALSTACK_ADMIN_HOSTS="admin1 admin2 admin3"
