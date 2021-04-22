@@ -313,6 +313,14 @@ os_control_setup_repo_mirror () {
   os_control_checkout_repofetcher $HOST
   echo "Running repo-fetcher setup on $HOST, see logs in /tmp/repo-fetcher_setup_$$.log"
   ssh_control_run_as_user root "/home/cliff/CODE/feralcoder/repo-fetcher/setup.sh | tee /tmp/repo-fetcher_setup_$$.log" $HOST
+  os_control_setup_fileserver $HOST
+}
+
+os_control_setup_fileserver () {
+  # FUTURE: separate this from repo setup...
+  local HOST=$1
+  ssh_control_sync_as_user root $CONTROL_DIR/scripts/nginx_files.conf /etc/nginx/conf.d/files.conf $HOST
+  ssh_control_run_as_user root "systemctl restart nginx" $HOST
 }
 
 os_control_repoint_repos_to_feralcoder_these_hosts () {

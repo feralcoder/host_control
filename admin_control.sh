@@ -475,6 +475,7 @@ admin_control_fix_mounts () {
       echo "LABEL=image-serve /var/lib/image-serve          xfs     defaults        0 0" >> $DRIVE_MAP
       echo "LABEL=repo-store /repo-store                    xfs     defaults        0 0" >> $DRIVE_MAP
       echo "LABEL=backups /backups                          xfs     defaults        0 0" >> $DRIVE_MAP
+      echo "LABEL=files /files                              xfs     defaults        0 0" >> $DRIVE_MAP
       ;;
     kgn)
       ssh_control_run_as_user root "mkdir -p /backups" $HOST
