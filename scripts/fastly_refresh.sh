@@ -4,7 +4,7 @@ echo Running scripts from: $THIS_SOURCE
 
 . $THIS_SOURCE/../control_scripts.sh
 
-WIKI_CHECKOUTS='/home/cliff/CODE/feralcoder/workstation.git /home/cliff/CODE/feralcoder/shared.git'
+WIKI_CHECKOUTS='/home/cliff/CODE/feralcoder/workstation.wiki /home/cliff/CODE/feralcoder/shared.wiki'
 for WIKI in $WIKI_CHECKOUTS; do
   cd $WIKI
   git pull
