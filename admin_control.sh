@@ -7,6 +7,9 @@ admin_control_test_sudo () {
   if [[ $PASSFILE == "" ]]; then
     echo "PASSFILE is undefined!"
     return 1
+  elif ! [[ -f $PASSFILE ]]; then
+    echo "PASSFILE: $PASSFILE does not exist"
+    return 1
   fi
   cat $PASSFILE | sudo -S ls > /dev/null 2>&1
 }
