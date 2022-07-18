@@ -18,10 +18,18 @@ if [[ $USER_DIR == '' ]]; then
   exit
 fi
 
+LOCK_FILE=/tmp/fastly_refresh_lock
+if [[ -f $LOCK_FILE ]]; then
+  echo "It appears another refresh process is already running."
+  echo "If this is not the case, then remove $LOCK_FILE and try again."
+else
+  touch $LOCK_FILE
 
-WIKI_CHECKOUTS="$USER_DIR/CODE/feralcoder/workstation.wiki $USER_DIR/CODE/feralcoder/shared.wiki"
-for WIKI in $WIKI_CHECKOUTS; do
-  cd $WIKI
-  git pull
-  wiki_control_warm_fastly_cache
-done
+  WIKI_CHECKOUTS="$USER_DIR/CODE/feralcoder/workstation.wiki $USER_DIR/CODE/feralcoder/shared.wiki"
+  for WIKI in $WIKI_CHECKOUTS; do
+    cd $WIKI
+    git pull
+    wiki_control_warm_fastly_cache
+  done
+  rm $LOCK_FILE
+fi
