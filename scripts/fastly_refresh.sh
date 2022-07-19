@@ -15,13 +15,14 @@ USER_DIR=$(
 )
 if [[ $USER_DIR == '' ]]; then
   echo "Unable to determine admin user on system.  Not 'cliff' or 'feralcoder'."
-  exit
+  exit 1
 fi
 
 LOCK_FILE=/tmp/fastly_refresh_lock
 if [[ -f $LOCK_FILE ]]; then
   echo "It appears another refresh process is already running."
   echo "If this is not the case, then remove $LOCK_FILE and try again."
+  exit 1
 else
   touch $LOCK_FILE
 
