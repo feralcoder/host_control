@@ -24,7 +24,7 @@ LOCK_FILE=/tmp/fastly_refresh_lock
 if [[ -f $LOCK_FILE ]]; then
   LAST_TIME=$(cat $LOCK_FILE)
   ELAPSED=$(( $EPOCH_TIME - $LAST_TIME ))
-  if [[ $ELAPSED < 7200 ]]; then
+  if [[ $ELAPSED -lt 7200 ]]; then
     echo; echo "It appears another refresh process is already running."
     echo "It started $ELAPSED seconds ago."
     echo "If this is not the case, then remove $LOCK_FILE and try again."
