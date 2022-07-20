@@ -18,4 +18,4 @@ if [[ $USER_DIR == '' ]]; then
   exit
 fi
 
-$THIS_SOURCE/fastly_refresh.sh && sudo shutdown
+$THIS_SOURCE/fastly_refresh.sh && sudo shutdown now

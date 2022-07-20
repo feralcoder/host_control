@@ -20,6 +20,10 @@ fi
 
 EPOCH_TIME=$(date +%s)
 
+# THE FOLLOWING SLEEP IS TO ELIMINATE RACE CONDITION
+#  Where next job starts between previous job deleting lock and restarting machine
+sleep 30
+
 LOCK_FILE=/tmp/fastly_refresh_lock
 if [[ -f $LOCK_FILE ]]; then
   LAST_TIME=$(cat $LOCK_FILE)
