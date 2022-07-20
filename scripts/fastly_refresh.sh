@@ -38,6 +38,7 @@ if [[ -f $LOCK_FILE ]]; then
       echo; echo "Found old processes:"
       echo "$OLD_PROCS"
       echo; echo Killing PIDS: $OLD_PIDS
+      rm $LOCK_FILE
       kill -9 $OLD_PIDS
     else
       echo; echo "No old processes found."
