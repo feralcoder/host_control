@@ -1,7 +1,8 @@
 #!/bin/bash -x
 
 REPOS="bootstrap-scripts  host_control  kolla-ansible  twilio-pager workstation  workstation.wiki"
-CODE_PATH=/home/cliff/CODE/feralcoder/
+ADMIN_HOME=$(sudo -u cliff env | grep -E '^HOME=' | sed 's/HOME=//g')
+CODE_PATH=$ADMIN_HOME/CODE/feralcoder/
 
 
 git_control_set_local_password () {
