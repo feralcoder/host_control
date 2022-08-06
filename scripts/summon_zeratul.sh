@@ -26,8 +26,9 @@ TRIES=20
 
 for TRY in $(seq 1 $TRIES); do
   echo Try $TRY of $TRIES.
+  SHUTDOWN_LOCK=/tmp/no_shutdown
   ssh -o ConnectTimeout=3 zeratul.feralcoder.org hostname && {
-    ssh -o ConnectTimeout=3 zeratul.feralcoder.org touch /tmp/no_shutdown
+    ssh -o ConnectTimeout=3 zeratul.feralcoder.org touch $SHUTDOWN_LOCK
     echo ZERATUL HAS BEEN SUMMONED
     return
   }
@@ -35,4 +36,3 @@ for TRY in $(seq 1 $TRIES); do
   echo Sleeping for $SLEEP seconds.
   sleep $SLEEP
 done
-
