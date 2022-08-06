@@ -18,4 +18,10 @@ if [[ $USER_DIR == '' ]]; then
   exit
 fi
 
-$THIS_SOURCE/fastly_refresh.sh && sudo shutdown now
+$THIS_SOURCE/fastly_refresh.sh
+SHUTDOWN_LOCK=/tmp/no_shutdown
+if [[ ! -f $SHUTDOWN_LOCK ]]; then
+  sudo shutdown now
+else
+  echo "I would shut down but $SHUTDOWN_LOCK says not to!"
+fi
